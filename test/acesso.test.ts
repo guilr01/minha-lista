@@ -24,13 +24,13 @@ describe("acesso ao banco", () => {
     expect(culpados).toEqual(["src/lib/db.ts"]);
   });
 
-  it("comoSistema é usado só onde não há usuário: pagamento e área pública", () => {
+  it("comoSistema é usado só onde não há usuário: pagamento, área pública e login", () => {
     const raiz = join(process.cwd(), "src");
     const usam = arquivos(raiz)
       .filter((a) => /comoSistema\(/.test(readFileSync(a, "utf8")))
       .map((a) => relative(process.cwd(), a))
       .sort();
     // Lista fechada: acrescentar um arquivo aqui é decisão, não detalhe.
-    expect(usam).toEqual(["src/lib/area-publica.ts", "src/lib/pagamento/processar.ts"]);
+    expect(usam).toEqual(["src/lib/area-publica.ts", "src/lib/autenticacao.ts", "src/lib/pagamento/processar.ts"]);
   });
 });

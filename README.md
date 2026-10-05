@@ -23,6 +23,16 @@ pnpm db:semear               # dados de exemplo (idempotente)
 pnpm dev
 ```
 
+Área do pai: `http://localhost:3000/papelaria-central`. Painel da papelaria:
+`http://localhost:3000/entrar` (ou `/cadastro`, que cria uma papelaria nova).
+
+Para dar acesso à papelaria do seed (ou trocar uma senha):
+
+```bash
+SENHA='...' node --experimental-strip-types scripts/criar-acesso.mjs \
+  --email dona@papelaria.com --papelaria papelaria-central --nome "Maria"
+```
+
 Abra `http://localhost:3000/papelaria-central`. Com o provedor falso, a tela
 do Pix tem o botão "Simular pagamento aprovado", e o cartão abre uma página
 de teste no lugar do gateway.

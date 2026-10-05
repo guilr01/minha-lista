@@ -8,6 +8,7 @@ import { buscarPedido } from "@/lib/area-publica";
 import { reais } from "@/lib/dinheiro";
 import { ROTULO_FAIXA } from "@/lib/faixa";
 import { simulacaoLiberada } from "@/lib/pagamento";
+import { COR_STATUS, ROTULO_STATUS } from "@/lib/status";
 import type { PedidoPublico, StatusPedido } from "@/lib/vitrine";
 import { formatarCep, linkWhatsApp } from "@/lib/whatsapp";
 import { AtualizarSozinho, CopiarCodigo, GerarDeNovo, SimularPagamento } from "./interativos";
@@ -22,28 +23,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     robots: { index: false, follow: false },
   };
 }
-
-const ROTULO_STATUS: Record<StatusPedido, string> = {
-  aguardando_pagamento: "Aguardando pagamento",
-  pago: "Pago · a separar",
-  em_separacao: "Em separação",
-  saiu_para_entrega: "Saiu para entrega",
-  pronto_para_retirada: "Pronto para retirada",
-  entregue: "Entregue",
-  cancelado: "Cancelado",
-  expirado: "Pagamento expirado",
-};
-
-const COR_STATUS: Record<StatusPedido, string> = {
-  aguardando_pagamento: "bg-aviso-fundo text-aviso",
-  pago: "bg-azul-claro text-azul",
-  em_separacao: "bg-aviso-fundo text-aviso",
-  saiu_para_entrega: "bg-roxo-fundo text-roxo",
-  pronto_para_retirada: "bg-roxo-fundo text-roxo",
-  entregue: "bg-ok-fundo text-ok",
-  cancelado: "bg-linha-2 text-tinta",
-  expirado: "bg-linha-2 text-tinta",
-};
 
 const hora = (iso: string) =>
   new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });

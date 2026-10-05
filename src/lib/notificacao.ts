@@ -6,7 +6,7 @@ import "server-only";
 
 export interface MudancaDeStatus {
   pedidoId: string;
-  fornecedorId: string;
+  fornecedorId?: string;
   numero: number;
   status: string;
 }

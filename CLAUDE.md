@@ -14,13 +14,6 @@ pelo link de UMA papelaria e só vê aquela. Protótipo de referência (fluxo, t
 2. **O pai não tem conta e não toca tabela.** `anon` não tem privilégio em tabela nenhuma.
    Tudo passa por funções `security definer` em `20261005000003_area_publica.sql`. Hoje são
    cinco; função nova ali é decisão deliberada, e o teste lista as cinco por nome.
-7. **Só `src/lib/db.ts` conecta ao banco**, e toda operação escolhe o papel: `comoPai`
-   (anon), `comoUsuario` (authenticated + `app.usuario_id`) ou `comoSistema` (o dono, sem
-   RLS). `test/acesso.test.ts` falha se outro arquivo importar `pg`, e a lista de quem usa
-   `comoSistema` é fechada: hoje, pagamento e a leitura da cobrança.
-8. **Um só caminho marca pedido como pago**: `aplicarEventoDePagamento`
-   (`src/lib/pagamento/processar.ts`) → `app.confirmar_pagamento`, idempotente. O webhook e
-   a simulação do provedor falso passam por ele.
 3. **O preço do pedido é do banco e é congelado.** O navegador manda a ESCOLHA (produto,
    faixa, quantidade), nunca o preço. `criar_pedido` lê o catálogo e grava cópia de nome,
    marca, faixa e preço. Gatilhos recusam alterar o pedido e o item depois; só o status e o
@@ -31,6 +24,19 @@ pelo link de UMA papelaria e só vê aquela. Protótipo de referência (fluxo, t
    `test/db/faixa-paridade.test.ts` compara as 81 combinações. Mudar uma sem a outra quebra.
 6. **Filho referencia pai por `(fornecedor_id, id)`.** Chave composta: item de lista não
    aponta para produto de outra papelaria nem por engano.
+7. **Só `src/lib/db.ts` conecta ao banco**, e toda operação escolhe o papel: `comoPai`
+   (anon), `comoUsuario` (authenticated + `app.usuario_id`) ou `comoSistema` (o dono, sem
+   RLS). `test/acesso.test.ts` falha se outro arquivo importar `pg`, e a lista de quem usa
+   `comoSistema` é fechada: hoje, pagamento e a leitura da cobrança.
+8. **Um só caminho marca pedido como pago**: `aplicarEventoDePagamento`
+   (`src/lib/pagamento/processar.ts`) → `app.confirmar_pagamento`, idempotente. O webhook e
+   a simulação do provedor falso passam por ele.
+9. **Pedido pago só anda por duas funções**: `marcar_item_separado` e `avancar_pedido`
+   (migração 0005). Elas conferem a papelaria (`app.eh_membro`), o estado e a transição, recusam
+   despachar com item faltando e gravam o autor na trilha. O fornecedor não tem mais `update` em
+   `pedido_item`. Pedido de outra papelaria responde como inexistente.
+10. **Toda ação do painel chama `exigirUsuario()`** (`src/lib/sessao.ts`). O layout barrar a
+   página não protege a Server Action, que é um endpoint público.
 
 ## Decisões de produto (05/10/2026, padrões aprovados pelo Guilherme)
 
@@ -56,6 +62,25 @@ pelo link de UMA papelaria e só vê aquela. Protótipo de referência (fluxo, t
 - **Produto que está em lista não se apaga** (`on delete restrict`). Fora de lista, pode, e
   o pedido continua inteiro (o item guarda a cópia; `produto_id` vira nulo).
 
+## Login da papelaria (decisão de 05/10/2026: login próprio)
+
+O Neon Auth está ligado no projeto, mas as sessões na nuvem não o alcançam (proxy, 403), e
+login que não se testa aqui seria escrito às cegas. O Guilherme escolheu login próprio; dá para
+migrar para o Neon Auth depois.
+
+- **Senha**: scrypt com sal em `src/lib/senha.ts`, a ÚNICA definição; a aplicação e
+  `scripts/criar-acesso.mjs` importam de lá. O banco só vê o resultado.
+- **Sessão**: token aleatório de 32 bytes no cookie `lp_sessao` (httpOnly, sameSite lax, 30
+  dias); o banco guarda o SHA-256 em `app.sessao`. Ler a tabela não dá sessão a ninguém.
+- **Limite**: 5 senhas erradas por e-mail ou 20 por origem em 15 minutos trancam por 15
+  minutos (`app.falha_login`, origem em sha256). Acertar limpa as falhas do e-mail. E-mail
+  inexistente gasta o mesmo scrypt, para a resposta não denunciar quem tem conta.
+- **Cadastro** cria pessoa, papelaria e vínculo numa transação só. Para ligar alguém a uma
+  papelaria que já existe (a do seed), `scripts/criar-acesso.mjs`; com `--sql` ele imprime os
+  comandos para o conector do Neon.
+- **Falta**: recuperar senha por e-mail (não há provedor de e-mail; por ora o script troca a
+  senha), mais de uma papelaria por pessoa na tela (o banco já aceita).
+
 ## Do protótipo, o que NÃO entra agora
 
 O protótipo tem leitura de lista por foto e por texto colado, e a fila "Itens não
@@ -70,6 +95,12 @@ análise". Também ficam fora: gateway real e split, envio de WhatsApp (o ponto 
 administrador), com dono `lp_dono` sem superusuário, e aplica as migrações e o seed duas vezes
 (o seed é idempotente). Cada teste roda numa transação desfeita no fim.
 
+- **Os testes de `src/lib` que usam `db.ts` gravam de verdade** no banco de teste (login,
+  lista do painel): use dados únicos e nunca suponha o estado de outro arquivo. Um teste antigo
+  supunha o pedido #1001 e quebrou quando a ordem dos arquivos mudou; rode com
+  `--sequence.shuffle` ao mexer nisso.
+- **O driver `pg` não converte array de ENUM**: devolve a string `"{premium}"`. Converta para
+  `text[]` no SQL. Foi assim que todo pedido apareceu como faixa "Mista" no painel.
 - **O total da tela é o total cobrado**: `test/db/carrinho-paridade.test.ts` passa o total de
   `src/lib/carrinho.ts` como `total_esperado_centavos` em 200 carrinhos sorteados.
 
@@ -129,7 +160,7 @@ Interface toda em pt-BR, valores em R$. Cores, fontes e raios só em `src/app/gl
 |---|---|---|
 | a | Setup, schema, RLS, funções públicas, seed, testes | **concluída** |
 | b | Área do pai: escola → série → faixa → revisão → checkout → pagamento fake → acompanhamento | **concluída**, aplicada no Neon |
-| c | Login do fornecedor, painel de pedidos, separação, status | |
+| c | Login do fornecedor, painel de pedidos, separação, status | **concluída**, aplicada no Neon |
 | d | Cadastro de catálogo, escolas, séries e listas | |
 
 Pare ao fim de cada etapa, diga como testar e o que ficou pendente.

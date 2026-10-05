@@ -1,7 +1,7 @@
 -- Impressão digital do schema (funções, colunas, restrições, políticas,
 -- permissões, gatilhos, índices, RLS). Rodar no Neon e num banco local montado
--- por scripts/banco.mjs: os hashes precisam ser iguais. No Postgres 18 os NOT
--- NULL também viram restrição (contype n); compare-os à parte se as versões diferirem.
+-- por scripts/banco.mjs: os hashes precisam ser iguais. Ignora contype n: no
+-- Postgres 18 cada NOT NULL também vira restrição, e no 16 não.
 select 'funcoes' as parte, md5(string_agg(p.proname || ':' || md5(pg_get_functiondef(p.oid)), ',' order by p.proname)) as h, count(*) as n
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname in ('app','public')
 union all
@@ -9,7 +9,7 @@ select 'colunas', md5(string_agg(table_schema||'.'||table_name||'.'||column_name
   from information_schema.columns where table_schema in ('app','public','controle')
 union all
 select 'restricoes', md5(string_agg(conrelid::regclass::text||'.'||conname||':'||pg_get_constraintdef(oid), ',' order by conrelid::regclass::text, conname)), count(*)
-  from pg_constraint where connamespace in (select oid from pg_namespace where nspname in ('app','public'))
+  from pg_constraint where contype <> 'n' and connamespace in (select oid from pg_namespace where nspname in ('app','public'))
 union all
 select 'politicas', md5(string_agg(tablename||'.'||policyname||':'||cmd||':'||array_to_string(roles,'+')||':'||coalesce(qual,'')||':'||coalesce(with_check,''), ',' order by tablename, policyname)), count(*)
   from pg_policies where schemaname = 'public'

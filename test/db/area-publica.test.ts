@@ -117,6 +117,11 @@ describe("vitrine", () => {
 describe("criar_pedido: o preço vem do banco", () => {
   it("calcula o total pelo catálogo e devolve o número e o token", async () => {
     await emSandbox(async (q) => {
+      // O número vem do contador da papelaria; outros testes podem ter
+      // gravado pedidos antes deste, então lê o contador em vez de supor 1001.
+      const proximo = (await q<{ n: number }>(
+        "select proximo_numero_pedido as n from public.fornecedor where slug = 'papelaria-central'",
+      )).rows[0].n;
       await comoPai(q);
       const r = await criar(q, pedido([
         { produto_id: CADERNO, faixa: "intermediaria", quantidade: 4 },
@@ -124,7 +129,7 @@ describe("criar_pedido: o preço vem do banco", () => {
       ]));
       expect(r.subtotal_centavos).toBe(4 * 1490 + 6 * 120);
       expect(r.total_centavos).toBe(r.subtotal_centavos);
-      expect(r.numero).toBe(1001);
+      expect(r.numero).toBe(proximo);
       expect(r.token).toMatch(/^[0-9a-f]{64}$/);
     });
   });
