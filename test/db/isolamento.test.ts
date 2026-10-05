@@ -28,18 +28,37 @@ const TABELAS: Record<string, string> = {
 };
 
 describe("o catálogo do banco confere com a lista acima", () => {
-  it("toda tabela de public está na lista, tem RLS ligado e forçado", async () => {
+  it("os testes rodam como um dono SEM superusuário, igual ao Neon", async () => {
+    // Superusuário ignora o RLS: com ele, a vitrine e o criar_pedido passariam
+    // aqui e quebrariam lá. Se este teste cair, os outros deixam de provar.
     await emSandbox(async (q) => {
-      const r = await q<{ relname: string; relrowsecurity: boolean; relforcerowsecurity: boolean }>(`
-        select c.relname, c.relrowsecurity, c.relforcerowsecurity
+      const r = await q<{ rolsuper: boolean; rolbypassrls: boolean }>(
+        `select rolsuper, rolbypassrls from pg_roles where rolname = current_user`,
+      );
+      expect(r.rows[0]).toEqual({ rolsuper: false, rolbypassrls: false });
+    });
+  });
+
+  it("toda tabela de public está na lista e tem RLS ligado", async () => {
+    await emSandbox(async (q) => {
+      const r = await q<{ relname: string; relrowsecurity: boolean }>(`
+        select c.relname, c.relrowsecurity
         from pg_class c join pg_namespace n on n.oid = c.relnamespace
         where n.nspname = 'public' and c.relkind = 'r'`);
       // Tabela nova fora de TABELAS é tabela que ninguém verificou.
       expect(r.rows.map((x) => x.relname).sort()).toEqual(Object.keys(TABELAS).sort());
       for (const t of r.rows) {
         expect(t.relrowsecurity, `${t.relname} sem RLS`).toBe(true);
-        expect(t.relforcerowsecurity, `${t.relname} sem FORCE RLS`).toBe(true);
       }
+    });
+  });
+
+  it("os papéis da requisição não leem as tabelas internas (app, controle)", async () => {
+    await emSandbox(async (q) => {
+      const r = await q(`
+        select table_schema, table_name, grantee from information_schema.role_table_grants
+        where table_schema in ('app', 'controle') and grantee in ('anon', 'authenticated')`);
+      expect(r.rows).toEqual([]);
     });
   });
 
@@ -140,7 +159,7 @@ describe("duas papelarias, nenhuma consulta atravessa", () => {
 
   it("usuário sem papelaria não vê nada", async () => {
     await emSandbox(async (q) => {
-      await q(`insert into auth.users (id, email) values ('99999999-0000-4000-8000-000000000009', 'x@exemplo.test')`);
+      await q(`insert into app.usuario (id, email) values ('99999999-0000-4000-8000-000000000009', 'x@exemplo.test')`);
       await trocarPara(q, "authenticated", "99999999-0000-4000-8000-000000000009");
       for (const tabela of Object.keys(TABELAS)) {
         const r = await q<{ n: number }>(`select count(*)::int as n from public.${tabela}`);

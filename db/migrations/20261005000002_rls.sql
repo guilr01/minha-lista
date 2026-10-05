@@ -6,27 +6,30 @@
 --   * o pai (anon) não lê nem escreve tabela nenhuma. Tudo que ele faz passa
 --     pelas funções de 0003, que validam e devolvem só o que é público.
 --
--- O schema `app` não é exposto pela API do Supabase: é onde mora a função
--- sobre a qual todas as políticas se apoiam.
+-- O RLS vale para `anon` e `authenticated`. O dono do banco (o papel do
+-- sistema, ver 0000) não passa por ele: é ele quem executa as funções
+-- `security definer`, e elas precisam enxergar todas as papelarias para
+-- achar a do slug pedido.
 
 create function app.eh_membro(p_fornecedor uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.membro_fornecedor m
     where m.fornecedor_id = p_fornecedor
-      and m.user_id = (select auth.uid())
+      and m.user_id = (select app.usuario_atual())
   )
 $$;
 
 grant usage on schema app to authenticated;
+revoke all on function app.usuario_atual() from public, anon, authenticated;
+grant execute on function app.usuario_atual() to authenticated;
 revoke all on function app.eh_membro(uuid) from public, anon;
 grant execute on function app.eh_membro(uuid) to authenticated;
 revoke all on function app.tg_evento_somente_insercao() from public, anon, authenticated;
 revoke all on function app.tg_pedido_item_congelado() from public, anon, authenticated;
 revoke all on function app.tg_pedido_congelado() from public, anon, authenticated;
 
--- O Supabase concede tudo em public a anon e authenticated por padrão.
--- Aqui as concessões são explícitas: tirar tudo e devolver o necessário.
+-- Concessões explícitas: tirar tudo e devolver o necessário, tabela a tabela.
 revoke all on all tables in schema public from anon, authenticated;
 revoke all on all sequences in schema public from anon, authenticated;
 
@@ -39,7 +42,6 @@ begin
     'pedido_evento'
   ] loop
     execute format('alter table public.%I enable row level security', t);
-    execute format('alter table public.%I force row level security', t);
   end loop;
 end $$;
 
@@ -50,7 +52,7 @@ grant select, update on public.fornecedor to authenticated;
 -- proximo_numero_pedido é do banco: não se edita pela tela.
 revoke update on public.fornecedor from authenticated;
 grant update (nome, whatsapp, endereco_retirada, aceita_entrega, aceita_retirada,
-              taxa_entrega_centavos, logo_path)
+              taxa_entrega_centavos, parcelas_maximas, logo_path)
   on public.fornecedor to authenticated;
 
 create policy fornecedor_leitura on public.fornecedor
@@ -63,7 +65,7 @@ create policy fornecedor_edicao on public.fornecedor
 grant select on public.membro_fornecedor to authenticated;
 create policy membro_leitura on public.membro_fornecedor
   for select to authenticated
-  using (user_id = (select auth.uid()) or (select app.eh_membro(fornecedor_id)));
+  using (user_id = (select app.usuario_atual()) or (select app.eh_membro(fornecedor_id)));
 
 -- ------------------------------------- cadastro: CRUD completo do fornecedor
 do $$

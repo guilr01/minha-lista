@@ -41,7 +41,8 @@ language sql stable set search_path = '' as $$
     'nome', f.nome, 'slug', f.slug, 'whatsapp', f.whatsapp,
     'logo_path', f.logo_path, 'endereco_retirada', f.endereco_retirada,
     'aceita_entrega', f.aceita_entrega, 'aceita_retirada', f.aceita_retirada,
-    'taxa_entrega_centavos', f.taxa_entrega_centavos)
+    'taxa_entrega_centavos', f.taxa_entrega_centavos,
+    'parcelas_maximas', f.parcelas_maximas)
 $$;
 
 -- ---------------------------------------------------------------- vitrine
@@ -115,7 +116,7 @@ $$;
 
 -- ----------------------------------------------------------- criar_pedido
 -- Entrada:
--- { lista_id, faixa_base, metodo_pagamento, modalidade,
+-- { lista_id, faixa_base, metodo_pagamento, modalidade, total_esperado_centavos?,
 --   aluno_nome, responsavel_nome, responsavel_whatsapp,
 --   endereco: { cep, logradouro, numero, complemento, bairro, cidade },
 --   itens: [ { produto_id, faixa, quantidade } ] }
@@ -154,6 +155,7 @@ declare
   v_ordem integer := 0;
   v_vistos uuid[] := '{}';
   v_linhas jsonb := '[]'::jsonb;
+  v_parcelas integer := 1;
 begin
   if jsonb_typeof(p) is distinct from 'object' then
     raise exception 'entrada_invalida: esperado um objeto';
@@ -182,6 +184,13 @@ begin
   end;
   if v_modalidade is null or v_metodo is null or v_faixa_base is null then
     raise exception 'entrada_invalida: modalidade, método e faixa são obrigatórios';
+  end if;
+
+  if v_metodo = 'cartao' then
+    v_parcelas := coalesce((p ->> 'parcelas')::integer, 1);
+    if v_parcelas not between 1 and v_forn.parcelas_maximas then
+      raise exception 'entrada_invalida: até % parcelas', v_forn.parcelas_maximas;
+    end if;
   end if;
 
   if length(v_aluno) < 2 then raise exception 'dados_invalidos: nome do aluno'; end if;
@@ -267,6 +276,13 @@ begin
     v_subtotal := v_subtotal + v_opcao.preco_centavos * v_qtd;
   end loop;
 
+  -- A tela calculou um total com os preços de quando a página abriu. Se o
+  -- catálogo mudou desde então, o pai precisa ver o preço novo ANTES de pagar.
+  if p ? 'total_esperado_centavos'
+     and (p ->> 'total_esperado_centavos')::integer is distinct from v_subtotal + v_taxa then
+    raise exception 'preco_mudou: o total agora é % centavos', v_subtotal + v_taxa;
+  end if;
+
   -- A papelaria está travada (for update acima): dois pedidos simultâneos
   -- não saem com o mesmo número.
   v_numero := v_forn.proximo_numero_pedido;
@@ -276,12 +292,12 @@ begin
   insert into public.pedido (
     id, fornecedor_id, lista_id, numero, token, status, faixa_base,
     escola_nome, serie_nome, ano_letivo, aluno_nome, responsavel_nome,
-    responsavel_whatsapp, modalidade, endereco, metodo_pagamento,
+    responsavel_whatsapp, modalidade, endereco, metodo_pagamento, parcelas,
     subtotal_centavos, taxa_entrega_centavos, total_centavos, expira_em)
   values (
     v_pedido, v_forn.id, v_lista.id, v_numero, v_token, 'aguardando_pagamento',
     v_faixa_base, v_escola, v_serie, v_lista.ano_letivo, v_aluno, v_resp,
-    v_fone, v_modalidade, v_endereco, v_metodo,
+    v_fone, v_modalidade, v_endereco, v_metodo, v_parcelas,
     v_subtotal, v_taxa, v_subtotal + v_taxa, now() + interval '30 minutes');
 
   insert into public.pedido_item (
@@ -319,7 +335,7 @@ language sql stable security definer set search_path = '' as $$
     'ano_letivo', pe.ano_letivo, 'faixa_base', pe.faixa_base,
     'aluno_nome', pe.aluno_nome, 'responsavel_nome', pe.responsavel_nome,
     'modalidade', pe.modalidade, 'endereco', pe.endereco,
-    'metodo_pagamento', pe.metodo_pagamento,
+    'metodo_pagamento', pe.metodo_pagamento, 'parcelas', pe.parcelas,
     'subtotal_centavos', pe.subtotal_centavos,
     'taxa_entrega_centavos', pe.taxa_entrega_centavos,
     'total_centavos', pe.total_centavos,

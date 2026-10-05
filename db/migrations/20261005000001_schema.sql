@@ -8,8 +8,6 @@
 --   * o pedido é uma cópia congelada: preço, nome e marca são gravados na
 --     compra, e um gatilho recusa alterá-los depois.
 
-create schema if not exists app;
-
 create type public.faixa as enum ('economica', 'intermediaria', 'premium');
 create type public.status_lista as enum ('rascunho', 'publicada', 'encerrada');
 create type public.status_pedido as enum (
@@ -32,12 +30,15 @@ create table public.fornecedor (
   slug text not null unique
     check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) between 3 and 60)
     check (slug not in ('painel', 'entrar', 'sair', 'cadastro', 'api', 'pedido',
-                        'admin', 'login', 'conta', 'ajuda', 'termos', 'privacidade')),
+                        'admin', 'login', 'conta', 'ajuda', 'termos', 'privacidade',
+                        'pagamento-fake')),
   whatsapp text check (whatsapp is null or whatsapp ~ '^[0-9]{10,13}$'),
   endereco_retirada text,
   aceita_entrega boolean not null default true,
   aceita_retirada boolean not null default true,
   taxa_entrega_centavos integer not null default 0 check (taxa_entrega_centavos >= 0),
+  -- Cartão: até quantas vezes sem juros.
+  parcelas_maximas integer not null default 3 check (parcelas_maximas between 1 and 12),
   logo_path text,
   -- Contador do número humano do pedido ("#1042"), por papelaria.
   proximo_numero_pedido integer not null default 1001,
@@ -47,7 +48,7 @@ create table public.fornecedor (
 
 create table public.membro_fornecedor (
   fornecedor_id uuid not null references public.fornecedor (id) on delete cascade,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null references app.usuario (id) on delete cascade,
   papel text not null default 'dono' check (papel in ('dono')),
   criado_em timestamptz not null default now(),
   primary key (fornecedor_id, user_id)
@@ -172,6 +173,8 @@ create table public.pedido (
   modalidade public.modalidade_entrega not null,
   endereco jsonb,
   metodo_pagamento public.metodo_pagamento not null,
+  parcelas integer not null default 1
+    check (parcelas between 1 and 12 and (metodo_pagamento = 'cartao' or parcelas = 1)),
   subtotal_centavos integer not null check (subtotal_centavos > 0),
   taxa_entrega_centavos integer not null check (taxa_entrega_centavos >= 0),
   total_centavos integer not null,
@@ -241,7 +244,7 @@ create table public.pedido_evento (
   pedido_id uuid not null,
   status_de public.status_pedido,
   status_para public.status_pedido not null,
-  autor_id uuid references auth.users (id) on delete set null,
+  autor_id uuid references app.usuario (id) on delete set null,
   criado_em timestamptz not null default now(),
   foreign key (fornecedor_id, pedido_id)
     references public.pedido (fornecedor_id, id) on delete cascade
@@ -294,14 +297,14 @@ begin
   if (new.id, new.fornecedor_id, new.lista_id, new.numero, new.token,
       new.faixa_base, new.escola_nome, new.serie_nome, new.ano_letivo,
       new.aluno_nome, new.responsavel_nome, new.responsavel_whatsapp,
-      new.modalidade, new.endereco, new.metodo_pagamento,
+      new.modalidade, new.endereco, new.metodo_pagamento, new.parcelas,
       new.subtotal_centavos, new.taxa_entrega_centavos, new.total_centavos,
       new.criado_em)
      is distinct from
      (old.id, old.fornecedor_id, old.lista_id, old.numero, old.token,
       old.faixa_base, old.escola_nome, old.serie_nome, old.ano_letivo,
       old.aluno_nome, old.responsavel_nome, old.responsavel_whatsapp,
-      old.modalidade, old.endereco, old.metodo_pagamento,
+      old.modalidade, old.endereco, old.metodo_pagamento, old.parcelas,
       old.subtotal_centavos, old.taxa_entrega_centavos, old.total_centavos,
       old.criado_em)
   then

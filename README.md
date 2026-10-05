@@ -9,40 +9,38 @@ Protótipo de referência: `prototipo/lista-pronta.html` (abre direto no navegad
 
 ## Stack
 
-Next.js (App Router) · TypeScript · Tailwind · Supabase (Postgres, Auth, RLS,
-Storage) · Vercel. Pagamento atrás da interface `PaymentProvider`, com uma
-implementação falsa para desenvolvimento.
+Next.js (App Router) · TypeScript · Tailwind · Postgres no Neon, com RLS ·
+Vercel. Pagamento atrás da interface `PaymentProvider`
+(`src/lib/pagamento`), com uma implementação falsa para desenvolvimento.
 
 ## Rodar
 
 ```bash
 pnpm install
-cp .env.example .env.local   # preencha com o projeto Supabase
+cp .env.example .env.local   # DATABASE_URL do Neon (pooled)
+pnpm db:migrar               # aplica as migrações pendentes
+pnpm db:semear               # dados de exemplo (idempotente)
 pnpm dev
 ```
 
+Abra `http://localhost:3000/papelaria-central`. Com o provedor falso, a tela
+do Pix tem o botão "Simular pagamento aprovado", e o cartão abre uma página
+de teste no lugar do gateway.
+
 ## Banco
 
-As migrações em `supabase/migrations` são a única definição do schema.
-`supabase/seed.sql` traz os dados de exemplo (1 papelaria, 2 escolas,
-4 séries, 22 produtos) e pode rodar quantas vezes for preciso.
-
-Aplicar no projeto Supabase (com o CLI):
-
-```bash
-supabase db push --db-url "$DATABASE_URL"
-psql "$DATABASE_URL" -f supabase/seed.sql
-```
+`db/migrations` é a única definição do schema; `scripts/banco.mjs` as aplica
+em ordem, cada uma na sua transação, e registra em `controle.migracao`.
+**`pnpm db:migrar` contra o Neon de produção vale na hora.**
 
 ## Testes
 
-Os testes de banco rodam num **Postgres comum**, sem Docker nem Supabase:
-`test/db/supabase-local.sql` simula os papéis `anon` e `authenticated` e o
-`auth.uid()`, e o setup aplica as mesmas migrações e o seed num banco
-descartável (`lista_pronta_teste`).
+Os testes de banco rodam num **Postgres comum**, sem Docker nem Neon. O setup
+cria um banco descartável (`lista_pronta_teste`) cujo dono é um usuário SEM
+superusuário (`lp_dono`), como no Neon, e aplica nele as mesmas migrações e o
+seed, pelo mesmo `scripts/banco.mjs`.
 
 ```bash
 export TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
-pnpm test        # isolamento entre papelarias, vitrine, pedido, paridade da faixa
-pnpm typecheck && pnpm lint && pnpm build
+pnpm test && pnpm typecheck && pnpm lint && pnpm build
 ```

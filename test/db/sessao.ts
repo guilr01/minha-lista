@@ -22,7 +22,7 @@ export type Q = <T extends pg.QueryResultRow = pg.QueryResultRow>(
   params?: unknown[],
 ) => Promise<pg.QueryResult<T>>;
 
-/** Executa como o dono do banco (equivale à conexão direta), e desfaz. */
+/** Executa como o dono do banco (o papel do sistema, sem RLS), e desfaz. */
 export async function emSandbox<T>(fn: (q: Q) => Promise<T>): Promise<T> {
   const c = await conexao().connect();
   try {
@@ -34,11 +34,9 @@ export async function emSandbox<T>(fn: (q: Q) => Promise<T>): Promise<T> {
   }
 }
 
-/** Troca de papel dentro da transação, como o PostgREST faz por requisição. */
+/** Troca de papel dentro da transação, como src/lib/db.ts faz por requisição. */
 export async function trocarPara(q: Q, papel: "anon" | "authenticated", userId?: string) {
-  await q(`select set_config('request.jwt.claims', $1, true)`, [
-    JSON.stringify(userId ? { sub: userId, role: papel } : { role: papel }),
-  ]);
+  await q(`select set_config('app.usuario_id', $1, true)`, [userId ?? ""]);
   await q(`set local role ${papel}`);
 }
 
@@ -64,8 +62,8 @@ export async function falha(q: Q, sql: string, params?: unknown[]): Promise<stri
 /** Cria um usuário e uma segunda papelaria com o mínimo para isolar. */
 export async function outraPapelaria(q: Q) {
   const r = await q<{ user_a: string; user_b: string; forn_b: string }>(`
-    with ua as (insert into auth.users (id, email) values (gen_random_uuid(), 'a@exemplo.test') returning id),
-         ub as (insert into auth.users (id, email) values (gen_random_uuid(), 'b@exemplo.test') returning id),
+    with ua as (insert into app.usuario (email) values ('a@exemplo.test') returning id),
+         ub as (insert into app.usuario (email) values ('b@exemplo.test') returning id),
          fb as (insert into public.fornecedor (nome, slug) values ('Papelaria Rival', 'papelaria-rival') returning id),
          ma as (insert into public.membro_fornecedor (fornecedor_id, user_id) select '${PAPELARIA_CENTRAL}', id from ua),
          mb as (insert into public.membro_fornecedor (fornecedor_id, user_id) select fb.id, ub.id from fb, ub)
