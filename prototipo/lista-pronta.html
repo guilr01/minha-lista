@@ -1,0 +1,1050 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Lista Pronta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tb:52px;
+  --bg:#F6F3EC;--card:#FFFFFF;--line:#E4DED2;--line2:#EFEAE0;--field:#CFC7B8;
+  --ink:#1B2430;--muted:#5A6472;
+  --blue:#1F4F8F;--blue-d:#163A6B;--blue-l:#E3ECF7;--blue-xl:#F4F8FC;
+  --yellow:#F4C542;
+  --warn-bg:#FFF1D6;--warn:#7A4B00;--warn-line:#F1D9A6;
+  --ok-bg:#E2F1E8;--ok:#2E7D4F;
+  --red:#A33A2B;--purple-bg:#EDE6F7;--purple:#5B3A8C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Figtree',system-ui,sans-serif;color:var(--ink);background:var(--bg);display:flex;flex-direction:column;height:100%;overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3,p{margin:0}
+.h{font-family:'Bricolage Grotesque',Georgia,serif;letter-spacing:-.01em}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.strong{font-weight:700}
+.block{display:block}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.warn-t{color:var(--warn)}
+.ok-t{color:var(--ok)}
+
+/* ---------- barra do protótipo ---------- */
+.tb{height:var(--tb);flex:none;background:#10161F;color:#fff;display:flex;align-items:center;gap:12px;padding:0 14px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.tb::-webkit-scrollbar{display:none}
+.tb-brand{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--yellow)}
+.tb-label{font-size:12px;color:#8C98A8}
+.seg{display:flex;background:#222C3A;border-radius:10px;padding:3px;gap:2px;flex:none}
+.seg button{border:0;background:none;color:#C9D1DB;padding:0 12px;height:32px;border-radius:8px;font-size:13px;font-weight:600}
+.seg button:hover{color:#fff}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink)}
+.tb-reset{margin-left:auto;flex:none;background:none;border:1px solid #3A4656;color:#C9D1DB;height:32px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:600}
+.tb-reset:hover{color:#fff;border-color:#5A6676}
+
+/* ---------- palco ---------- */
+#stage{flex:1;min-height:0;display:flex;justify-content:center}
+#app{width:100%;height:100%;overflow:auto;background:var(--bg);position:relative;scroll-behavior:auto}
+#stage.phone{background:#E3DDCF;padding:18px;align-items:center}
+#stage.phone #app{width:390px;height:min(844px,100%);border-radius:34px;border:9px solid var(--ink);box-shadow:0 24px 60px rgba(27,36,48,.28)}
+#app.is-desktop .d-root,#app.is-desktop .op-d{min-width:1024px}
+
+/* ---------- componentes ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:14px;background:var(--blue);color:#fff;font-weight:600;font-size:16px;border:0;text-decoration:none}
+.btn:hover{background:var(--blue-d)}
+.btn:disabled{background:#AEB7C2;cursor:not-allowed}
+.btn-block{width:100%}
+.btn-sm{min-height:44px;padding:0 16px;font-size:15px;border-radius:12px}
+.btn2{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:14px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);font-weight:600;font-size:16px}
+.btn2:hover{background:var(--blue-xl);color:var(--blue-d)}
+.btn2.btn-sm{min-height:44px;font-size:15px;border-radius:12px}
+.btn-ok{background:var(--ok)}.btn-ok:hover{background:#246540}
+.link{background:none;border:0;padding:0;color:var(--blue);font-weight:600;min-height:32px;text-align:left}
+.link:hover{color:var(--blue-d);text-decoration:underline}
+.link.danger{color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;min-width:0}
+.input{height:46px;border:1px solid var(--field);border-radius:10px;padding:0 12px;font-size:15px;font-weight:400;color:var(--ink);background:#fff;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue)}
+.input-sm{height:44px;font-size:14px}
+.input.is-err{border-color:var(--red);background:#FFF7F5}
+.ta{height:112px;padding:10px 12px;resize:vertical;line-height:1.45}
+.err-t{color:var(--red);font-size:12px;font-weight:600}
+.req{color:var(--red)}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pill{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.st-pago{background:var(--blue-l);color:var(--blue)}
+.st-separacao{background:var(--warn-bg);color:var(--warn)}
+.st-rota{background:var(--purple-bg);color:var(--purple)}
+.st-entregue{background:var(--ok-bg);color:var(--ok)}
+.chip{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.chip-0{background:var(--blue-l);color:var(--blue)}.chip-1{background:var(--blue);color:#fff}.chip-2{background:var(--ink);color:var(--yellow)}.chip-m{background:var(--line2);color:var(--ink)}
+.box-warn{padding:14px 16px;border-radius:14px;background:var(--warn-bg);color:var(--warn);font-size:14px;line-height:1.45;display:flex;gap:10px;align-items:flex-start}
+.box-warn strong{color:var(--ink)}
+.box-info{padding:12px 14px;border-radius:12px;background:var(--blue-xl);border:1px dashed #B8C8DD;color:#2B3C52;font-size:13px;line-height:1.45}
+.stk{display:flex;flex-direction:column;gap:12px}
+.lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.spinner{width:44px;height:44px;border-radius:50%;border:4px solid var(--blue-l);border-top-color:var(--blue);animation:spin .9s linear infinite}
+.spinner.sm{width:18px;height:18px;border-width:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;color:inherit}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:var(--yellow);color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.logo-name{font-size:19px;font-weight:700}
+
+/* ---------- área dos pais: celular ---------- */
+.p-wrap{min-height:100%;display:flex;flex-direction:column}
+.m-head{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;min-height:60px}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:44px;background:none;border:0;padding:0 4px 0 0;color:var(--blue);font-weight:600;font-size:15px}
+.icon-btn{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.dotc{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:999px;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.p-main{flex:1;padding:4px 20px 28px}
+.p-title{font-size:26px;line-height:1.15;font-weight:700}
+.p-sub{margin-top:6px;font-size:15px;line-height:1.45;color:var(--muted)}
+.p-body{margin-top:18px}
+.bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 20px 18px;display:flex;flex-direction:column;gap:10px;z-index:5}
+.bar-total{display:flex;justify-content:space-between;align-items:baseline}
+.bar-total .h{font-size:24px;font-weight:700}
+.home-title{font-size:30px;line-height:1.12;font-weight:700}
+
+/* ---------- área dos pais: desktop ---------- */
+.d-root{min-height:100%;display:flex;flex-direction:column}
+.d-head{background:#fff;border-bottom:1px solid var(--line);min-height:68px;display:flex;align-items:center;padding:0 40px;gap:24px;position:sticky;top:0;z-index:6}
+.d-nav{margin-left:auto;display:flex;gap:6px}
+.d-nav button{background:none;border:0;min-height:44px;padding:0 14px;border-radius:10px;font-weight:600;font-size:15px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.d-nav button:hover{background:var(--bg)}
+.d-nav .cnt{min-width:22px;height:22px;border-radius:999px;background:var(--blue);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+.stepper{display:flex;align-items:center;gap:10px;width:100%;max-width:1200px;margin:0 auto;padding:22px 40px 0}
+.stp{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap}
+.stp .n{width:26px;height:26px;border-radius:999px;border:2px solid var(--field);display:flex;align-items:center;justify-content:center;font-size:13px;background:#fff}
+.stp.on{color:var(--ink)}.stp.on .n{background:var(--blue);border-color:var(--blue);color:#fff}
+.stp.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.stp-sep{flex:1;height:2px;background:var(--line);max-width:90px}
+.d-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:32px;width:100%;max-width:1200px;margin:0 auto;padding:24px 40px 64px;align-items:start}
+.d-grid.full{grid-template-columns:minmax(0,1fr);max-width:880px}
+.d-title{font-size:34px;line-height:1.1;font-weight:700}
+.d-sub{margin-top:8px;font-size:16px;color:var(--muted);line-height:1.45}
+.d-body{margin-top:22px}
+.d-aside{position:sticky;top:92px}
+.sum{padding:20px;display:flex;flex-direction:column;gap:12px}
+.sum-t{font-size:18px;font-weight:700}
+.sum-row{display:flex;justify-content:space-between;gap:12px;font-size:15px}
+.sum-row span:first-child{color:var(--muted)}
+.sum-total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line2);padding-top:12px}
+.sum-total .h{font-size:28px;font-weight:700}
+.d-home{width:100%;max-width:1200px;margin:0 auto;padding:48px 40px 64px}
+.d-home .hero{max-width:720px;margin-bottom:32px}
+.d-home .home-title{font-size:46px;line-height:1.05}
+.d-home .p-sub{font-size:18px;margin-top:12px}
+.is-desktop .m-only{display:none}
+.is-mobile .d-only{display:none}
+
+/* ---------- telas dos pais ---------- */
+.choices{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.is-desktop .choices{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.choice{padding:18px;display:flex;flex-direction:column;gap:12px}
+.is-desktop .choice{padding:24px}
+.choice h2{font-size:17px;font-weight:700}
+.choice p{font-size:14px;line-height:1.4}
+.choice-ic{width:44px;height:44px;border-radius:12px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center}
+.choice .btn,.choice .btn2{margin-top:auto}
+.file-btn{position:relative;cursor:pointer}
+.notice{display:flex;align-items:center;gap:10px;width:100%;margin-bottom:14px;padding:12px 14px;border-radius:14px;background:var(--ok-bg);border:0;color:#1E5A38;font-size:15px;text-align:left;min-height:48px}
+.help{text-align:center;font-size:14px;color:var(--muted);margin-top:22px}
+.help .link{display:inline;min-height:0}
+
+.src{padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.src-thumb{width:52px;height:64px;border-radius:8px;background:#FBFAF6;border:1px solid var(--line);padding:8px 7px;display:flex;flex-direction:column;gap:5px;flex:none;overflow:hidden}
+.src-thumb i{display:block;height:3px;background:var(--field);border-radius:2px}
+.src-thumb img{width:100%;height:100%;object-fit:cover;margin:-8px -7px;width:calc(100% + 14px);height:calc(100% + 16px)}
+.lst{padding:2px 16px}
+.lrow{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line2);align-items:flex-start}
+.lrow:last-child{border-bottom:0}
+.st{width:24px;height:24px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px;font-weight:800;font-size:14px}
+.st-ok{background:var(--ok-bg);color:var(--ok)}
+.st-warn{background:var(--warn-bg);color:var(--warn)}
+.lrow-txt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.lrow-txt strong{font-size:15px;font-weight:600}
+.lrow-txt select{margin-top:8px}
+.lrow-end{display:flex;flex-direction:column;align-items:flex-end;gap:0}
+.qty{font-size:14px;font-weight:700;color:var(--muted);white-space:nowrap}
+
+.tier{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left;padding:16px;border-radius:16px;background:#fff;border:1px solid var(--line);color:var(--ink)}
+.tier:hover{border-color:#9FB4CF}
+.tier.on{border:2px solid var(--blue);padding:15px;background:var(--blue-xl)}
+.tier-top{display:flex;align-items:center;gap:12px;width:100%}
+.tier-top .h{margin-left:auto;font-size:24px;font-weight:700}
+.dot{width:22px;height:22px;border-radius:999px;border:2px solid #9AA3AE;flex:none}
+.tier.on .dot{border:7px solid var(--blue)}
+.tier .ind{padding-left:34px;font-size:14px}
+.is-desktop .tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.is-desktop .tier{padding:20px}
+.is-desktop .tier.on{padding:19px}
+.is-desktop .tier-top{flex-wrap:wrap}
+.is-desktop .tier-top .h{margin-left:0;width:100%;font-size:30px;margin-top:6px}
+.is-desktop .tier .ind{padding-left:0}
+
+.item{padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"info price" "tier qty";gap:10px 12px;align-items:center}
+.is-desktop .item{grid-template-columns:minmax(0,1fr) 240px 136px 118px;grid-template-areas:"info tier qty price";padding:14px 18px}
+.i-info{grid-area:info;display:flex;flex-direction:column;gap:2px;min-width:0}
+.i-info strong{font-size:15px;font-weight:600}
+.i-tier{grid-area:tier;min-width:0}
+.i-qty{grid-area:qty;display:flex;align-items:center;gap:4px}
+.i-qty span{min-width:32px;text-align:center;font-weight:700;font-size:16px}
+.i-price{grid-area:price;display:flex;flex-direction:column;align-items:flex-end}
+.i-price strong{font-size:15px;white-space:nowrap}
+.qbtn{width:44px;height:44px;border-radius:10px;border:1px solid var(--field);background:#fff;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.qbtn:hover{background:#F1EDE4}
+.qbtn:disabled{opacity:.4;cursor:not-allowed}
+.removed{padding:0 14px;border:1px dashed var(--field);border-radius:16px;display:flex;justify-content:space-between;align-items:center;min-height:50px}
+.removed span{text-decoration:line-through;color:var(--muted);font-size:14px}
+.add-row{display:flex;gap:10px;align-items:center;margin-top:4px}
+
+.sec{padding:16px;display:flex;flex-direction:column;gap:12px}
+.is-desktop .sec{padding:22px}
+.sec-t{font-size:16px;font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{display:flex;align-items:center;gap:10px;min-height:60px;padding:10px 12px;border:1px solid var(--field);border-radius:12px;background:#fff;cursor:pointer}
+.opt.on{border:2px solid var(--blue);padding:9px 11px;background:var(--blue-xl)}
+.opt input{width:18px;height:18px;accent-color:var(--blue);margin:0;flex:none}
+.opt-txt{display:flex;flex-direction:column;font-size:15px;font-weight:600;line-height:1.25}
+.opt-txt .small{font-weight:500}
+.grid-addr{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px}
+
+.pix{padding:22px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.pix-amt{font-size:32px;font-weight:700}
+.pix-code{display:flex;gap:8px;width:100%;max-width:420px}
+.pix-code input{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.waiting{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+
+.done-hero{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:12px 0 20px}
+.done-ic{width:76px;height:76px;border-radius:999px;background:var(--ok-bg);color:var(--ok);display:flex;align-items:center;justify-content:center}
+.tl{padding:18px}
+.tl-row{display:flex;gap:14px}
+.tl-col{display:flex;flex-direction:column;align-items:center}
+.tl-dot{width:22px;height:22px;border-radius:999px;border:2px solid var(--field);background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.tl-dot.on{background:var(--ok);border-color:var(--ok)}
+.tl-line{width:2px;flex:1;min-height:24px;background:var(--line)}
+.tl-line.on{background:var(--ok)}
+.tl-txt{display:flex;flex-direction:column;padding-bottom:14px}
+.tl-txt strong{font-size:15px}
+.ocard{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;padding:16px;color:var(--ink)}
+.ocard:hover{border-color:#9FB4CF}
+.mini-list{padding:4px 16px}
+.mini-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2);font-size:14px}
+.mini-row:last-child{border-bottom:0}
+
+/* ---------- painel do operador ---------- */
+.op-d{display:flex;min-height:100%}
+.op-side{width:240px;flex:none;background:var(--ink);padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;align-self:flex-start;height:calc(100dvh - var(--tb) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+#stage.phone .op-side{height:100%}
+.op-side .logo{color:#fff;padding:0 8px 20px}
+.nav{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:10px;color:#D6DCE4;background:none;border:0;font-size:15px;font-weight:500;text-align:left;width:100%}
+.nav:hover{background:#26364A;color:#fff}
+.nav.on{background:var(--yellow);color:var(--ink);font-weight:700}
+.badge{margin-left:auto;min-width:22px;height:22px;border-radius:999px;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.nav.on .badge{background:var(--ink);color:var(--yellow)}
+.op-foot{margin-top:auto;padding:12px;color:#9AA6B4;line-height:1.4;border-top:1px solid #2C3A4C}
+.op-main{flex:1;padding:28px 32px 48px;min-width:0}
+.op-m{min-height:100%}
+.op-mh{background:var(--ink);padding:12px 16px;color:#fff}
+.op-mh .logo{color:#fff}
+.op-tabs{display:flex;gap:6px;padding:10px 12px;background:var(--ink);border-top:1px solid #2C3A4C;position:sticky;top:0;z-index:4;overflow-x:auto}
+.op-tabs .nav{width:auto;flex:none;font-size:14px}
+.op-mm{padding:18px 16px 40px}
+.op-title{font-size:30px;font-weight:700}
+.is-mobile .op-title{font-size:24px}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:18px 0}
+.is-mobile .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid var(--line);text-align:left;color:var(--ink)}
+.kpi:hover{border-color:#9FB4CF}
+.kpi.on{border:2px solid var(--blue);padding:13px 15px}
+.kpi .h{font-size:26px;font-weight:700}
+.kpi.warn{background:var(--warn-bg);border-color:var(--warn-line)}
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto}
+.tabs button{flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:14px;font-weight:600}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tbl-wrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:#FBFAF6;padding:12px 16px;border-bottom:1px solid var(--line)}
+.tbl td{padding:12px 16px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr[data-action]{cursor:pointer}
+.tbl tbody tr[data-action]:hover{background:var(--blue-xl)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.op-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+.is-mobile .op-grid{grid-template-columns:minmax(0,1fr)}
+.op-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.op-actions{display:flex;gap:10px;flex-wrap:wrap}
+.chk{display:grid;grid-template-columns:32px minmax(0,1fr) auto 56px;gap:12px;align-items:center;min-height:54px;padding:0 18px;border-bottom:1px solid var(--line2);font-size:15px;cursor:pointer}
+.chk:last-child{border-bottom:0}
+.chk input{width:20px;height:20px;accent-color:var(--ok);margin:0}
+.chk.done .nm{text-decoration:line-through;color:var(--muted)}
+.chk .q{font-weight:700;font-size:17px;text-align:right}
+.is-mobile .chk{grid-template-columns:28px minmax(0,1fr) 40px;padding:10px 14px}
+.is-mobile .chk .chip{display:none}
+.prog{height:8px;border-radius:999px;background:var(--line2);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok);border-radius:999px}
+.info{padding:16px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.4}
+.pq{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid var(--line);color:var(--ink)}
+.pq:hover{border-color:#9FB4CF}
+.pq.on{border:2px solid var(--blue);padding:13px 15px;background:var(--blue-xl)}
+.pend-grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start;margin-top:18px}
+.is-mobile .pend-grid{grid-template-columns:minmax(0,1fr)}
+.pd{padding:22px;display:flex;flex-direction:column;gap:18px}
+.is-mobile .pd{padding:16px}
+.pd-top{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px}
+.is-mobile .pd-top{grid-template-columns:minmax(0,1fr)}
+.quote{border-radius:12px;background:#FBFAF6;border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:8px}
+.quote .q{font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;font-style:italic;color:#33404F}
+.radio{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;font-weight:600;cursor:pointer}
+.radio input{width:18px;height:18px;accent-color:var(--blue);margin:0}
+.p3{display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(0,1fr));gap:12px;align-items:end}
+.is-mobile .p3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.is-mobile .p3 .field:first-child{grid-column:1/-1}
+.hist{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.hist-row{padding:10px 14px;border-radius:12px;background:#fff;border:1px solid var(--line);font-size:13px;display:flex;flex-direction:column;gap:2px}
+.cat-search{max-width:360px;margin:16px 0}
+.money{text-align:right}
+.alias{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--ok-bg);color:var(--ok);font-size:12px;font-weight:600;margin:2px 4px 2px 0}
+.ccard{padding:14px;display:flex;flex-direction:column;gap:10px}
+.ccard .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+
+/* ---------- toast e impressão ---------- */
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:calc(100vw - 32px);box-shadow:0 10px 30px rgba(0,0,0,.2)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#print-area{display:none}
+@media print{
+  body{display:block;height:auto;overflow:visible;background:#fff}
+  body>*:not(#print-area){display:none!important}
+  #print-area{display:block;font-family:'Figtree',sans-serif;color:#000;padding:10mm}
+  #print-area h1{font-size:20pt;margin-bottom:4pt}
+  #print-area table{width:100%;border-collapse:collapse;margin:12pt 0;font-size:12pt}
+  #print-area td,#print-area th{border-bottom:1px solid #999;padding:6pt 4pt;text-align:left}
+  #print-area .lab{border:2px dashed #000;padding:10pt;margin-top:16pt;font-size:13pt;line-height:1.5}
+}
+</style>
+<div class="tb" id="topbar"></div>
+<div id="stage"><div id="app"></div></div>
+<div id="print-area"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================
+   Lista Pronta: protótipo funcional
+   Tudo roda no navegador; os dados ficam salvos neste
+   aparelho (localStorage). "Reiniciar demo" volta ao início.
+   ========================================================= */
+
+const TIERS = ['Econômica', 'Intermediária', 'Premium'];
+const TIER_DESC = ['Marcas básicas, melhor preço.', 'Marcas conhecidas, mais durabilidade.', 'Marcas top de linha.'];
+const FRETE = 10; // valor de exemplo: ajustar à operação real
+const STATUS = { pago: 'Pago · a separar', separacao: 'Em separação', rota: 'Saiu para entrega', entregue: 'Entregue' };
+const STATUS_ORDER = ['pago', 'separacao', 'rota', 'entregue'];
+
+/* Catálogo: cada item genérico tem 3 preços (econômica, intermediária, premium).
+   req = palavras obrigatórias (| = alternativas); bonus = palavras que desempatam. */
+const CATALOG_SEED = [
+  { id: 'cad-bro', name: 'Caderno brochura 96 folhas', req: ['caderno'], bonus: ['brochura', '96', 'capa dura'], p: [7.9, 14.9, 24.9] },
+  { id: 'cad-esp', name: 'Caderno universitário 10 matérias', req: ['caderno'], bonus: ['universit', 'materia', 'espiral', '10'], p: [19.9, 34.9, 59.9] },
+  { id: 'cad-des', name: 'Caderno de desenho 48 folhas', req: ['caderno'], bonus: ['desenho', 'cartografia'], p: [8.9, 15.9, 27.9] },
+  { id: 'lap-gra', name: 'Lápis grafite nº 2', req: ['lapis'], bonus: ['grafite', 'preto', 'no 2', 'n 2'], p: [1.2, 2.5, 4.9] },
+  { id: 'lap-cor', name: 'Lápis de cor 24 cores', req: ['lapis', 'cor'], bonus: ['24', 'caixa'], p: [12.9, 29.9, 64.9] },
+  { id: 'giz', name: 'Giz de cera 12 cores', req: ['giz'], bonus: ['cera'], p: [4.9, 9.9, 18.9] },
+  { id: 'canetinha', name: 'Canetinha hidrográfica 12 cores', req: ['canetinha|hidrocor|hidrografica'], bonus: [], p: [7.9, 16.9, 34.9] },
+  { id: 'caneta', name: 'Caneta esferográfica azul', req: ['caneta'], bonus: ['esferografica', 'azul'], p: [1.5, 2.9, 6.9] },
+  { id: 'marca', name: 'Marca-texto amarelo', req: ['marca texto|marcador'], bonus: [], p: [2.9, 5.9, 11.9] },
+  { id: 'borracha', name: 'Borracha branca', req: ['borracha'], bonus: ['branca'], p: [1.5, 2.9, 5.9] },
+  { id: 'cola', name: 'Cola branca 90 g', req: ['cola'], bonus: ['branca', 'liquida', '90'], p: [3.5, 5.9, 9.9] },
+  { id: 'cola-bas', name: 'Cola bastão 10 g', req: ['cola', 'bastao'], bonus: [], p: [3.9, 6.9, 12.9] },
+  { id: 'tesoura', name: 'Tesoura sem ponta', req: ['tesoura'], bonus: [], p: [6.9, 12.9, 24.9] },
+  { id: 'apontador', name: 'Apontador com depósito', req: ['apontador'], bonus: ['deposito'], p: [4.5, 8.9, 16.9] },
+  { id: 'pasta', name: 'Pasta com elástico', req: ['pasta'], bonus: ['elastico', 'plastica'], p: [3.9, 7.5, 12.9] },
+  { id: 'regua', name: 'Régua 30 cm', req: ['regua'], bonus: ['30'], p: [2.5, 4.9, 9.9] },
+  { id: 'massinha', name: 'Massinha de modelar 12 cores', req: ['massinha|massa de modelar|massa para modelar'], bonus: [], p: [6.9, 12.9, 22.9] },
+  { id: 'sulfite', name: 'Papel sulfite A4, 100 folhas', req: ['sulfite|papel a4'], bonus: [], p: [6.9, 11.9, 19.9] },
+  { id: 'estojo', name: 'Estojo escolar', req: ['estojo'], bonus: [], p: [9.9, 24.9, 59.9] },
+  { id: 'guache', name: 'Tinta guache 6 cores', req: ['guache'], bonus: [], p: [6.9, 12.9, 24.9] },
+  { id: 'pincel', name: 'Pincel escolar nº 8', req: ['pincel'], bonus: [], p: [2.9, 5.9, 12.9] },
+  { id: 'eva', name: 'Folha de EVA', req: ['eva'], bonus: [], p: [1.5, 2.5, 4.5] }
+];
+
+/* Listas já cadastradas das escolas (exemplos) */
+const SCHOOLS = {
+  modelo: { name: 'Colégio Modelo', grades: {
+    '1': { label: '1º ano · Fundamental', text: '02 caixas de giz de cera\n03 potes de massinha de modelar\n02 colas bastão\n01 caderno de desenho 48 folhas\n01 pincel nº 8\n01 tinta guache 6 cores\n04 lápis grafite\n02 borrachas\n01 pacote de papel sulfite A4\n01 avental plástico para pintura' },
+    '3': { label: '3º ano · Fundamental', text: '04 cadernos brochura 96 folhas capa dura\n06 lápis grafite nº 2\n02 borrachas brancas\n01 caixa de lápis de cor 24 cores\n02 colas brancas 90g\n01 tesoura sem ponta\n01 apontador com depósito\n02 pastas com elástico\n01 revista velha para recorte' }
+  } },
+  horizonte: { name: 'Escola Horizonte', grades: {
+    '2': { label: '2º ano · Fundamental', text: '03 cadernos brochura 96 folhas\n06 lápis grafite\n02 borrachas\n01 caixa de lápis de cor\n02 colas brancas\n01 tesoura sem ponta\n01 apontador\n01 canetinha hidrográfica 12 cores' },
+    '5': { label: '5º ano · Fundamental', text: '01 caderno universitário 10 matérias\n04 canetas esferográficas azuis\n02 marca-textos\n01 régua 30 cm\n01 estojo\n03 lápis grafite\n01 borracha\n01 dicionário da língua portuguesa' }
+  } }
+};
+const SAMPLE_PASTE = '2 cadernos brochura\n1 cx lápis de cor 24 cores\n3 lápis pretos\n1 cola bastão\n1 régua 30cm\n1 livro de inglês (comprar na escola)';
+
+/* ---------------- utilidades ---------------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => { const [i, d] = Number(n || 0).toFixed(2).split('.'); return 'R$ ' + i.replace(/\B(?=(\d{3})+$)/g, '.') + ',' + d; };
+const uid = () => 'u' + Math.random().toString(36).slice(2, 9);
+const norm = s => ' ' + String(s).normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
+const money = v => { let s = String(v || '').replace(/[^\d,.]/g, ''); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); return parseFloat(s); };
+const digits = v => String(v || '').replace(/\D/g, '');
+function rel(iso) {
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return 'agora';
+  if (m < 60) return 'há ' + m + ' min';
+  const h = Math.round(m / 60);
+  if (h < 24) return 'há ' + h + ' h';
+  const d = Math.round(h / 24);
+  return 'há ' + d + (d > 1 ? ' dias' : ' dia');
+}
+const P = {
+  check: '<path d="M20 6 9 17l-5-5"/>', back: '<path d="m15 18-6-6 6-6"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/>',
+  school: '<path d="m3 10 9-5 9 5-9 5Z"/><path d="M7 12.3V17c3 2.2 7 2.2 10 0v-4.7"/>',
+  text: '<path d="M4 6h16M4 12h16M4 18h10"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/>',
+  truck: '<path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  print: '<path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+  box: '<path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  tag: '<path d="M20 12 12 20l-8-8V4h8Z"/><circle cx="8" cy="8" r="1.5"/>',
+  store: '<path d="M4 9h16l-1-5H5Z"/><path d="M5 9v11h14V9"/><path d="M10 20v-6h4v6"/>',
+  card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+  pix: '<path d="M12 3 21 12 12 21 3 12Z"/><path d="m8 12 4-4 4 4-4 4Z"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12Z"/>'
+};
+const ic = (n, s = 20, w = 2) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const logo = (act = 'goHome') => `<button class="logo" data-action="${act}" aria-label="Lista Pronta, início"><span class="logo-mark">${ic('pen', 18, 2.2)}</span><span class="h logo-name">Lista Pronta</span></button>`;
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2800); }
+
+/* ---------------- leitura da lista (parser) ---------------- */
+function splitQty(raw) {
+  let s = String(raw).replace(/^[\s\-•*·–—]+/, '').trim();
+  let qty = 1;
+  const m = s.match(/^(\d{1,3})\s*(x|un|und|unid|unidades?|cx|caixas?|pct|pacotes?|potes?|tubos?|pares?)?\.?\s+(de\s+|do\s+)?/i);
+  if (m) { qty = parseInt(m[1], 10); s = s.slice(m[0].length); }
+  else {
+    const t = s.match(/[\s\-–(:]+(\d{1,3})\s*(un|und|unid|unidades?)\.?\)?\s*$/i) || s.match(/\s+x\s*(\d{1,3})\s*$/i);
+    if (t) { qty = parseInt(t[1], 10); s = s.slice(0, t.index); }
+  }
+  return { qty: Math.min(99, Math.max(1, qty || 1)), clean: s.trim() };
+}
+function score(it, t) {
+  if (!it.req || !it.req.length) return 0;
+  let s = 0;
+  for (const r of it.req) { if (!r.split('|').some(a => t.includes(' ' + a))) return 0; s += 10; }
+  for (const b of it.bonus || []) if (t.includes(' ' + b)) s += 1;
+  return s;
+}
+function matchItem(clean) {
+  const t = norm(clean), key = t.trim();
+  for (const a in S.aliases) if (key === a || t.includes(' ' + a + ' ')) return S.aliases[a];
+  let best = null, bs = 0;
+  for (const it of S.catalog) { const s = score(it, t); if (s > bs) { bs = s; best = it.id; } }
+  return best;
+}
+function parseList(text) {
+  return String(text).split(/\r?\n|;/).map(l => l.trim()).filter(l => l && /[a-zà-ú]/i.test(l)).map(raw => {
+    const { qty, clean } = splitQty(raw);
+    return { uid: uid(), raw, clean, qty, baseQty: qty, itemId: matchItem(clean), tier: 1, removed: false };
+  });
+}
+
+/* ---------------- estado ---------------- */
+const KEY = 'listapronta-proto-v1';
+let S, PHOTO = null, LENDO = null;
+function seedOrders() {
+  const find = id => CATALOG_SEED.find(c => c.id === id);
+  const mk = (id, parent, student, school, tier, status, items, pend, delivery, pay, minAgo, doneN) => {
+    const lines = items.map(([iid, q], i) => ({ itemId: iid, name: find(iid).name, tier, qty: q, baseQty: q, unit: find(iid).p[tier], done: i < (doneN || 0) || status === 'rota' || status === 'entregue' }));
+    const subtotal = lines.reduce((a, l) => a + l.unit * l.qty, 0);
+    return { id, mine: false, createdAt: new Date(Date.now() - minAgo * 60000).toISOString(), status, school, student, parent,
+      phone: '(00) 90000-0000', delivery, address: delivery === 'entrega' ? '[endereço de exemplo]' : 'Retirada na loja', pay,
+      tierLabel: TIERS[tier], lines, removed: [], pending: pend.map(r => { const s = splitQty(r); return { uid: uid(), raw: s.clean, qty: s.qty, status: 'aberto' }; }),
+      subtotal, frete: delivery === 'entrega' ? FRETE : 0, extras: [] };
+  };
+  return [
+    mk(1023, 'Carlos Lima', 'Lucas Lima', 'Colégio Modelo · 1º ano', 0, 'separacao', [['giz', 2], ['massinha', 3], ['cola-bas', 2], ['cad-des', 1], ['pincel', 1], ['guache', 1], ['lap-gra', 4], ['borracha', 2], ['sulfite', 1]], [], 'entrega', 'Pix', 180, 4),
+    mk(1022, 'Beatriz Rocha', 'Sofia Rocha', 'Escola Horizonte · 5º ano', 2, 'rota', [['cad-esp', 1], ['caneta', 4], ['marca', 2], ['regua', 1], ['estojo', 1], ['lap-gra', 3], ['borracha', 1]], [], 'entrega', 'Cartão 3x', 1200),
+    mk(1021, 'Diego Alves', 'Enzo Alves', 'Escola Horizonte · 2º ano', 1, 'pago', [['cad-bro', 3], ['lap-gra', 6], ['borracha', 2], ['lap-cor', 1], ['cola', 2], ['tesoura', 1], ['apontador', 1]], [], 'retirada', 'Pix', 60),
+    mk(1020, 'Fernanda Dias', 'Clara Dias', 'Colégio Modelo · 3º ano', 0, 'entregue', [['cad-bro', 4], ['lap-gra', 6], ['borracha', 2], ['lap-cor', 1], ['cola', 2], ['tesoura', 1], ['apontador', 1], ['pasta', 2]], [], 'entrega', 'Pix', 3000),
+    mk(1019, 'Rafael Nunes', 'Miguel Nunes', 'Foto enviada · 4º ano', 1, 'pago', [['cad-bro', 5], ['lap-gra', 4], ['borracha', 2], ['lap-cor', 1], ['cola', 1], ['regua', 1], ['pasta', 2], ['canetinha', 1]], ['1 livro paradidático (ver site da escola)', '1 kit de sucata para artes'], 'entrega', 'Pix', 30)
+  ];
+}
+function fresh() {
+  return { catalog: CATALOG_SEED.map(c => ({ ...c, p: [...c.p] })), aliases: {}, orders: seedOrders(), seq: 1024,
+    ui: { mode: 'pais', view: 'auto', screen: 'home', opScreen: 'pedidos', opOrder: null, opFilter: 'todos', pendSel: null, pend: null,
+      editLine: null, trackId: null, school: 'modelo', grade: '3', paste: '', processing: false },
+    draft: null };
+}
+function load() { try { const r = localStorage.getItem(KEY); if (r) { S = JSON.parse(r); if (S && S.catalog) return; } } catch (e) {} S = fresh(); }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+const cat = id => S.catalog.find(c => c.id === id);
+const order = id => S.orders.find(o => o.id === +id);
+
+/* ---------------- rascunho do pedido (pais) ---------------- */
+function newDraft(label, text, photo) {
+  S.draft = { source: { label, photo: !!photo }, lines: parseList(text), tier: 1,
+    form: { aluno: '', resp: '', fone: '', cep: '', end: '', num: '', comp: '' }, delivery: 'entrega', pay: 'pix', parcelas: '1',
+    card: { num: '', nome: '', val: '', cvv: '' }, errors: {}, pixCode: '' };
+}
+const lines = () => S.draft ? S.draft.lines : [];
+const priced = () => lines().filter(l => l.itemId && !l.removed);
+const pendL = () => lines().filter(l => !l.itemId);
+const price = (l, t) => { const it = cat(l.itemId); return it ? it.p[t == null ? l.tier : t] : 0; };
+const subtotal = () => priced().reduce((a, l) => a + price(l) * l.qty, 0);
+const tierTotal = t => priced().reduce((a, l) => a + price(l, t) * l.qty, 0);
+const frete = () => S.draft && S.draft.delivery === 'entrega' ? FRETE : 0;
+const total = () => subtotal() + frete();
+function tierLabel(ls) { const t = [...new Set(ls.map(l => l.tier))]; return t.length === 1 ? TIERS[t[0]] : t.length ? 'Mista' : '—'; }
+function tierIdx(o) { const c = [0, 0, 0]; o.lines.forEach(l => c[l.tier]++); return c.indexOf(Math.max(...c)); }
+const statusLabel = o => (o.delivery === 'retirada' && o.status === 'rota') ? 'Pronto para retirada' : STATUS[o.status];
+const openPend = () => S.orders.flatMap(o => o.pending.filter(p => p.status === 'aberto').map(p => ({ o, p })));
+
+function createOrder(payLabel) {
+  const d = S.draft, id = S.seq++;
+  const f = d.form;
+  const o = { id, mine: true, createdAt: new Date().toISOString(), status: 'pago', school: d.source.label, student: f.aluno.trim(), parent: f.resp.trim(), phone: f.fone,
+    delivery: d.delivery, address: d.delivery === 'entrega' ? `${f.end}, ${f.num}${f.comp ? ' · ' + f.comp : ''} · CEP ${f.cep}` : 'Retirada na loja', pay: payLabel,
+    tierLabel: tierLabel(priced()),
+    lines: priced().map(l => ({ itemId: l.itemId, name: cat(l.itemId).name, tier: l.tier, qty: l.qty, baseQty: l.baseQty, unit: price(l), done: false })),
+    removed: lines().filter(l => l.itemId && l.removed).map(l => cat(l.itemId).name),
+    pending: pendL().map(l => ({ uid: l.uid, raw: l.clean || l.raw, qty: l.qty, status: 'aberto' })),
+    subtotal: subtotal(), frete: frete(), extras: [] };
+  S.orders.unshift(o);
+  return id;
+}
+function finishOrder(payLabel) {
+  const id = createOrder(payLabel);
+  S.draft = null; PHOTO = null; S.ui.trackId = id; S.ui.processing = false;
+  nav('confirmado');
+}
+
+/* ---------------- visualização ---------------- */
+function effView() { const v = S.ui.view; return v === 'auto' ? (window.innerWidth < 900 ? 'mobile' : 'desktop') : v; }
+let lastEV = null;
+function applyView() {
+  const ev = effView(); lastEV = ev;
+  $('#app').className = 'is-' + ev;
+  $('#stage').className = (S.ui.view === 'mobile' && window.innerWidth >= 520) ? 'phone' : '';
+}
+function renderTop() {
+  const b = (grp, v, t, cur) => `<button type="button" data-action="${grp}" data-v="${v}" aria-pressed="${cur === v}">${t}</button>`;
+  $('#topbar').innerHTML = `<span class="tb-brand">Protótipo</span>
+    <div class="seg" role="group" aria-label="Área">${b('mode', 'pais', 'Área dos pais', S.ui.mode)}${b('mode', 'op', 'Painel do operador', S.ui.mode)}</div>
+    <span class="tb-label">Tela</span>
+    <div class="seg" role="group" aria-label="Visualização">${b('view', 'auto', 'Auto', S.ui.view)}${b('view', 'mobile', 'Celular', S.ui.view)}${b('view', 'desktop', 'Desktop', S.ui.view)}</div>
+    <button type="button" class="tb-reset" data-action="reset">Reiniciar demo</button>`;
+}
+function render() {
+  applyView(); renderTop();
+  $('#app').innerHTML = S.ui.mode === 'pais' ? renderPais() : renderOp();
+  save();
+}
+function nav(screen) { S.ui.screen = screen; S.ui.editLine = null; render(); $('#app').scrollTop = 0; }
+function opNav(screen) { S.ui.opScreen = screen; render(); $('#app').scrollTop = 0; }
+
+/* =========================================================
+   ÁREA DOS PAIS
+   ========================================================= */
+const FLOW = ['leitura', 'faixas', 'revisao', 'checkout', 'pix', 'cartao'];
+function renderPais() {
+  if (FLOW.includes(S.ui.screen) && !S.draft) S.ui.screen = 'home';
+  if (S.ui.screen === 'lendo' && !LENDO) S.ui.screen = 'home';
+  if (['confirmado', 'pedido'].includes(S.ui.screen) && !order(S.ui.trackId)) S.ui.screen = 'home';
+  const v = (SCREENS[S.ui.screen] || SCREENS.home)();
+  return effView() === 'desktop' ? layoutD(v) : layoutM(v);
+}
+const ctaBtn = c => c ? `<button type="button" class="btn btn-block" data-action="${c.action}" ${c.arg ? `data-arg="${c.arg}"` : ''} ${c.disabled ? 'disabled' : ''}>${c.label}</button>` : '';
+function layoutM(v) {
+  const mine = S.orders.filter(o => o.mine).length;
+  let head;
+  if (v.step) head = `<div class="m-head"><button type="button" class="back" data-action="go" data-arg="${v.back}">${ic('back')}Voltar</button><span class="small muted strong">Passo ${v.step} de 4</span></div>`;
+  else if (v.back) head = `<div class="m-head"><button type="button" class="back" data-action="go" data-arg="${v.back}">${ic('back')}Voltar</button>${logo()}</div>`;
+  else head = `<div class="m-head">${logo()}<button type="button" class="icon-btn" data-action="go" data-arg="pedidos" aria-label="Meus pedidos">${ic('box')}${mine ? `<span class="dotc">${mine}</span>` : ''}</button></div>`;
+  const title = v.home ? `<h1 class="h home-title">${v.title}</h1>` : v.title ? `<h1 class="h p-title">${v.title}</h1>` : '';
+  const bar = v.cta ? `<div class="bar">${v.total != null ? `<div class="bar-total"><span class="muted">${v.totalLabel || 'Total'}</span><span class="h">${fmt(v.total)}</span></div>` : ''}${ctaBtn(v.cta)}</div>` : '';
+  return `<div class="p-wrap">${head}<main class="p-main">${title}${v.sub ? `<p class="p-sub">${v.sub}</p>` : ''}<div class="p-body">${v.body}</div></main>${bar}</div>`;
+}
+function stepper(n) {
+  const names = ['Lista', 'Faixa', 'Revisão', 'Pagamento'];
+  return `<div class="stepper" aria-label="Etapas">${names.map((t, i) => `${i ? '<span class="stp-sep"></span>' : ''}<span class="stp ${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}"><span class="n">${i + 1 < n ? ic('check', 13, 3.2) : i + 1}</span>${t}</span>`).join('')}</div>`;
+}
+function summary(v) {
+  const d = S.draft; if (!d) return '';
+  const pn = pendL().length;
+  return `<h2 class="sum-t">Resumo da lista</h2>
+    <div class="sum-row"><span>Lista</span><span>${esc(d.source.label)}</span></div>
+    <div class="sum-row"><span>Itens com preço</span><span>${priced().length}</span></div>
+    <div class="sum-row"><span>Faixa</span><span>${tierLabel(priced())}</span></div>
+    ${pn ? `<div class="sum-row"><span>Em análise</span><span class="warn-t strong">${pn} ${pn > 1 ? 'itens' : 'item'}</span></div>` : ''}
+    ${v.showFrete ? `<div class="sum-row"><span>Produtos</span><span>${fmt(subtotal())}</span></div><div class="sum-row"><span>Entrega</span><span>${frete() ? fmt(frete()) : 'Grátis'}</span></div>` : ''}
+    <div class="sum-total"><span class="strong">Total</span><span class="h">${fmt(v.total != null ? v.total : subtotal())}</span></div>`;
+}
+function layoutD(v) {
+  const mine = S.orders.filter(o => o.mine).length;
+  const head = `<header class="d-head">${logo()}<nav class="d-nav" aria-label="Principal"><button type="button" data-action="goHome">${ic('plus', 18)}Nova lista</button><button type="button" data-action="go" data-arg="pedidos">${ic('box', 18)}Meus pedidos${mine ? `<span class="cnt">${mine}</span>` : ''}</button></nav></header>`;
+  if (v.home) return `<div class="d-root">${head}<div class="d-home"><div class="hero"><h1 class="h home-title">${v.title}</h1><p class="p-sub">${v.sub}</p></div>${v.body}</div></div>`;
+  const hasAside = v.cta || v.aside;
+  const aside = hasAside ? `<aside class="d-aside"><div class="card sum">${v.aside != null ? v.aside : summary(v)}${ctaBtn(v.cta)}</div></aside>` : '';
+  const back = v.back ? `<button type="button" class="back" data-action="go" data-arg="${v.back}" style="margin-bottom:6px">${ic('back')}Voltar</button>` : '';
+  return `<div class="d-root">${head}${v.step ? stepper(v.step) : ''}<div class="d-grid ${hasAside ? '' : 'full'}"><main>${back}${v.title ? `<h1 class="h d-title">${v.title}</h1>` : ''}${v.sub ? `<p class="d-sub">${v.sub}</p>` : ''}<div class="d-body">${v.body}</div></main>${aside}</div></div>`;
+}
+
+const SCREENS = {
+  home() {
+    const sc = SCHOOLS[S.ui.school];
+    if (!sc.grades[S.ui.grade]) S.ui.grade = Object.keys(sc.grades)[0];
+    const mine = S.orders.filter(o => o.mine);
+    const so = Object.entries(SCHOOLS).map(([k, s]) => `<option value="${k}" ${k === S.ui.school ? 'selected' : ''}>${s.name}</option>`).join('');
+    const go = Object.entries(sc.grades).map(([k, g]) => `<option value="${k}" ${k === S.ui.grade ? 'selected' : ''}>${g.label}</option>`).join('');
+    return { home: true, title: 'A lista de material do seu filho, pronta e entregue em casa.',
+      sub: 'Escolha a escola, envie a foto da lista ou cole o texto. Você revisa os itens, paga e recebe tudo separado.',
+      body: `${mine.length ? `<button type="button" class="notice" data-action="go" data-arg="pedidos">${ic('box')}<span>Você tem ${mine.length} pedido${mine.length > 1 ? 's' : ''}. <strong>Acompanhar</strong></span></button>` : ''}
+      <div class="choices">
+        <section class="card choice">
+          <div class="choice-ic">${ic('school', 22)}</div>
+          <h2>A escola já está cadastrada</h2>
+          <label class="field">Escola<select class="input" data-action="schoolChange">${so}</select></label>
+          <label class="field">Série<select class="input" data-action="gradeChange">${go}</select></label>
+          <button type="button" class="btn" data-action="loadSchool">Ver a lista da escola</button>
+        </section>
+        <section class="card choice">
+          <div class="choice-ic">${ic('camera', 22)}</div>
+          <h2>Tenho a lista em papel ou PDF</h2>
+          <p class="muted">Tire uma foto ou envie o arquivo que a escola mandou. O sistema identifica os itens.</p>
+          <label class="btn2 file-btn">${ic('camera')} Enviar foto ou PDF<input type="file" class="sr" accept="image/*,application/pdf" data-action="upload"></label>
+        </section>
+        <section class="card choice">
+          <div class="choice-ic">${ic('text', 22)}</div>
+          <h2>Colar o texto da lista</h2>
+          <label class="sr" for="pasteTa">Texto da lista</label>
+          <textarea id="pasteTa" class="input ta" data-field="ui.paste" placeholder="Um item por linha. Ex.:&#10;04 cadernos brochura 96 folhas&#10;02 borrachas brancas">${esc(S.ui.paste)}</textarea>
+          <div class="row-between"><button type="button" class="link" data-action="fillSample">Usar um exemplo</button><button type="button" class="btn btn-sm" data-action="parsePaste">Ler lista</button></div>
+        </section>
+      </div>
+      <p class="help">Prefere falar com alguém? <button type="button" class="link" data-action="whats">Atendimento no WhatsApp</button></p>` };
+  },
+
+  lendo() {
+    return { title: '', body: `<div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;padding:60px 0">
+      ${PHOTO ? `<img src="${PHOTO}" alt="Foto da lista enviada" style="width:160px;height:200px;object-fit:cover;border-radius:12px;border:1px solid var(--line)">` : `<div class="src-thumb" style="width:120px;height:150px;padding:16px 14px;gap:9px"><i></i><i style="width:80%"></i><i></i><i style="width:60%"></i><i></i><i style="width:70%"></i></div>`}
+      <div class="spinner"></div><h1 class="h p-title">Lendo sua lista…</h1><p class="muted">Identificando os itens e as quantidades.</p></div>` };
+  },
+
+  leitura() {
+    const ls = lines(), ok = ls.filter(l => l.itemId).length, pn = ls.length - ok, d = S.draft;
+    const rows = ls.map(l => {
+      const it = l.itemId ? cat(l.itemId) : null, ed = S.ui.editLine === l.uid;
+      const sel = ed ? `<select class="input input-sm" aria-label="Item do catálogo para “${esc(l.raw)}”" data-action="relink" data-uid="${l.uid}"><option value="">Não está no catálogo (enviar para a equipe)</option>${S.catalog.map(c => `<option value="${c.id}" ${c.id === l.itemId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>` : '';
+      return `<div class="lrow"><span class="st ${it ? 'st-ok' : 'st-warn'}">${it ? ic('check', 14, 3) : '!'}</span>
+        <div class="lrow-txt"><strong>${esc(it ? it.name : (l.clean || l.raw))}</strong>
+        ${it ? `<span class="small muted">Na lista: “${esc(l.raw)}”</span>` : `<span class="small warn-t strong">Não encontramos no catálogo. Nossa equipe vai analisar.</span>`}${sel}</div>
+        <div class="lrow-end"><span class="qty">${l.qty} un</span><button type="button" class="link small" data-action="editLine" data-uid="${l.uid}">${ed ? 'Fechar' : 'Alterar'}</button></div></div>`;
+    }).join('');
+    return { step: 1, back: 'home', title: `Encontramos ${ls.length} ${ls.length === 1 ? 'item' : 'itens'} na sua lista`,
+      sub: pn ? `${ok} reconhecidos e ${pn} para a nossa equipe analisar. Confira antes de ver os preços.` : 'Todos os itens foram reconhecidos. Confira antes de ver os preços.',
+      body: `<div class="card src"><div class="src-thumb">${d.source.photo && PHOTO ? `<img src="${PHOTO}" alt="">` : '<i></i><i style="width:80%"></i><i></i><i style="width:60%"></i><i></i>'}</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><strong style="font-size:15px">${esc(d.source.label)}</strong><span class="small muted">${ls.length} linhas lidas</span></div>
+        <button type="button" class="link" data-action="goHome">Trocar lista</button></div>
+        ${d.source.photo ? `<div class="box-info" style="margin-bottom:14px">No protótipo, a leitura da foto usa uma lista de exemplo. Para testar a identificação de verdade, volte e use “Colar o texto da lista”.</div>` : ''}
+        <div class="card lst">${rows || '<div class="empty">Nenhum item encontrado.</div>'}</div>`,
+      cta: { label: 'Ver opções de preço', action: 'go', arg: 'faixas', disabled: ok === 0 }, total: null };
+  },
+
+  faixas() {
+    const d = S.draft, first = priced()[0], pn = pendL().length;
+    const tiers = TIERS.map((n, i) => `<button type="button" class="tier ${i === d.tier ? 'on' : ''}" aria-pressed="${i === d.tier}" data-action="setTier" data-arg="${i}">
+      <span class="tier-top"><span class="dot"></span><span class="chip chip-${i}">${n}</span><span class="h">${fmt(tierTotal(i))}</span></span>
+      <span class="ind muted">${TIER_DESC[i]}</span>
+      ${first ? `<span class="ind small">Ex.: ${esc(cat(first.itemId).name)} por ${fmt(cat(first.itemId).p[i])}</span>` : ''}</button>`).join('');
+    return { step: 2, back: 'leitura', title: 'Escolha a faixa da sua lista',
+      sub: `${priced().length} itens com preço. Na próxima tela você pode trocar a faixa de um item específico.`,
+      body: `<div class="stk tiers">${tiers}</div>${pn ? `<div class="box-warn" style="margin-top:14px"><strong>!</strong><span>${pn} ${pn > 1 ? 'itens estão' : 'item está'} em análise pela equipe e não ${pn > 1 ? 'entram' : 'entra'} neste valor.</span></div>` : ''}`,
+      cta: { label: `Continuar com a ${TIERS[d.tier]}`, action: 'go', arg: 'revisao' }, total: tierTotal(d.tier), totalLabel: TIERS[d.tier] };
+  },
+
+  revisao() {
+    const inList = new Set(lines().filter(l => l.itemId && !l.removed).map(l => l.itemId));
+    const rows = lines().filter(l => l.itemId).map(l => {
+      const it = cat(l.itemId), u = price(l);
+      if (l.removed) return `<div class="removed"><span>${esc(it.name)}</span><button type="button" class="link" data-action="undo" data-uid="${l.uid}">Desfazer</button></div>`;
+      const note = l.baseQty === 0 ? ' · fora da lista' : l.qty !== l.baseQty ? ` · a lista pede ${l.baseQty}` : '';
+      return `<div class="card item">
+        <div class="i-info"><strong>${esc(it.name)}</strong><span class="small muted">${fmt(u)} cada${note}</span></div>
+        <div class="i-tier"><select class="input input-sm" aria-label="Faixa de ${esc(it.name)}" data-action="lineTier" data-uid="${l.uid}">${TIERS.map((n, i) => `<option value="${i}" ${i === l.tier ? 'selected' : ''}>${n} · ${fmt(it.p[i])}</option>`).join('')}</select></div>
+        <div class="i-qty"><button type="button" class="qbtn" data-action="dec" data-uid="${l.uid}" aria-label="Diminuir quantidade" ${l.qty <= 1 ? 'disabled' : ''}>−</button><span aria-live="polite">${l.qty}</span><button type="button" class="qbtn" data-action="inc" data-uid="${l.uid}" aria-label="Aumentar quantidade">+</button></div>
+        <div class="i-price"><strong>${fmt(u * l.qty)}</strong><button type="button" class="link danger small" data-action="remove" data-uid="${l.uid}">Remover</button></div>
+      </div>`;
+    }).join('');
+    const pend = pendL().map(l => `<div class="box-warn" style="flex-direction:column;gap:2px"><strong>${esc(l.clean || l.raw)} · ${l.qty} un</strong><span class="small">Em análise pela nossa equipe. Não entra no total agora; avisamos pelo WhatsApp.</span></div>`).join('');
+    const addOpts = S.catalog.filter(c => !inList.has(c.id)).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    return { step: 3, back: 'faixas', title: 'Revise sua lista', sub: 'Remova o que já tem em casa, ajuste quantidades ou troque a faixa de um item.',
+      body: `<div class="stk">${rows}${pend}
+        <div class="add-row"><label class="sr" for="addSel">Adicionar item</label><select id="addSel" class="input input-sm"><option value="">Adicionar um item que faltou…</option>${addOpts}</select><button type="button" class="btn2 btn-sm" data-action="addItem">${ic('plus', 18)}Adicionar</button></div></div>`,
+      cta: { label: 'Ir para entrega e pagamento', action: 'go', arg: 'checkout', disabled: priced().length === 0 }, total: subtotal(), totalLabel: `${priced().length} itens no pedido` };
+  },
+
+  checkout() {
+    const d = S.draft, f = d.form, e = d.errors;
+    const fld = (label, key, o = {}) => `<label class="field">${label}${o.req ? ' <span class="req" aria-hidden="true">*</span>' : ''}<input class="input ${e[key] ? 'is-err' : ''}" data-field="draft.form.${key}" value="${esc(f[key])}" ${o.ph ? `placeholder="${o.ph}"` : ''} ${o.im ? `inputmode="${o.im}"` : ''} ${o.mask ? `data-mask="${o.mask}"` : ''} ${o.ac ? `autocomplete="${o.ac}"` : 'autocomplete="off"'} ${o.req ? 'aria-required="true"' : ''}>${e[key] ? `<span class="err-t">${e[key]}</span>` : ''}</label>`;
+    const opt = (name, val, cur, action, icon, t, s) => `<label class="opt ${val === cur ? 'on' : ''}"><input type="radio" name="${name}" value="${val}" data-action="${action}" ${val === cur ? 'checked' : ''}>${ic(icon)}<span class="opt-txt">${t}<span class="small muted">${s}</span></span></label>`;
+    const pn = pendL().length;
+    return { step: 4, back: 'revisao', title: 'Entrega e pagamento', showFrete: true,
+      body: `<div class="stk">
+        <section class="card sec"><h2 class="sec-t">Aluno</h2>${fld('Nome do aluno (vai na etiqueta)', 'aluno', { req: 1, ph: 'Ex.: Pedro Souza' })}<span class="small muted">Lista: ${esc(d.source.label)}</span></section>
+        <section class="card sec"><h2 class="sec-t">Responsável</h2><div class="grid2">${fld('Seu nome', 'resp', { req: 1, ac: 'name' })}${fld('WhatsApp', 'fone', { req: 1, ph: '(00) 00000-0000', im: 'tel', mask: 'phone', ac: 'tel' })}</div></section>
+        <section class="card sec"><h2 class="sec-t">Como quer receber?</h2>
+          <div class="opts">${opt('dlv', 'entrega', d.delivery, 'delivery', 'truck', 'Entregar em casa', fmt(FRETE) + ' (exemplo)')}${opt('dlv', 'retirada', d.delivery, 'delivery', 'store', 'Retirar na loja', 'Grátis')}</div>
+          ${d.delivery === 'entrega' ? `<div class="grid-addr">${fld('CEP', 'cep', { req: 1, ph: '00000-000', im: 'numeric', mask: 'cep', ac: 'postal-code' })}${fld('Endereço', 'end', { req: 1, ph: 'Rua e bairro', ac: 'street-address' })}</div><div class="grid2">${fld('Número', 'num', { req: 1, im: 'numeric' })}${fld('Complemento', 'comp', { ph: 'Opcional' })}</div>` : `<span class="small muted">Retirada em [endereço da loja]. Avisamos pelo WhatsApp quando estiver pronto.</span>`}
+        </section>
+        <section class="card sec"><h2 class="sec-t">Pagamento</h2>
+          <div class="opts">${opt('pay', 'pix', d.pay, 'pay', 'pix', 'Pix', 'Aprovação na hora')}${opt('pay', 'cartao', d.pay, 'pay', 'card', 'Cartão de crédito', 'Até 3x sem juros')}</div>
+          ${d.pay === 'cartao' ? `<label class="field">Parcelas<select class="input" data-action="parcelas">${[1, 2, 3].map(n => `<option value="${n}" ${String(n) === d.parcelas ? 'selected' : ''}>${n}x de ${fmt(total() / n)} sem juros</option>`).join('')}</select></label>` : ''}
+        </section>
+        <section class="card sec m-only"><h2 class="sec-t">Resumo</h2>
+          <div class="sum-row"><span class="muted">${priced().length} itens · ${tierLabel(priced())}</span><span>${fmt(subtotal())}</span></div>
+          <div class="sum-row"><span class="muted">Entrega</span><span>${frete() ? fmt(frete()) : 'Grátis'}</span></div>
+          ${pn ? `<div class="sum-row"><span class="muted">Itens em análise</span><span class="warn-t strong">${pn}, cobrados depois</span></div>` : ''}
+        </section></div>`,
+      cta: { label: 'Continuar para o pagamento', action: 'toPayment' }, total: total() };
+  },
+
+  pix() {
+    const d = S.draft;
+    return { step: 4, back: 'checkout', title: 'Pague com Pix', sub: 'Escaneie o QR Code ou copie o código no app do seu banco.', showFrete: true,
+      body: `<div class="card pix"><span class="muted">Valor a pagar</span><span class="h pix-amt">${fmt(total())}</span>${qr(d.pixCode)}
+        <div class="pix-code"><label class="sr" for="pixc">Código Pix copia e cola</label><input id="pixc" class="input input-sm" readonly value="${esc(d.pixCode)}"><button type="button" class="btn2 btn-sm" data-action="copyPix">${ic('copy', 18)}Copiar</button></div>
+        <div class="waiting"><span class="spinner sm"></span>Aguardando pagamento…</div>
+        <div class="box-info">Protótipo: nenhum pagamento real é feito. Use o botão abaixo para simular a confirmação do banco.</div></div>`,
+      cta: { label: 'Simular pagamento aprovado', action: 'confirmPix' }, total: total() };
+  },
+
+  cartao() {
+    const d = S.draft, c = d.card, e = d.errors;
+    const fld = (label, key, o = {}) => `<label class="field">${label}<input class="input ${e['c_' + key] ? 'is-err' : ''}" data-field="draft.card.${key}" value="${esc(c[key])}" ${o.ph ? `placeholder="${o.ph}"` : ''} ${o.im ? `inputmode="${o.im}"` : ''} ${o.mask ? `data-mask="${o.mask}"` : ''} autocomplete="off">${e['c_' + key] ? `<span class="err-t">${e['c_' + key]}</span>` : ''}</label>`;
+    return { step: 4, back: 'checkout', title: 'Pagamento com cartão', sub: `${d.parcelas}x de ${fmt(total() / +d.parcelas)} sem juros.`, showFrete: true,
+      body: `<section class="card sec">${fld('Número do cartão', 'num', { ph: '0000 0000 0000 0000', im: 'numeric', mask: 'card' })}${fld('Nome impresso no cartão', 'nome')}
+        <div class="grid2">${fld('Validade', 'val', { ph: 'MM/AA', im: 'numeric', mask: 'val' })}${fld('CVV', 'cvv', { ph: '123', im: 'numeric', mask: 'cvv' })}</div>
+        <div class="box-info">Protótipo: nenhum dado é enviado. Qualquer número com 16 dígitos é aceito.</div></section>`,
+      cta: { label: S.ui.processing ? 'Processando…' : `Pagar ${fmt(total())}`, action: 'payCard', disabled: S.ui.processing }, total: total() };
+  },
+
+  confirmado() {
+    const o = order(S.ui.trackId);
+    return { title: '', body: `<div class="done-hero"><div class="done-ic">${ic('check', 38, 2.6)}</div><h1 class="h p-title">Pedido #${o.id} confirmado</h1>
+      <p class="muted" style="max-width:440px;line-height:1.45">Pagamento recebido. A lista ${o.student ? 'de ' + esc(o.student) + ' ' : ''}já está no painel da nossa equipe para separação.</p></div>
+      <div class="stk">${timeline(o)}${pendNotes(o)}
+      <button type="button" class="btn btn-block" data-action="openTrack" data-arg="${o.id}">Acompanhar pedido</button>
+      <button type="button" class="btn2 btn-block" data-action="goHome">Fazer outra lista</button>
+      <div class="box-info">Dica para a demonstração: abra o “Painel do operador” na barra de cima. O pedido #${o.id} já aparece lá.</div></div>` };
+  },
+
+  pedidos() {
+    const mine = S.orders.filter(o => o.mine);
+    return { back: 'home', title: 'Meus pedidos', sub: mine.length ? 'Toque em um pedido para ver o andamento.' : '',
+      body: mine.length ? `<div class="stk">${mine.map(o => `<button type="button" class="card ocard" data-action="openTrack" data-arg="${o.id}">
+        <span class="row-between"><strong style="font-size:16px">Pedido #${o.id}</strong><span class="pill st-${o.status}">${statusLabel(o)}</span></span>
+        <span class="muted small">${esc(o.student)} · ${esc(o.school)} · ${rel(o.createdAt)}</span>
+        <span class="row-between"><span class="small">${o.lines.length} itens · ${esc(o.tierLabel)}</span><strong>${fmt(o.subtotal + o.frete)}</strong></span>
+        ${o.pending.some(p => p.status === 'aberto') || o.extras.some(x => !x.paid) ? `<span class="small warn-t strong">Tem item em análise ou cobrança pendente</span>` : ''}</button>`).join('')}</div>`
+        : `<div class="card empty">Você ainda não fez nenhum pedido.<br><br><button type="button" class="btn btn-sm" data-action="goHome">Enviar minha lista</button></div>` };
+  },
+
+  pedido() {
+    const o = order(S.ui.trackId);
+    const items = o.lines.map(l => `<div class="mini-row"><span>${l.qty}× ${esc(l.name)} <span class="chip chip-${l.tier}" style="margin-left:6px">${TIERS[l.tier]}</span></span><span>${fmt(l.unit * l.qty)}</span></div>`).join('');
+    return { back: 'pedidos', title: `Pedido #${o.id}`, sub: `${esc(o.student)} · ${esc(o.school)}`,
+      body: `<div class="stk">${timeline(o)}${pendNotes(o)}${extrasBox(o, true)}
+        <div class="card"><div style="padding:14px 16px 0" class="lbl">Itens</div><div class="mini-list">${items}
+        <div class="mini-row"><span class="muted">Entrega</span><span>${o.frete ? fmt(o.frete) : 'Retirada · grátis'}</span></div>
+        <div class="mini-row"><strong>Total pago</strong><strong>${fmt(o.subtotal + o.frete)}</strong></div></div></div>
+        <div class="card info"><span class="lbl">Entrega</span><span>${esc(o.address)}</span><span class="muted">Pagamento: ${esc(o.pay)}</span></div></div>` };
+  }
+};
+
+function timeline(o) {
+  const idx = STATUS_ORDER.indexOf(o.status), ret = o.delivery === 'retirada';
+  const steps = [['Pagamento confirmado', rel(o.createdAt)], ['Em separação', 'Nossa equipe monta o kit'], [ret ? 'Pronto para retirada' : 'Saiu para entrega', ret ? 'Avisamos pelo WhatsApp' : 'Você recebe um aviso'], [ret ? 'Retirado' : 'Entregue', ret ? 'Na loja' : 'Previsão: [prazo de entrega]']];
+  return `<div class="card tl" aria-label="Andamento do pedido">${steps.map((s, i) => `<div class="tl-row"><div class="tl-col"><span class="tl-dot ${i <= idx ? 'on' : ''}">${i <= idx ? ic('check', 12, 3.5) : ''}</span>${i < 3 ? `<span class="tl-line ${i < idx ? 'on' : ''}"></span>` : ''}</div><div class="tl-txt"><strong style="${i > idx ? 'color:var(--muted);font-weight:600' : ''}">${s[0]}</strong><span class="small muted">${s[1]}</span></div></div>`).join('')}</div>`;
+}
+function pendNotes(o) {
+  return o.pending.map(p => p.status === 'aberto'
+    ? `<div class="box-warn"><strong>!</strong><span><strong>${esc(p.raw)}</strong> está em análise pela nossa equipe. Avisamos pelo WhatsApp se ele entra no pedido.</span></div>`
+    : p.status === 'resolvido'
+      ? `<div class="box-info"><strong>${esc(p.raw)}</strong>: ${esc(p.note)}. Valor cobrado à parte (veja abaixo).</div>`
+      : `<div class="box-info"><strong>${esc(p.raw)}</strong>: ${esc(p.note)}</div>`).join('');
+}
+function extrasBox(o, parent) {
+  if (!o.extras.length) return '';
+  return `<div class="card info"><span class="lbl">Cobrança complementar</span>${o.extras.map((x, i) => `<div class="row-between"><span>${esc(x.desc)}</span><span class="row-between" style="gap:10px;flex:none"><strong style="white-space:nowrap">${fmt(x.value)}</strong>${x.paid ? '<span class="pill st-entregue">Pago</span>' : parent ? `<button type="button" class="btn btn-sm" data-action="payExtra" data-arg="${o.id}:${i}">Pagar com Pix</button>` : '<span class="pill st-separacao">Aguardando</span>'}</span></div>`).join('')}</div>`;
+}
+function qr(seed) {
+  let x = 0; for (const c of String(seed || 'x')) x = (x * 31 + c.charCodeAt(0)) & 0x7fffffff;
+  const rnd = () => { x = (x * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff; };
+  const n = 25, F = [[0, 0], [0, n - 7], [n - 7, 0]];
+  const inF = (i, j) => F.some(([a, b]) => i >= a - 1 && i <= a + 7 && j >= b - 1 && j <= b + 7);
+  let r = '';
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (!inF(i, j) && rnd() > .52) r += `<rect x="${j}" y="${i}" width="1" height="1"/>`;
+  const f = F.map(([a, b]) => `<rect x="${b}" y="${a}" width="7" height="7" fill="#1B2430"/><rect x="${b + 1}" y="${a + 1}" width="5" height="5" fill="#fff"/><rect x="${b + 2}" y="${a + 2}" width="3" height="3" fill="#1B2430"/>`).join('');
+  return `<svg viewBox="-2 -2 29 29" width="196" height="196" role="img" aria-label="QR Code Pix de exemplo" style="border:1px solid var(--line);border-radius:12px"><rect x="-2" y="-2" width="29" height="29" fill="#fff"/><g fill="#1B2430">${r}</g>${f}</svg>`;
+}
+
+/* =========================================================
+   PAINEL DO OPERADOR
+   ========================================================= */
+function renderOp() {
+  const isD = effView() === 'desktop', scr = S.ui.opScreen, openN = openPend().length;
+  const body = scr === 'pedido' && order(S.ui.opOrder) ? opPedido(isD) : scr === 'pendencias' ? opPend(isD) : scr === 'catalogo' ? opCat(isD) : opPedidos(isD);
+  const active = scr === 'pedido' ? 'pedidos' : scr;
+  const items = [['pedidos', 'Pedidos', 'list', 'Pedidos'], ['pendencias', 'Itens não encontrados', 'alert', 'Pendências'], ['catalogo', 'Catálogo e faixas', 'tag', 'Catálogo']];
+  const navB = (k, t, icon, short, full) => `<button type="button" class="nav ${active === k ? 'on' : ''}" data-action="opNav" data-arg="${k}" ${active === k ? 'aria-current="page"' : ''}>${full ? ic(icon, 18) : ''}${full ? t : short}${k === 'pendencias' && openN ? `<span class="badge">${openN}</span>` : ''}</button>`;
+  if (isD) return `<div class="op-d"><nav class="op-side" aria-label="Painel">${logo('noop')}${items.map(i => navB(...i, true)).join('')}<div class="op-foot small">Pedidos pagos na Área dos pais chegam aqui na hora, já formatados.</div></nav><main class="op-main">${body}</main></div>`;
+  return `<div class="op-m"><div class="op-mh">${logo('noop')}</div><nav class="op-tabs" aria-label="Painel">${items.map(i => navB(...i, false)).join('')}</nav><main class="op-mm">${body}</main></div>`;
+}
+
+function opPedidos(isD) {
+  const c = s => S.orders.filter(o => o.status === s).length, f = S.ui.opFilter, openN = openPend().length;
+  const kpi = (v, t, n, warn) => `<button type="button" class="kpi ${warn ? 'warn' : ''} ${f === v ? 'on' : ''}" data-action="${warn ? 'opNav' : 'opFilter'}" data-arg="${warn ? 'pendencias' : v}"><span class="small ${warn ? 'warn-t' : 'muted'} strong">${t}</span><span class="h">${n}</span></button>`;
+  const list = S.orders.filter(o => f === 'todos' || o.status === f).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const tab = (v, t) => `<button type="button" data-action="opFilter" data-arg="${v}" aria-pressed="${f === v}">${t}</button>`;
+  const pn = o => { const n = o.pending.filter(p => p.status === 'aberto').length; return n ? `${n} ${n > 1 ? 'itens' : 'item'} em análise` : ''; };
+  const rows = isD
+    ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Pedido</th><th>Responsável</th><th>Escola · série</th><th>Faixa</th><th>Itens</th><th>Total</th><th>Status</th><th>Pendência</th></tr></thead><tbody>
+      ${list.map(o => `<tr data-action="openOrder" data-arg="${o.id}"><td><button type="button" class="link strong" data-action="openOrder" data-arg="${o.id}">#${o.id}</button><span class="small muted block">${rel(o.createdAt)}${o.mine ? ' · novo' : ''}</span></td><td>${esc(o.parent)}</td><td class="muted">${esc(o.school)}</td><td><span class="chip ${o.tierLabel === 'Mista' ? 'chip-m' : 'chip-' + TIERS.indexOf(o.tierLabel)}">${esc(o.tierLabel)}</span></td><td>${o.lines.length}</td><td class="strong">${fmt(o.subtotal + o.frete)}</td><td><span class="pill st-${o.status}">${statusLabel(o)}</span></td><td class="small warn-t strong">${pn(o) || '<span class="muted">—</span>'}</td></tr>`).join('')}
+      </tbody></table>${list.length ? '' : '<div class="empty">Nenhum pedido neste filtro.</div>'}</div>`
+    : `<div class="stk">${list.map(o => `<button type="button" class="card ocard" data-action="openOrder" data-arg="${o.id}"><span class="row-between"><strong>#${o.id} · ${esc(o.parent)}</strong><span class="pill st-${o.status}">${statusLabel(o)}</span></span><span class="small muted">${esc(o.school)} · ${rel(o.createdAt)}</span><span class="row-between small"><span>${o.lines.length} itens · ${esc(o.tierLabel)}</span><strong>${fmt(o.subtotal + o.frete)}</strong></span>${pn(o) ? `<span class="small warn-t strong">${pn(o)}</span>` : ''}</button>`).join('') || '<div class="card empty">Nenhum pedido neste filtro.</div>'}</div>`;
+  return `<div class="op-head"><h1 class="h op-title">Pedidos</h1><span class="small muted">${S.orders.length} pedidos no total</span></div>
+    <div class="kpis">${kpi('pago', 'Pagos, a separar', c('pago'))}${kpi('separacao', 'Em separação', c('separacao'))}${kpi('rota', 'Saiu para entrega', c('rota'))}${kpi('entregue', 'Entregues', c('entregue'))}${kpi('', 'Itens em análise', openN, true)}</div>
+    <div class="tabs" role="group" aria-label="Filtro">${tab('todos', 'Todos')}${tab('pago', 'Pagos')}${tab('separacao', 'Em separação')}${tab('rota', 'Em entrega')}${tab('entregue', 'Entregues')}</div>${rows}`;
+}
+
+function opPedido(isD) {
+  const o = order(S.ui.opOrder), ret = o.delivery === 'retirada';
+  const next = { pago: ['separacao', 'Iniciar separação'], separacao: ['rota', ret ? 'Marcar pronto para retirada' : 'Marcar como saiu para entrega'], rota: ['entregue', ret ? 'Confirmar retirada' : 'Confirmar entrega'] }[o.status];
+  const done = o.lines.filter(l => l.done).length;
+  const checks = o.lines.map((l, i) => `<label class="chk ${l.done ? 'done' : ''}"><input type="checkbox" data-action="toggleDone" data-arg="${o.id}:${i}" ${l.done ? 'checked' : ''}><span class="nm">${esc(l.name)}${l.added ? ' <span class="small ok-t strong">· incluído depois</span>' : ''}</span><span class="chip chip-${l.tier}">${TIERS[l.tier]}</span><span class="q">${l.qty}</span></label>`).join('');
+  const diffs = o.lines.filter(l => !l.added && l.qty !== l.baseQty).map(l => `<span>${esc(l.name)}: lista pede ${l.baseQty}, pais pediram ${l.qty}</span>`);
+  const att = [
+    ...o.removed.map(n => `<span>Removido pelos pais: ${esc(n)}</span>`), ...diffs,
+    ...o.pending.filter(p => p.status === 'aberto').map(p => `<span>Em análise: ${esc(p.raw)} · <button type="button" class="link" style="min-height:0;display:inline" data-action="openPend" data-arg="${o.id}:${p.uid}">resolver</button></span>`),
+    ...o.pending.filter(p => p.status !== 'aberto').map(p => `<span>${esc(p.raw)}: ${esc(p.note)}</span>`)
+  ];
+  return `<button type="button" class="back" data-action="opNav" data-arg="pedidos">${ic('back')}Pedidos</button>
+    <div class="op-head"><div style="display:flex;flex-direction:column;gap:6px"><h1 class="h op-title">Pedido #${o.id} · lista de separação</h1><span><span class="pill st-${o.status}">${statusLabel(o)}</span> <span class="small muted">&nbsp;${rel(o.createdAt)}</span></span></div>
+    <div class="op-actions">${next ? `<button type="button" class="btn btn-sm ${o.status === 'rota' ? 'btn-ok' : ''}" data-action="advance" data-arg="${o.id}">${next[1]}</button>` : ''}</div></div>
+    <div class="op-grid">
+      <div class="card" style="overflow:hidden"><div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)"><div class="row-between"><span class="strong">${done} de ${o.lines.length} itens separados</span><span class="small muted">Marque conforme pega na prateleira</span></div><div class="prog"><i style="width:${o.lines.length ? done / o.lines.length * 100 : 0}%"></i></div></div>
+      ${checks}
+      ${o.status === 'pago' && done > 0 ? '' : ''}
+      </div>
+      <div class="stk">
+        <div class="card info"><span class="lbl">Aluno e entrega</span><strong style="font-size:16px">${esc(o.student)}</strong><span class="muted">${esc(o.school)}</span><span>Responsável: ${esc(o.parent)}</span><span>WhatsApp: ${esc(o.phone)}</span><span>${ret ? ic('store', 16) + ' ' : ''}${esc(o.address)}</span></div>
+        <div class="card info"><span class="lbl">Pagamento</span><span class="ok-t strong">${esc(o.pay)} · pago</span><span class="row-between"><span class="muted">Produtos</span><span>${fmt(o.subtotal)}</span></span><span class="row-between"><span class="muted">Entrega</span><span>${o.frete ? fmt(o.frete) : 'Retirada'}</span></span><span class="row-between"><strong>Total</strong><strong>${fmt(o.subtotal + o.frete)}</strong></span></div>
+        ${att.length ? `<div class="box-warn" style="flex-direction:column;gap:6px"><strong>Atenção neste pedido</strong>${att.join('')}</div>` : ''}
+        ${extrasBox(o, false)}
+      </div>
+    </div>`;
+}
+
+function opPend(isD) {
+  const q = openPend();
+  if (!S.ui.pendSel || !q.find(x => x.o.id + ':' + x.p.uid === S.ui.pendSel)) { S.ui.pendSel = q[0] ? q[0].o.id + ':' + q[0].p.uid : null; S.ui.pend = null; }
+  const hist = S.orders.flatMap(o => o.pending.filter(p => p.status !== 'aberto').map(p => ({ o, p }))).slice(0, 6);
+  const histH = hist.length ? `<div class="lbl" style="margin-top:18px">Resolvidos</div><div class="hist">${hist.map(({ o, p }) => `<div class="hist-row"><strong>${esc(p.raw)}</strong><span class="muted">#${o.id} · ${esc(p.note)}</span></div>`).join('')}</div>` : '';
+  const head = `<h1 class="h op-title">Itens não encontrados</h1><p class="muted" style="margin-top:4px">Linhas das listas que o sistema não conseguiu ligar a um item do catálogo. Ao resolver, o sistema aprende para as próximas listas.</p>`;
+  if (!q.length) return `${head}<div class="card empty" style="margin-top:18px">Tudo resolvido. Nenhum item aguardando análise.</div>${histH}`;
+  const cur = q.find(x => x.o.id + ':' + x.p.uid === S.ui.pendSel), { o, p } = cur;
+  if (!S.ui.pend) S.ui.pend = { mode: 'novo', itemId: '', tier: String(tierIdx(o)), name: p.raw.charAt(0).toUpperCase() + p.raw.slice(1), p0: '', p1: '', p2: '', msg: 'Não trabalhamos com este item. Recomendamos adquiri-lo separadamente.' };
+  const U = S.ui.pend;
+  const qList = q.map(({ o, p }) => { const k = o.id + ':' + p.uid; return `<button type="button" class="pq ${k === S.ui.pendSel ? 'on' : ''}" aria-pressed="${k === S.ui.pendSel}" data-action="pendSelect" data-arg="${k}"><strong>${esc(p.raw)}</strong><span class="small muted">Pedido #${o.id} · ${esc(o.school)} · qtd ${p.qty}</span></button>`; }).join('');
+  const radio = (v, t) => `<label class="radio"><input type="radio" name="pmode" value="${v}" data-action="pendMode" ${U.mode === v ? 'checked' : ''}>${t}</label>`;
+  const tierSel = `<label class="field">Faixa cobrada<select class="input" data-field="ui.pend.tier">${TIERS.map((n, i) => `<option value="${i}" ${String(i) === U.tier ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`;
+  let form = '';
+  if (U.mode === 'link') form = `<div class="grid2"><label class="field">Item do catálogo<select class="input" data-field="ui.pend.itemId"><option value="">Escolha…</option>${S.catalog.map(c => `<option value="${c.id}" ${c.id === U.itemId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>${tierSel}</div>`;
+  if (U.mode === 'novo') form = `<div class="p3"><label class="field">Nome do item<input class="input" data-field="ui.pend.name" value="${esc(U.name)}"></label>${[0, 1, 2].map(i => `<label class="field"><span class="chip chip-${i}">${TIERS[i]}</span><input class="input money" inputmode="decimal" placeholder="R$ 0,00" data-field="ui.pend.p${i}" value="${esc(U['p' + i])}"></label>`).join('')}</div><div style="max-width:280px">${tierSel}</div>`;
+  if (U.mode === 'nao') form = `<label class="field">Mensagem para os pais (WhatsApp)<textarea class="input ta" data-field="ui.pend.msg">${esc(U.msg)}</textarea></label>`;
+  const btn = U.mode === 'nao' ? 'Avisar os pais' : 'Salvar e gerar cobrança';
+  return `${head}<div class="pend-grid"><div class="stk">${qList}${isD ? histH : ''}</div>
+    <div class="card pd">
+      <div class="pd-top"><div class="quote"><span class="lbl">Texto na lista</span><span class="q">“${esc(p.raw)}”</span></div>
+      <div class="info" style="padding:0"><span class="lbl">Pedido</span><strong>#${o.id} · ${esc(o.student)}</strong><span class="muted">${esc(o.school)} · quantidade ${p.qty}</span><span class="muted">Responsável: ${esc(o.parent)} · ${esc(o.phone)}</span><span class="muted">Os pais já pagaram o restante do pedido.</span></div></div>
+      <div style="height:1px;background:var(--line2)"></div>
+      <div><span class="strong" style="font-size:16px">Como resolver?</span>${radio('link', 'Ligar a um item que já existe no catálogo')}${radio('novo', 'Cadastrar um item novo com as 3 faixas')}${radio('nao', 'Não vendemos: avisar os pais')}</div>
+      ${form}
+      <div class="row-between" style="flex-wrap:wrap"><span class="small muted">${U.mode === 'nao' ? 'O item sai do pedido e os pais recebem a mensagem.' : 'O item entra na lista de separação e os pais recebem a cobrança do valor. Da próxima vez, esse texto é reconhecido sozinho.'}</span><button type="button" class="btn btn-sm" data-action="resolve">${btn}</button></div>
+    </div></div>${isD ? '' : histH}`;
+}
+
+function opCat(isD) {
+  const al = id => Object.keys(S.aliases).filter(k => S.aliases[k] === id).map(k => `<span class="alias" title="Aprendido com uma lista">${esc(k)}</span>`).join('');
+  const inp = (c, i) => `<input class="input input-sm money" aria-label="Preço ${TIERS[i]} de ${esc(c.name)}" inputmode="decimal" data-price="${c.id}:${i}" value="${c.p[i].toFixed(2).replace('.', ',')}">`;
+  const rows = isD
+    ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Item genérico</th><th style="width:130px">Econômica</th><th style="width:130px">Intermediária</th><th style="width:130px">Premium</th><th>Também reconhece</th></tr></thead><tbody>
+      ${S.catalog.map(c => `<tr data-name="${esc(norm(c.name))}"><td class="strong">${esc(c.name)}${c.custom ? ' <span class="small ok-t">· novo</span>' : ''}</td><td>${inp(c, 0)}</td><td>${inp(c, 1)}</td><td>${inp(c, 2)}</td><td>${al(c.id) || '<span class="muted small">—</span>'}</td></tr>`).join('')}</tbody></table></div>`
+    : `<div class="stk">${S.catalog.map(c => `<div class="card ccard" data-name="${esc(norm(c.name))}"><strong>${esc(c.name)}</strong><div class="grid3">${[0, 1, 2].map(i => `<label class="field"><span class="chip chip-${i}" style="font-size:11px">${TIERS[i]}</span>${inp(c, i)}</label>`).join('')}</div>${al(c.id) ? `<div>${al(c.id)}</div>` : ''}</div>`).join('')}</div>`;
+  return `<h1 class="h op-title">Catálogo e faixas</h1><p class="muted" style="margin-top:4px">Cada item genérico tem um preço por faixa. Alterações valem para as próximas listas.</p>
+    <div class="cat-search"><label class="sr" for="catq">Buscar item</label><input id="catq" class="input" placeholder="Buscar item…" data-filter="1"></div>${rows}`;
+}
+
+/* =========================================================
+   AÇÕES
+   ========================================================= */
+function findLine(uidv) { return lines().find(l => l.uid === uidv); }
+function validateCheckout() {
+  const d = S.draft, f = d.form, e = {};
+  if (!f.aluno.trim()) e.aluno = 'Informe o nome do aluno';
+  if (!f.resp.trim()) e.resp = 'Informe seu nome';
+  if (digits(f.fone).length < 10) e.fone = 'WhatsApp com DDD';
+  if (d.delivery === 'entrega') {
+    if (digits(f.cep).length !== 8) e.cep = 'CEP com 8 dígitos';
+    if (!f.end.trim()) e.end = 'Informe o endereço';
+    if (!f.num.trim()) e.num = 'Informe o número';
+  }
+  d.errors = e; return !Object.keys(e).length;
+}
+const A = {
+  noop() {},
+  mode(el) { S.ui.mode = el.dataset.v; render(); $('#app').scrollTop = 0; },
+  view(el) { S.ui.view = el.dataset.v; render(); },
+  reset() { S = fresh(); PHOTO = null; LENDO = null; render(); toast('Demo reiniciada'); },
+  go(el) { nav(el.dataset.arg); },
+  goHome() { S.ui.mode = 'pais'; nav('home'); },
+  whats() { toast('Aqui abriria a conversa no WhatsApp da loja'); },
+  schoolChange(el) { S.ui.school = el.value; S.ui.grade = Object.keys(SCHOOLS[el.value].grades)[0]; render(); },
+  gradeChange(el) { S.ui.grade = el.value; },
+  loadSchool() { const sc = SCHOOLS[S.ui.school], g = sc.grades[S.ui.grade]; PHOTO = null; newDraft(`${sc.name} · ${g.label.split(' · ')[0]}`, g.text); nav('leitura'); },
+  fillSample() { S.ui.paste = SAMPLE_PASTE; render(); },
+  parsePaste() {
+    const t = (S.ui.paste || '').trim();
+    if (!parseList(t).length) { toast('Cole a lista com um item por linha'); return; }
+    PHOTO = null; newDraft('Lista colada', t); nav('leitura');
+  },
+  upload(el) {
+    const f = el.files && el.files[0]; if (!f) return;
+    PHOTO = null;
+    const go = () => { LENDO = setTimeout(() => { LENDO = null; newDraft('Foto enviada', SCHOOLS.modelo.grades['3'].text, true); nav('leitura'); }, 1800); nav('lendo'); };
+    if (f.type.startsWith('image/')) { const r = new FileReader(); r.onload = () => { PHOTO = r.result; go(); }; r.onerror = go; r.readAsDataURL(f); } else go();
+  },
+  editLine(el) { S.ui.editLine = S.ui.editLine === el.dataset.uid ? null : el.dataset.uid; render(); },
+  relink(el) { const l = findLine(el.dataset.uid); l.itemId = el.value || null; l.tier = S.draft.tier; S.ui.editLine = null; render(); },
+  setTier(el) { const t = +el.dataset.arg; S.draft.tier = t; lines().forEach(l => l.tier = t); render(); },
+  lineTier(el) { findLine(el.dataset.uid).tier = +el.value; render(); },
+  inc(el) { const l = findLine(el.dataset.uid); l.qty = Math.min(99, l.qty + 1); render(); },
+  dec(el) { const l = findLine(el.dataset.uid); l.qty = Math.max(1, l.qty - 1); render(); },
+  remove(el) { findLine(el.dataset.uid).removed = true; render(); },
+  undo(el) { findLine(el.dataset.uid).removed = false; render(); },
+  addItem() {
+    const v = $('#addSel').value; if (!v) { toast('Escolha um item para adicionar'); return; }
+    const c = cat(v); S.draft.lines.push({ uid: uid(), raw: c.name, clean: c.name, qty: 1, baseQty: 0, itemId: v, tier: S.draft.tier, removed: false });
+    render(); toast(c.name + ' adicionado');
+  },
+  delivery(el) { S.draft.delivery = el.value; render(); },
+  pay(el) { S.draft.pay = el.value; render(); },
+  parcelas(el) { S.draft.parcelas = el.value; },
+  toPayment() {
+    if (!validateCheckout()) { render(); toast('Preencha os campos destacados'); const e = $('.is-err'); if (e) e.focus(); return; }
+    const d = S.draft;
+    if (d.pay === 'pix') { d.pixCode = '00020126580014BR.GOV.BCB.PIX0136' + Math.random().toString(16).slice(2, 10) + '-exemplo-' + Math.random().toString(16).slice(2, 10) + '5204000053039865406' + total().toFixed(2) + '5802BR6304' + Math.random().toString(16).slice(2, 6).toUpperCase(); nav('pix'); }
+    else nav('cartao');
+  },
+  copyPix() { const t = S.draft.pixCode; try { navigator.clipboard.writeText(t).then(() => toast('Código Pix copiado'), () => toast('Selecione e copie o código')); } catch (e) { toast('Selecione e copie o código'); } },
+  confirmPix() { finishOrder('Pix'); },
+  payCard() {
+    const c = S.draft.card, e = {};
+    if (digits(c.num).length !== 16) e.c_num = 'Número com 16 dígitos';
+    if (!c.nome.trim()) e.c_nome = 'Nome como no cartão';
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(c.val)) e.c_val = 'Use MM/AA';
+    if (digits(c.cvv).length < 3) e.c_cvv = '3 ou 4 dígitos';
+    S.draft.errors = e;
+    if (Object.keys(e).length) { render(); toast('Confira os dados do cartão'); return; }
+    S.ui.processing = true; render();
+    setTimeout(() => finishOrder('Cartão ' + S.draft.parcelas + 'x'), 1300);
+  },
+  openTrack(el) { S.ui.trackId = +el.dataset.arg; nav('pedido'); },
+  payExtra(el) { const [id, i] = el.dataset.arg.split(':'); order(id).extras[+i].paid = true; render(); toast('Pagamento complementar confirmado (simulação)'); },
+
+  opNav(el) { opNav(el.dataset.arg); },
+  opFilter(el) { S.ui.opFilter = el.dataset.arg || 'todos'; S.ui.opScreen = 'pedidos'; render(); },
+  openOrder(el) { S.ui.opOrder = +el.dataset.arg; opNav('pedido'); },
+  toggleDone(el) { const [id, i] = el.dataset.arg.split(':'); const o = order(id); o.lines[+i].done = el.checked; if (el.checked && o.status === 'pago') { o.status = 'separacao'; toast('Pedido passou para “Em separação”'); } render(); },
+  advance(el) {
+    const o = order(el.dataset.arg), i = STATUS_ORDER.indexOf(o.status);
+    if (o.status === 'separacao' && o.lines.some(l => !l.done)) { toast('Marque todos os itens como separados antes'); return; }
+    if (o.status === 'separacao' && o.pending.some(p => p.status === 'aberto')) { toast('Há item em análise: resolva em “Itens não encontrados”'); return; }
+    if (i < 3) { o.status = STATUS_ORDER[i + 1]; if (o.status === 'rota' || o.status === 'entregue') o.lines.forEach(l => l.done = true); }
+    render(); toast(`#${o.id}: ${statusLabel(o)}. Os pais foram avisados pelo WhatsApp (simulação)`);
+  },
+  printOrder(el) {
+    const o = order(el.dataset.arg);
+    $('#print-area').innerHTML = `<h1>Pedido #${o.id} · ${esc(o.student)}</h1><div>${esc(o.school)} · ${esc(o.tierLabel)} · ${esc(o.pay)}</div>
+      <table><thead><tr><th>OK</th><th>Produto</th><th>Faixa</th><th>Qtd</th></tr></thead><tbody>${o.lines.map(l => `<tr><td>☐</td><td>${esc(l.name)}</td><td>${TIERS[l.tier]}</td><td><b>${l.qty}</b></td></tr>`).join('')}</tbody></table>
+      <div class="lab"><b>${esc(o.student)}</b><br>${esc(o.school)}<br>Resp.: ${esc(o.parent)} · ${esc(o.phone)}<br>${esc(o.address)}<br>Pedido #${o.id}</div>`;
+    window.print();
+  },
+  openPend(el) { S.ui.pendSel = el.dataset.arg; S.ui.pend = null; opNav('pendencias'); },
+  pendSelect(el) { S.ui.pendSel = el.dataset.arg; S.ui.pend = null; render(); },
+  pendMode(el) { S.ui.pend.mode = el.value; render(); },
+  resolve() {
+    const cur = openPend().find(x => x.o.id + ':' + x.p.uid === S.ui.pendSel); if (!cur) return;
+    const { o, p } = cur, U = S.ui.pend;
+    const learn = id => { const k = norm(p.raw).trim(); if (k) S.aliases[k] = id; };
+    const add = (id, tier) => {
+      const it = cat(id), unit = it.p[tier];
+      o.lines.push({ itemId: id, name: it.name, tier, qty: p.qty, baseQty: p.qty, unit, done: false, added: true });
+      o.extras.push({ desc: `${it.name} × ${p.qty}`, value: unit * p.qty, paid: false });
+      p.status = 'resolvido'; p.note = `incluído como ${it.name} (${TIERS[tier]})`;
+      learn(id);
+    };
+    if (U.mode === 'link') { if (!U.itemId) { toast('Escolha o item do catálogo'); return; } add(U.itemId, +U.tier); }
+    else if (U.mode === 'novo') {
+      const name = U.name.trim(), pr = [U.p0, U.p1, U.p2].map(money);
+      if (!name || pr.some(v => !(v > 0))) { toast('Preencha o nome e os 3 preços'); return; }
+      const id = 'novo-' + Date.now(); S.catalog.push({ id, name, req: [], bonus: [], p: pr, custom: true }); add(id, +U.tier);
+    } else { p.status = 'nao'; p.note = U.msg.trim() || 'Item não disponível'; }
+    S.ui.pendSel = null; S.ui.pend = null; render();
+    toast(U.mode === 'nao' ? 'Pais avisados pelo WhatsApp (simulação)' : 'Item incluído e cobrança enviada aos pais (simulação)');
+  }
+};
+
+/* máscaras */
+const MASK = {
+  phone: v => { const d = digits(v).slice(0, 11); if (d.length <= 2) return d.length ? '(' + d : ''; if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`; if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`; return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`; },
+  cep: v => { const d = digits(v).slice(0, 8); return d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; },
+  card: v => digits(v).slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 '),
+  val: v => { const d = digits(v).slice(0, 4); return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; },
+  cvv: v => digits(v).slice(0, 4)
+};
+function setPath(path, val) { const ks = path.split('.'); let o = S; for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = val; }
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if (!el) return;
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) return;
+  const f = A[el.dataset.action]; if (f) { e.preventDefault(); f(el, e); }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.price) { const [id, i] = el.dataset.price.split(':'); const v = money(el.value); if (v > 0) { cat(id).p[+i] = v; save(); el.value = v.toFixed(2).replace('.', ','); toast('Preço atualizado'); } else { el.value = cat(id).p[+i].toFixed(2).replace('.', ','); } return; }
+  if (el.dataset.field && el.tagName === 'SELECT') { setPath(el.dataset.field, el.value); save(); return; }
+  if (el.dataset.action && ['INPUT', 'SELECT'].includes(el.tagName)) { const f = A[el.dataset.action]; if (f) f(el, e); }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.filter) { const q = norm(el.value).trim(); document.querySelectorAll('[data-name]').forEach(r => { r.style.display = !q || r.dataset.name.includes(q) ? '' : 'none'; }); return; }
+  if (!el.dataset.field || el.tagName === 'SELECT') return;
+  if (el.dataset.mask && MASK[el.dataset.mask]) el.value = MASK[el.dataset.mask](el.value);
+  setPath(el.dataset.field, el.value);
+  if (el.classList.contains('is-err')) { el.classList.remove('is-err'); const t = el.parentElement.querySelector('.err-t'); if (t) t.remove(); }
+  save();
+});
+window.addEventListener('resize', () => { if (effView() !== lastEV) render(); else applyView(); });
+
+load();
+render();
+</script>
+
+</body></html>
