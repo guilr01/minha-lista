@@ -11,7 +11,7 @@ jobs:
       # Postgres comum: os testes simulam o Supabase com test/db/supabase-local.sql
       # e aplicam as mesmas migrações que vão para o projeto de verdade.
       postgres:
-        image: postgres:16
+        image: postgres:18
         env:
           POSTGRES_PASSWORD: postgres
         ports: ["5432:5432"]

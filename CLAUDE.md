@@ -81,21 +81,41 @@ administrador), com dono `lp_dono` sem superusuário, e aplica as migrações e 
 ## Banco: Neon (decisão de 05/10/2026)
 
 O plano gratuito do Supabase estava no limite de 2 projetos ativos, e os dois (`kaisa` e
-`wod-coach`) estão em uso diário. O banco é **Postgres no Neon**; o projeto do Neon se chama
-"minha lista". Nada do Supabase ficou: papéis, `app.usuario` e `app.usuario_atual()` são
-criados pela migração `20261005000000_ambiente.sql`.
+`wod-coach`) estão em uso diário. O banco é **Postgres no Neon**: projeto "Minha lista"
+(`odd-bird-95021023`), região `aws-sa-east-1`, **Postgres 18**, banco `neondb`. Nada do Supabase
+ficou: papéis, `app.usuario` e `app.usuario_atual()` são criados pela migração
+`20261005000000_ambiente.sql`. **As 5 migrações e o seed estão aplicados desde 05/10/2026.**
 
-- **O dono do banco NÃO é superusuário no Neon, e isso decide o desenho.** As tabelas usam
-  RLS sem `FORCE`: com `FORCE`, o próprio dono passa pelo RLS e as funções `security definer`
-  enxergam zero linhas (medido: nem o seed entra). O dono é o papel do sistema.
-- **Os testes rodam como `lp_dono`, sem superusuário**, e há teste que afirma isso.
-  Superusuário ignora o RLS: rodar os testes com ele esconde exatamente o defeito acima.
+- **O dono no Neon (`neondb_owner`) não é superusuário, mas TEM `BYPASSRLS`** (medido). O
+  desenho não depende disso: as tabelas usam RLS sem `FORCE`, o dono é o papel do sistema, e
+  cada requisição troca para `anon` ou `authenticated` em `src/lib/db.ts`.
+- **Os testes rodam como `lp_dono`, sem superusuário E sem `BYPASSRLS`**, o caso mais estrito,
+  e há teste que afirma isso. Com esse dono, ligar `FORCE` derruba até o seed (medido); com
+  superusuário, o RLS seria ignorado e os testes não provariam nada.
 - **`app.usuario_id` é configuração da TRANSAÇÃO** (`set_config(..., true)`), nunca da sessão:
   o pooler do Neon reaproveita conexões entre requisições.
-- `pnpm db:migrar` aplica pendentes pelo MESMO `scripts/banco.mjs` que monta o banco dos
-  testes. Contra o Neon de produção, vale na hora.
-- Login da papelaria (etapa c): o Neon tem Better Auth gerenciado (Neon Auth). Avaliar antes
-  de escrever login próprio. Skills do Neon em `.claude/skills/`.
+- **O projeto já tem o Neon Auth ligado** (schema `neon_auth`, Better Auth gerenciado). As
+  nossas migrações não tocam nele. Avaliar para o login da etapa (c) antes de escrever um
+  próprio. Skills do Neon em `.claude/skills/`.
+- **No Postgres 18 os `NOT NULL` também viram restrição no catálogo** (`contype = 'n'`). A CI
+  roda Postgres 18, como a produção; os 54 testes passam no 16 e no 18.
+
+### Aplicar migração no Neon
+
+`pnpm db:migrar` (com `DATABASE_URL`) aplica as pendentes pelo MESMO `scripts/banco.mjs` que
+monta o banco dos testes. Contra o Neon de produção, vale na hora.
+
+**Das sessões na nuvem do Claude Code, o Neon NÃO é alcançável direto**: a porta 5432 está
+bloqueada e o proxy recusa o WebSocket (403). Nelas, aplica-se pelo **conector do Neon**
+(`run_sql_transaction`), que aceita uma lista de comandos e não um arquivo:
+
+1. `node scripts/neon/gerar-comandos.mjs db/migrations/<arquivo>.sql <arquivo>.sql` gera a
+   lista, já com o registro em `controle.migracao`, para os dois entrarem na mesma transação.
+2. Aplicar a lista com `run_sql_transaction`.
+3. **Provar a transcrição**: rodar `scripts/neon/impressao-schema.sql` no Neon e num banco local
+   montado por `scripts/banco.mjs`; os hashes precisam bater. No seed, `impressao-dados.sql`.
+
+Foi assim que as 5 migrações e o seed entraram, e os hashes bateram em todas as partes.
 
 ## Convenções
 
@@ -108,7 +128,7 @@ Interface toda em pt-BR, valores em R$. Cores, fontes e raios só em `src/app/gl
 | | Etapa | Situação |
 |---|---|---|
 | a | Setup, schema, RLS, funções públicas, seed, testes | **concluída** |
-| b | Área do pai: escola → série → faixa → revisão → checkout → pagamento fake → acompanhamento | **concluída** (falta aplicar no Neon) |
+| b | Área do pai: escola → série → faixa → revisão → checkout → pagamento fake → acompanhamento | **concluída**, aplicada no Neon |
 | c | Login do fornecedor, painel de pedidos, separação, status | |
 | d | Cadastro de catálogo, escolas, séries e listas | |
 
