@@ -104,8 +104,12 @@ perto do banco.
 | `DATABASE_URL` | string POOLED do Neon (sensível) | o banco |
 | `PAGAMENTO_PROVEDOR` | `fake` | sem gateway real ainda |
 | `PAGAMENTO_FAKE_LIBERADO` | `1` | **liga o "Simular pagamento aprovado" em produção** |
-| `RESEND_API_KEY` | chave do Resend (sensível) | e-mail de recuperação de senha; **ainda não posta** |
-| `EMAIL_REMETENTE` | ex.: `Lista Pronta <nao-responda@dominio>` | remetente, de domínio verificado no Resend |
+| `RESEND_API_KEY` | chave do Resend (sensível, só produção) | e-mail de recuperação de senha |
+| `EMAIL_REMETENTE` | `Lista Pronta <onboarding@resend.dev>` (sensível, só produção) | remetente |
+
+**O e-mail funciona desde 06/10/2026, mas só para o dono da conta do Resend**: sem domínio
+verificado, o Resend recusa qualquer outro destinatário. Para valer para toda papelaria: verificar
+um domínio no Resend (região São Paulo) e trocar `EMAIL_REMETENTE` para um endereço dele.
 | `URL_PUBLICA` | opcional, ex.: `https://listapronta.com.br` | só com domínio próprio; sem ela vale o domínio de produção da Vercel |
 
 **`PAGAMENTO_FAKE_LIBERADO=1` está ligado de propósito, para testar o fluxo inteiro no
