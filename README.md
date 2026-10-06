@@ -26,7 +26,8 @@ pnpm dev
 Área do pai: `http://localhost:3000/papelaria-central`. Painel da papelaria:
 `http://localhost:3000/entrar` (ou `/cadastro`, que cria uma papelaria nova).
 
-Para dar acesso à papelaria do seed (ou trocar uma senha):
+Quem esqueceu a senha pede um link em `/entrar/esqueci` (sem o Resend configurado, o link
+aparece no log do servidor). Para dar acesso à papelaria do seed (ou trocar uma senha à mão):
 
 ```bash
 SENHA='...' node --experimental-strip-types scripts/criar-acesso.mjs \

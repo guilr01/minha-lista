@@ -2,7 +2,18 @@
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { cadastrar, entrar, sair, type DadosDeCadastro } from "@/lib/autenticacao";
+import { after } from "next/server";
+import {
+  RECUPERACAO_VALIDADE_MINUTOS,
+  cadastrar,
+  entrar,
+  pedirRecuperacao,
+  redefinirSenha,
+  sair,
+  type DadosDeCadastro,
+} from "@/lib/autenticacao";
+import { enviarEmail, mensagemDeRecuperacao } from "@/lib/email";
+import { enderecoPublico } from "@/lib/endereco";
 import { COOKIE_SESSAO, apagarCookieDeSessao, gravarCookieDeSessao } from "@/lib/sessao";
 
 export type EstadoDeEntrada = { erro?: string; email?: string };
@@ -56,4 +67,34 @@ export async function sairAcao() {
   await sair((await cookies()).get(COOKIE_SESSAO)?.value);
   await apagarCookieDeSessao();
   redirect("/entrar");
+}
+
+export type EstadoDeRecuperacao = { enviado?: boolean; erro?: string; email?: string };
+
+export async function pedirRecuperacaoAcao(_: EstadoDeRecuperacao, f: FormData): Promise<EstadoDeRecuperacao> {
+  const email = String(f.get("email") ?? "").trim();
+  if (!email) return { erro: "Informe o e-mail da conta." };
+  const h = await headers();
+  const base = enderecoPublico(h.get("host"));
+  const envio = await pedirRecuperacao(email, await origem());
+  // A tela responde igual com ou sem conta; o e-mail sai depois da resposta.
+  if (envio) {
+    after(() =>
+      enviarEmail(
+        mensagemDeRecuperacao(envio.para, envio.nome, `${base}/entrar/redefinir/${envio.token}`, RECUPERACAO_VALIDADE_MINUTOS),
+      ),
+    );
+  }
+  return { enviado: true, email };
+}
+
+export type EstadoDeRedefinicao = { erro?: string; linkInvalido?: boolean };
+
+export async function redefinirSenhaAcao(token: string, _: EstadoDeRedefinicao, f: FormData): Promise<EstadoDeRedefinicao> {
+  const senha = String(f.get("senha") ?? "");
+  if (senha !== String(f.get("confirmacao") ?? "")) return { erro: "As duas senhas não são iguais." };
+  const r = await redefinirSenha(token, senha);
+  if (!r.ok) return r.motivo === "link" ? { erro: r.mensagem, linkInvalido: true } : { erro: r.mensagem };
+  await gravarCookieDeSessao(r.token);
+  redirect("/painel");
 }

@@ -78,8 +78,20 @@ migrar para o Neon Auth depois.
 - **Cadastro** cria pessoa, papelaria e vínculo numa transação só. Para ligar alguém a uma
   papelaria que já existe (a do seed), `scripts/criar-acesso.mjs`; com `--sql` ele imprime os
   comandos para o conector do Neon.
-- **Falta**: recuperar senha por e-mail (não há provedor de e-mail; por ora o script troca a
-  senha), mais de uma papelaria por pessoa na tela (o banco já aceita).
+- **Recuperar a senha** (06/10/2026, migração 0007): `/entrar/esqueci` → e-mail com link
+  `/entrar/redefinir/<token>`. Token de 32 bytes, o banco guarda o SHA-256
+  (`app.recuperacao_senha`); vale **1 hora e uma vez só**, e pedir de novo invalida o anterior.
+  Trocar a senha **encerra todas as sessões** da conta e limpa as senhas erradas (senão quem
+  estava trancado seguiria trancado com a senha nova). A tela responde igual com ou sem conta, e o e-mail sai DEPOIS da
+  resposta (`after`), para nem o tempo denunciar quem tem conta. Limite: 3 pedidos por e-mail ou
+  10 por origem por hora (`app.pedido_recuperacao`), em silêncio.
+- **O link do e-mail NÃO usa o cabeçalho Host** (`src/lib/endereco.ts`): um Host forjado levaria
+  o token da vítima para o domínio de quem atacou. Vem de `URL_PUBLICA` ou do domínio de produção
+  que a Vercel injeta; fora da Vercel, em produção, sem `URL_PUBLICA` ele recusa.
+- **E-mail** sai por `src/lib/email.ts`, provedor Resend, ligado por `RESEND_API_KEY` e
+  `EMAIL_REMETENTE`. Sem as duas, nada é enviado: no desenvolvimento o link vai para o log do
+  servidor; em produção o log diz só que não foi enviado, sem o link.
+- **Falta**: mais de uma papelaria por pessoa na tela (o banco já aceita).
 
 ## Publicação: Vercel (06/10/2026)
 
@@ -92,6 +104,9 @@ perto do banco.
 | `DATABASE_URL` | string POOLED do Neon (sensível) | o banco |
 | `PAGAMENTO_PROVEDOR` | `fake` | sem gateway real ainda |
 | `PAGAMENTO_FAKE_LIBERADO` | `1` | **liga o "Simular pagamento aprovado" em produção** |
+| `RESEND_API_KEY` | chave do Resend (sensível) | e-mail de recuperação de senha; **ainda não posta** |
+| `EMAIL_REMETENTE` | ex.: `Lista Pronta <nao-responda@dominio>` | remetente, de domínio verificado no Resend |
+| `URL_PUBLICA` | opcional, ex.: `https://listapronta.com.br` | só com domínio próprio; sem ela vale o domínio de produção da Vercel |
 
 **`PAGAMENTO_FAKE_LIBERADO=1` está ligado de propósito, para testar o fluxo inteiro no
 celular, e é a primeira coisa a tirar antes de vender de verdade**: com ele, qualquer pessoa
@@ -157,7 +172,7 @@ O plano gratuito do Supabase estava no limite de 2 projetos ativos, e os dois (`
 `wod-coach`) estão em uso diário. O banco é **Postgres no Neon**: projeto "Minha lista"
 (`odd-bird-95021023`), região `aws-sa-east-1`, **Postgres 18**, banco `neondb`. Nada do Supabase
 ficou: papéis, `app.usuario` e `app.usuario_atual()` são criados pela migração
-`20261005000000_ambiente.sql`. **As 5 migrações e o seed estão aplicados desde 05/10/2026.**
+`20261005000000_ambiente.sql`. **Todas as migrações e o seed estão aplicados** (a 0007 em 06/10/2026, com os hashes conferidos).
 
 - **O dono no Neon (`neondb_owner`) não é superusuário, mas TEM `BYPASSRLS`** (medido). O
   desenho não depende disso: as tabelas usam RLS sem `FORCE`, o dono é o papel do sistema, e

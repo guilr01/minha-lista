@@ -14,10 +14,13 @@ export function FormularioDeEntrada() {
         E-mail
         <input name="email" type="email" required autoComplete="email" defaultValue={estado.email} className={campo} />
       </label>
-      <label className={rotuloCampo}>
-        Senha
-        <input name="senha" type="password" required autoComplete="current-password" className={campo} />
-      </label>
+      <div className="flex flex-col gap-1.5">
+        <label className={rotuloCampo}>
+          Senha
+          <input name="senha" type="password" required autoComplete="current-password" className={campo} />
+        </label>
+        <Link href="/entrar/esqueci" className={`${link} self-end text-[13px]`}>Esqueci a senha</Link>
+      </div>
       <button type="submit" className={botao} disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
       <p className="text-center text-sm text-apagado">
         Ainda não tem conta? <Link href="/cadastro" className={link}>Cadastrar a papelaria</Link>

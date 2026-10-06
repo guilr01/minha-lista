@@ -162,3 +162,105 @@ export async function cadastrar(d: DadosDeCadastro): Promise<ResultadoDeCadastro
   }
   return { ok: true, token: await abrirSessao(usuarioId) };
 }
+
+// ------------------------------------------------- recuperar a senha
+// O link leva um token de 32 bytes; o banco guarda o SHA-256. Vale 1 hora e
+// uma vez só, e pedir de novo invalida o anterior. A resposta para quem pede
+// é a mesma com ou sem conta, e o envio sai DEPOIS da resposta (quem chama
+// usa `after`), para nem o tempo denunciar quais e-mails têm conta.
+
+export const RECUPERACAO_VALIDADE_MINUTOS = 60;
+const RECUPERACAO_JANELA_MINUTOS = 60;
+const RECUPERACAO_POR_EMAIL = 3;
+const RECUPERACAO_POR_ORIGEM = 10;
+
+export type EnvioDeRecuperacao = { para: string; nome: string | null; token: string };
+
+/**
+ * Registra o pedido e, se houver conta e o limite permitir, devolve o que
+ * enviar. `null` não é erro: é a resposta para e-mail sem conta, para quem
+ * passou do limite e para e-mail malformado, e quem chama trata os três
+ * igual.
+ */
+export async function pedirRecuperacao(emailDigitado: string, origem: string | null): Promise<EnvioDeRecuperacao | null> {
+  const email = normalizarEmail(emailDigitado);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return null;
+  const origemHash = origem ? sha256(origem) : null;
+  const token = randomBytes(32).toString("base64url");
+
+  return comoSistema(async (q) => {
+    const antes = await q<{ por_email: number; por_origem: number }>(
+      `select
+         (select count(*)::int from app.pedido_recuperacao
+           where email = $1 and em > now() - make_interval(mins => $3)) as por_email,
+         (select count(*)::int from app.pedido_recuperacao
+           where $2::text is not null and origem = $2 and em > now() - make_interval(mins => $3)) as por_origem`,
+      [email, origemHash, RECUPERACAO_JANELA_MINUTOS],
+    );
+    await q("insert into app.pedido_recuperacao (email, origem) values ($1, $2)", [email, origemHash]);
+    const { por_email, por_origem } = antes.rows[0];
+    if (por_email >= RECUPERACAO_POR_EMAIL || por_origem >= RECUPERACAO_POR_ORIGEM) return null;
+
+    const u = await q<{ id: string; nome: string | null }>("select id, nome from app.usuario where email = $1", [email]);
+    if (!u.rowCount) return null;
+    const usuarioId = u.rows[0].id;
+    await q("update app.recuperacao_senha set usada_em = now() where usuario_id = $1 and usada_em is null", [usuarioId]);
+    await q(
+      `insert into app.recuperacao_senha (id, usuario_id, expira_em)
+       values ($1, $2, now() + make_interval(mins => $3))`,
+      [sha256(token), usuarioId, RECUPERACAO_VALIDADE_MINUTOS],
+    );
+    return { para: email, nome: u.rows[0].nome, token };
+  });
+}
+
+/** O token ainda serve? Para a tela dizer antes de a pessoa digitar a senha. */
+export async function recuperacaoValida(token: string): Promise<boolean> {
+  if (!token || token.length > 100) return false;
+  return comoSistema(async (q) => {
+    const r = await q(
+      "select 1 from app.recuperacao_senha where id = $1 and usada_em is null and expira_em > now()",
+      [sha256(token)],
+    );
+    return r.rowCount === 1;
+  });
+}
+
+export type ResultadoDeRedefinicao =
+  | { ok: true; token: string }
+  | { ok: false; motivo: "link"; mensagem: string }
+  | { ok: false; motivo: "senha"; mensagem: string };
+
+/**
+ * Troca a senha e encerra TODAS as sessões abertas: quem pede recuperação
+ * pode estar fazendo isso porque alguém entrou na conta. Limpa também as
+ * senhas erradas, senão a pessoa trancada continuaria trancada com a senha
+ * nova. Abre uma sessão nova para quem acabou de trocar.
+ */
+export async function redefinirSenha(token: string, senha: string): Promise<ResultadoDeRedefinicao> {
+  if (senha.length < SENHA_MINIMA) {
+    return { ok: false, motivo: "senha", mensagem: `A senha precisa de pelo menos ${SENHA_MINIMA} caracteres` };
+  }
+  if (!token || token.length > 100) return { ok: false, motivo: "link", mensagem: LINK_INVALIDO };
+  const hash = await cifrarSenha(senha);
+  const usuarioId = await comoSistema(async (q) => {
+    // O update marca o uso e devolve o dono numa operação só: dois envios do
+    // mesmo link ao mesmo tempo não trocam a senha duas vezes.
+    const r = await q<{ usuario_id: string }>(
+      `update app.recuperacao_senha set usada_em = now()
+        where id = $1 and usada_em is null and expira_em > now()
+       returning usuario_id`,
+      [sha256(token)],
+    );
+    if (!r.rowCount) return null;
+    const id = r.rows[0].usuario_id;
+    const u = await q<{ email: string }>("update app.usuario set senha_hash = $2 where id = $1 returning email", [id, hash]);
+    await q("delete from app.sessao where usuario_id = $1", [id]);
+    await q("delete from app.falha_login where email = $1", [u.rows[0].email]);
+    return id;
+  });
+  if (!usuarioId) return { ok: false, motivo: "link", mensagem: LINK_INVALIDO };
+  return { ok: true, token: await abrirSessao(usuarioId) };
+}
+
+const LINK_INVALIDO = "Este link expirou ou já foi usado. Peça um novo.";
