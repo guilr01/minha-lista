@@ -38,6 +38,11 @@ escolas e séries, monta a lista de cada série por ano letivo e a publica. Com 
 do Pix tem o botão "Simular pagamento aprovado", e o cartão abre uma página
 de teste no lugar do gateway.
 
+## No ar
+
+Vercel, projeto `minha-lista`: cada envio para o `main` publica em produção. Variáveis e
+cuidados em `CLAUDE.md` ("Publicação").
+
 ## Banco
 
 `db/migrations` é a única definição do schema; `scripts/banco.mjs` as aplica

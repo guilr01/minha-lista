@@ -81,6 +81,26 @@ migrar para o Neon Auth depois.
 - **Falta**: recuperar senha por e-mail (não há provedor de e-mail; por ora o script troca a
   senha), mais de uma papelaria por pessoa na tela (o banco já aceita).
 
+## Publicação: Vercel (06/10/2026)
+
+Projeto `minha-lista` na Vercel (equipe "Guil_R's projects"), ligado ao GitHub: **cada envio
+para o `main` publica sozinho em produção.** Funções em São Paulo (`gru1`, `vercel.json`),
+perto do banco.
+
+| Variável | Valor | Para quê |
+|---|---|---|
+| `DATABASE_URL` | string POOLED do Neon (sensível) | o banco |
+| `PAGAMENTO_PROVEDOR` | `fake` | sem gateway real ainda |
+| `PAGAMENTO_FAKE_LIBERADO` | `1` | **liga o "Simular pagamento aprovado" em produção** |
+
+**`PAGAMENTO_FAKE_LIBERADO=1` está ligado de propósito, para testar o fluxo inteiro no
+celular, e é a primeira coisa a tirar antes de vender de verdade**: com ele, qualquer pessoa
+com o link gera pedido "pago" sem dinheiro. Variável nova ou alterada só vale depois de uma
+publicação nova.
+
+Migração continua indo ao Neon à parte (ver "Aplicar migração no Neon"): a Vercel publica o
+código, não o schema. **Aplique a migração ANTES de enviar o código que depende dela.**
+
 ## Cadastro da papelaria (etapa d, 06/10/2026)
 
 - **Escrita direta, e o RLS decide**: produto, opção, escola, série, lista e item são `insert`/
