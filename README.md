@@ -33,7 +33,8 @@ SENHA='...' node --experimental-strip-types scripts/criar-acesso.mjs \
   --email dona@papelaria.com --papelaria papelaria-central --nome "Maria"
 ```
 
-Abra `http://localhost:3000/papelaria-central`. Com o provedor falso, a tela
+No painel, a papelaria cadastra o catálogo (até três faixas por item), as
+escolas e séries, monta a lista de cada série por ano letivo e a publica. Com o provedor falso, a tela
 do Pix tem o botão "Simular pagamento aprovado", e o cartão abre uma página
 de teste no lugar do gateway.
 

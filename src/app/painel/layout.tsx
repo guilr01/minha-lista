@@ -35,7 +35,7 @@ export default async function MolduraDoPainel({ children }: { children: React.Re
         {papelaria && (
           <Link href={`/${papelaria.slug}`} target="_blank"
             className="flex min-h-11 items-center gap-2.5 rounded-campo px-3 text-[15px] text-[#d6dce4] hover:bg-[#26364a] hover:text-white">
-            <Icone nome="loja" tamanho={18} />Página da papelaria
+            <Icone nome="seta" tamanho={18} />Ver a página dos pais
           </Link>
         )}
         <div className="mt-auto flex flex-col gap-1 border-t border-[#2c3a4c] px-3 pt-3 text-[13px] leading-snug text-[#9aa6b4]">

@@ -14,6 +14,7 @@ const CAMINHOS = {
   pix: (<><path d="M12 3 21 12 12 21 3 12Z" /><path d="m8 12 4-4 4 4-4 4Z" /></>),
   conversa: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12Z" />,
   seta: <path d="m9 18 6-6-6-6" />,
+  etiqueta: (<><path d="M20 12 12 20l-8-8V4h8Z" /><circle cx="8" cy="8" r="1.5" /></>),
 } as const;
 
 export type NomeIcone = keyof typeof CAMINHOS;

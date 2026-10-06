@@ -6,9 +6,11 @@ export function slugValido(slug: string): boolean {
   return FORMATO_SLUG.test(slug) && slug.length >= 3 && slug.length <= 60;
 }
 
-/** "Papelaria São João" → "papelaria-sao-joao" */
+/** "Papelaria São João" → "papelaria-sao-joao"; "3º ano" → "3-ano" */
 export function sugerirSlug(nome: string): string {
   return nome
+    // O indicador ordinal vira "o" na normalização ("3o-ano"); sai antes.
+    .replace(/[ºª°]/g, "")
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()

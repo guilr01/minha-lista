@@ -81,6 +81,24 @@ migrar para o Neon Auth depois.
 - **Falta**: recuperar senha por e-mail (não há provedor de e-mail; por ora o script troca a
   senha), mais de uma papelaria por pessoa na tela (o banco já aceita).
 
+## Cadastro da papelaria (etapa d, 06/10/2026)
+
+- **Escrita direta, e o RLS decide**: produto, opção, escola, série, lista e item são `insert`/
+  `update`/`delete` como `authenticated` (`src/lib/cadastro.ts`). Só o STATUS da lista tem regra
+  própria, em `publicar_lista` e `encerrar_lista` (migração 0006): `security invoker`, para o RLS
+  valer dentro delas. Lista vazia não publica, e publicar encerra a que estava no ar na mesma
+  série, na mesma transação.
+- **Os totais do editor de lista saem de `src/lib/carrinho.ts`**, a mesma conta da vitrine. A
+  papelaria vê o que os pais vão ver; uma segunda conta ali divergiria no primeiro ajuste.
+- **Faixa com marca e preço em branco = a papelaria não vende essa faixa daquele item.**
+- **Produto em lista não se exclui** (a tela manda desativar); série com lista e lista com pedido
+  também não. Só rascunho se exclui. Copiar a lista do ano anterior leva itens e recado.
+- **O endereço (slug) de escola e série vem do nome**, sem o ordinal ("3º ano" → `3-ano`), e
+  repetido vira `-2`. A tela do pai depende disso: é o link que a papelaria divulga.
+- **`FormAcao` envia por conta própria** (`src/components/form-acao.tsx`). No React 19 o
+  `<form action>` é LIMPO depois do envio mesmo quando o banco recusa; a papelaria perderia o
+  produto inteiro por um preço inválido.
+
 ## Do protótipo, o que NÃO entra agora
 
 O protótipo tem leitura de lista por foto e por texto colado, e a fila "Itens não
@@ -99,6 +117,10 @@ administrador), com dono `lp_dono` sem superusuário, e aplica as migrações e 
   lista do painel): use dados únicos e nunca suponha o estado de outro arquivo. Um teste antigo
   supunha o pedido #1001 e quebrou quando a ordem dos arquivos mudou; rode com
   `--sequence.shuffle` ao mexer nisso.
+- **Rode a suíte no Postgres 18 antes de enviar** (`docker run -p 5433:5432 postgres:18` e
+  `TEST_DATABASE_URL=...:5433/postgres pnpm test`). O Neon é 18 e o Postgres local deste
+  ambiente é 16. Foi assim que apareceu: no 18, `ON DELETE RESTRICT` recusa com o código
+  **23001**, não 23503, e a mensagem "desative o produto" virava o erro cru do banco.
 - **O driver `pg` não converte array de ENUM**: devolve a string `"{premium}"`. Converta para
   `text[]` no SQL. Foi assim que todo pedido apareceu como faixa "Mista" no painel.
 - **O total da tela é o total cobrado**: `test/db/carrinho-paridade.test.ts` passa o total de
@@ -161,6 +183,6 @@ Interface toda em pt-BR, valores em R$. Cores, fontes e raios só em `src/app/gl
 | a | Setup, schema, RLS, funções públicas, seed, testes | **concluída** |
 | b | Área do pai: escola → série → faixa → revisão → checkout → pagamento fake → acompanhamento | **concluída**, aplicada no Neon |
 | c | Login do fornecedor, painel de pedidos, separação, status | **concluída**, aplicada no Neon |
-| d | Cadastro de catálogo, escolas, séries e listas | |
+| d | Cadastro de catálogo, escolas, séries e listas | **concluída**, aplicada no Neon |
 
 Pare ao fim de cada etapa, diga como testar e o que ficou pendente.
