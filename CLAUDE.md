@@ -168,6 +168,33 @@ sempre parte de uma lista que a papelaria cadastrou, e por isso não existe item
 análise". Também ficam fora: gateway real e split, envio de WhatsApp (o ponto de integração é
 `pedido_evento`), marketplace.
 
+## Leitor de listas (19/10/2026, protótipo)
+
+**Decisão do Guilherme em 19/10/2026: o leitor de listas mora aqui, como módulo que a Lista Pronta
+e o agregador de afiliados vão dividir.** Ele NÃO derruba o "Importação de lista está fora do
+escopo" da seção acima: o pai continua partindo da lista que a papelaria cadastrou. O leitor é
+uma tela do painel, fora do menu (`/painel/leitor`), e **não grava nada**.
+
+- **`src/lib/leitor/` não importa nada do aplicativo**, só `zod`, `server-only` e o SDK da
+  Anthropic. É o que permite levá-lo ao agregador inteiro; `test/leitor.test.ts` falha se alguém
+  importar `@/...` lá dentro. Por isso `semAcento` é cópia de `paraBusca`, de propósito.
+- **Uma só chamada ao modelo**, em `extrair.ts`: `claude-opus-5-5`, esforço `medium`, saída
+  estruturada (`ListaLidaSchema`) e fallback do servidor (`fallbacks: "default"`) para recusa do
+  filtro de segurança. Recusa, resposta cortada e formato inválido viram ERRO, nunca lista vazia.
+- **O modelo padroniza o nome; `normalizar.ts` garante a forma**: quantidade inteira ≥ 1,
+  especificação sem repetição, e o mesmo item escrito duas vezes vira uma linha com as
+  quantidades somadas e os dois trechos originais. `chaveDoItem` é a identidade do item (sem
+  acento, caixa nem ordem das especificações), e é a chave que o casamento com catálogo vai usar.
+- **Em produção só com `LEITOR_LIBERADO=1`** (e `ANTHROPIC_API_KEY`). Qualquer um cria uma
+  papelaria pela página inicial, e cada leitura é uma chamada paga. Falta limite de leituras por
+  conta antes de abrir para papelaria de verdade.
+- **Arquivo até 4 MB** e Server Action com `bodySizeLimit: "4.5mb"` (`next.config.ts`): a
+  Vercel recusa corpo acima de 4,5 MB. Foto de celular passa disso com frequência; **reduzir a
+  imagem no navegador antes de enviar é a pendência seguinte**.
+- **Conferido no navegador sem chave** (19/10/2026): validação, erro "sem chave", texto que fica no
+  campo depois do erro e arquivo de 3 MB chegando à ação. **A leitura de verdade ainda não foi
+  medida**: não havia chave na sessão. O próximo passo é rodar 10 listas reais e conferir.
+
 ## Testes
 
 `pnpm test` sobe um banco descartável num **Postgres comum** (`TEST_DATABASE_URL`, usuário
