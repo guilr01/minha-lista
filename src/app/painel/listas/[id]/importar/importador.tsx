@@ -114,7 +114,10 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
                   <span className="text-[12px] font-bold uppercase tracking-[0.04em] text-apagado">Lista da escola</span>
                   <p className="text-[15px] font-semibold">{l.original}</p>
                 </div>
-                <span className={`inline-flex h-[26px] flex-none items-center rounded-full px-2.5 text-xs font-bold ${status[1]}`}>{status[0]}</span>
+                <div className="flex flex-none items-center gap-2">
+                  {sugestao && <span className="text-[13px] font-semibold text-apagado">{Math.round(sugestao.pontos * 100)}% parecido</span>}
+                  <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs font-bold ${status[1]}`}>{status[0]}</span>
+                </div>
               </div>
               <div className="flex flex-wrap items-end gap-3">
                 <label className={`${rotuloCampo} min-w-[240px] flex-[3]`}>
@@ -123,7 +126,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
                     {l.sugestoes.length > 0 && (
                       <optgroup label="Mais parecidos">
                         {l.sugestoes.map((s) => (
-                          <option key={s.produto_id} value={s.produto_id}>{s.nome} · {Math.round(s.pontos * 100)}% parecido</option>
+                          <option key={s.produto_id} value={s.produto_id}>{s.nome}</option>
                         ))}
                       </optgroup>
                     )}
