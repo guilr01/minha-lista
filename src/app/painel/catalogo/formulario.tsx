@@ -24,7 +24,7 @@ export function FormularioDeProduto({ produto }: { produto: ProdutoDoCadastro | 
           </label>
           <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[15px] font-semibold">
             <input type="checkbox" name="ativo" defaultChecked={produto?.ativo ?? true} className="size-[18px] accent-azul" />
-            Ativo: aparece nas listas e no catálogo dos pais
+            Ativo: aparece nas listas e no catálogo dos clientes
           </label>
         </section>
 

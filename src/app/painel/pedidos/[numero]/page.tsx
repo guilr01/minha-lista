@@ -50,9 +50,9 @@ export default async function PedidoNoPainel({ params }: Props) {
 
   // O que a papelaria precisa notar antes de separar.
   const atencao = [
-    ...p.itens.filter((i) => i.origem === "adicionado").map((i) => `${i.nome_produto}: incluído pelos pais (fora da lista)`),
+    ...p.itens.filter((i) => i.origem === "adicionado").map((i) => `${i.nome_produto}: incluído pelo cliente (fora da lista)`),
     ...p.itens.filter((i) => i.origem === "lista" && i.quantidade !== i.quantidade_lista)
-      .map((i) => `${i.nome_produto}: a lista pede ${i.quantidade_lista}, os pais pediram ${i.quantidade}`),
+      .map((i) => `${i.nome_produto}: a lista pede ${i.quantidade_lista}, o cliente pediu ${i.quantidade}`),
     ...p.itens.filter((i) => i.faixa !== i.faixa_pedida)
       .map((i) => `${i.nome_produto}: pedido na ${ROTULO_FAIXA[i.faixa_pedida]}, vai na ${ROTULO_FAIXA[i.faixa]} (faixa indisponível)`),
   ];

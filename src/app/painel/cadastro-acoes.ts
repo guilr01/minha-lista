@@ -144,7 +144,7 @@ export async function publicarListaAcao(_: EstadoDaAcao, f: FormData): Promise<E
 export async function encerrarListaAcao(_: EstadoDaAcao, f: FormData): Promise<EstadoDaAcao> {
   return executar(async (c) => {
     await cad.encerrarLista(c.usuarioId, texto(f, "lista"));
-    return "Lista encerrada. Ela saiu do ar para os pais.";
+    return "Lista encerrada. Ela saiu do ar para os clientes.";
   });
 }
 

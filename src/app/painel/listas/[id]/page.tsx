@@ -23,9 +23,9 @@ import {
 export const metadata: Metadata = { title: "Lista" };
 
 const STATUS = {
-  rascunho: { rotulo: "Rascunho", cor: "bg-aviso-fundo text-aviso", dica: "Os pais ainda não veem esta lista." },
-  publicada: { rotulo: "Publicada", cor: "bg-ok-fundo text-ok", dica: "Os pais já podem comprar por esta lista." },
-  encerrada: { rotulo: "Encerrada", cor: "bg-linha-2 text-apagado", dica: "Fora do ar. Publicar de novo a devolve aos pais." },
+  rascunho: { rotulo: "Rascunho", cor: "bg-aviso-fundo text-aviso", dica: "Os clientes ainda não veem esta lista." },
+  publicada: { rotulo: "Publicada", cor: "bg-ok-fundo text-ok", dica: "Os clientes já podem comprar por esta lista." },
+  encerrada: { rotulo: "Encerrada", cor: "bg-linha-2 text-apagado", dica: "Fora do ar. Publicar de novo a devolve aos clientes." },
 } as const;
 
 export default async function EditorDeLista({ params }: { params: Promise<{ id: string }> }) {
@@ -68,7 +68,7 @@ export default async function EditorDeLista({ params }: { params: Promise<{ id: 
         </div>
         <div className="flex flex-wrap items-start gap-2.5">
           {lista.status === "publicada" && (
-            <Link href={linkPublico} target="_blank" className={botaoContornoPequeno}>Ver como os pais veem</Link>
+            <Link href={linkPublico} target="_blank" className={botaoContornoPequeno}>Ver como os clientes veem</Link>
           )}
           {lista.status !== "publicada" ? (
             <FormAcao acao={publicarListaAcao} className="flex max-w-[320px] flex-col items-end gap-1">
@@ -76,7 +76,7 @@ export default async function EditorDeLista({ params }: { params: Promise<{ id: 
               <button type="submit" className={`${botaoPequeno} bg-ok hover:bg-[#246540]`}>Publicar lista</button>
             </FormAcao>
           ) : (
-            <FormAcao acao={encerrarListaAcao} confirmar="Encerrar a lista? Ela sai do ar para os pais." className="flex max-w-[320px] flex-col items-end gap-1">
+            <FormAcao acao={encerrarListaAcao} confirmar="Encerrar a lista? Ela sai do ar para os clientes." className="flex max-w-[320px] flex-col items-end gap-1">
               <input type="hidden" name="lista" value={lista.id} />
               <button type="submit" className={botaoContornoPequeno}>Encerrar</button>
             </FormAcao>
@@ -92,10 +92,10 @@ export default async function EditorDeLista({ params }: { params: Promise<{ id: 
           </div>
         ))}
       </section>
-      <p className="mt-2 text-[13px] text-apagado">O total que os pais veem em cada faixa, com os preços de hoje.</p>
+      <p className="mt-2 text-[13px] text-apagado">O total que os clientes veem em cada faixa, com os preços de hoje.</p>
       {foraDoAr.length > 0 && (
         <div className="mt-3"><Aviso>
-          Os pais não veem {foraDoAr.length === 1 ? "este item, inativo ou sem estoque" : "estes itens, inativos ou sem estoque"}:{" "}
+          Os clientes não veem {foraDoAr.length === 1 ? "este item, inativo ou sem estoque" : "estes itens, inativos ou sem estoque"}:{" "}
           <strong className="text-tinta">{foraDoAr.map((i) => i.nome).join(", ")}</strong>.
         </Aviso></div>
       )}
@@ -147,7 +147,7 @@ export default async function EditorDeLista({ params }: { params: Promise<{ id: 
         <FormAcao acao={salvarObservacoesAcao} className="flex flex-col gap-3">
           <input type="hidden" name="lista" value={lista.id} />
           <label className={rotuloCampo}>
-            Recado para os pais
+            Recado para os clientes
             <textarea name="observacoes" defaultValue={lista.observacoes ?? ""} rows={3} className={`${campo} h-auto py-2.5`}
               placeholder="Ex.: o avental de pintura é comprado na escola." />
           </label>

@@ -17,8 +17,8 @@ export const metadata: Metadata = { title: "Loja" };
 const campoCurto = campo.replace("w-full ", "");
 
 const EXPLICACAO: Record<Regra, string> = {
-  lista_completa: "O pai leva todos os itens da lista, nas quantidades da escola. Trocar a faixa ou incluir itens não tira o desconto.",
-  pix: "O pai paga no Pix.",
+  lista_completa: "O cliente leva todos os itens da lista, nas quantidades da escola. Trocar a faixa ou incluir itens não tira o desconto.",
+  pix: "O cliente paga no Pix.",
   valor_minimo: "Os produtos do pedido somam a partir do valor que você define.",
   faixa: "Todos os itens do pedido escolhidos na mesma faixa, a que você define.",
 };
@@ -34,7 +34,7 @@ export default async function Loja() {
     <>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Loja</h1>
       <p className="mt-1 text-[15px] text-apagado">
-        Link dos pais:{" "}
+        Link dos clientes:{" "}
         <Link href={`/${loja.slug}`} target="_blank" className="break-all font-semibold text-azul hover:underline">{host}/{loja.slug}</Link>
       </p>
 
@@ -45,7 +45,7 @@ export default async function Loja() {
           <label className={rotuloCampo}>
             WhatsApp de atendimento
             <input name="whatsapp" inputMode="tel" defaultValue={loja.whatsapp ? formatarTelefone(loja.whatsapp) : ""} className={campo} placeholder="(00) 00000-0000" />
-            <span className="text-[13px] font-normal text-apagado">Aparece para os pais como “Atendimento no WhatsApp”.</span>
+            <span className="text-[13px] font-normal text-apagado">Aparece para os clientes como “Atendimento no WhatsApp”.</span>
           </label>
         </section>
 
@@ -56,7 +56,7 @@ export default async function Loja() {
             Taxa de entrega (R$)
             <input name="taxa" inputMode="decimal" defaultValue={paraCampo(loja.taxa_entrega_centavos)} className={campo} />
           </label>
-          <label className={marcar}><input type="checkbox" name="aceita_retirada" defaultChecked={loja.aceita_retirada} className="size-[18px] accent-azul" />Os pais podem retirar na loja</label>
+          <label className={marcar}><input type="checkbox" name="aceita_retirada" defaultChecked={loja.aceita_retirada} className="size-[18px] accent-azul" />Os clientes podem retirar na loja</label>
           <label className={rotuloCampo}>
             Endereço para retirada
             <input name="endereco_retirada" defaultValue={loja.endereco_retirada ?? ""} className={campo} placeholder="Rua, número e bairro" />
@@ -77,7 +77,7 @@ export default async function Loja() {
           <h2 id="descontos" className="text-base font-bold">Descontos</h2>
           <p className="text-[13px] text-apagado">
             Ligue as regras que fazem sentido para a sua loja e escolha a porcentagem de cada uma. Quando o pedido cumpre mais de
-            uma, os descontos se somam, até 50%, e valem sobre os produtos (a taxa de entrega não entra). Os pais veem as regras
+            uma, os descontos se somam, até 50%, e valem sobre os produtos (a taxa de entrega não entra). Os clientes veem as regras
             na lista e o desconto no resumo antes de pagar.
           </p>
           <ul className="mt-2 flex flex-col divide-y divide-linha-2">

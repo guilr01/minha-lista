@@ -201,7 +201,7 @@ export async function gerarPlanilha(produtos: ProdutoParaPlanilha[] = []): Promi
     ["Como preencher o catálogo", true],
     ["", false],
     ["1. Use a aba \"Catálogo\". Uma linha por produto. Não mude os títulos da primeira linha.", false],
-    ["2. Produto: o nome como o pai vai ver, já dizendo o que vem nele. Ex.: Papel sulfite A4 pacote com 100 folhas.", false],
+    ["2. Produto: o nome como o cliente vai ver, já dizendo o que vem nele. Ex.: Papel sulfite A4 pacote com 100 folhas.", false],
     ["   Cada produto conta como 1 item: o pacote de 100 folhas é 1, não 100.", false],
     ["3. Faixas: preencha a MARCA e o PREÇO de cada faixa que você vende. Pode preencher só uma ou duas.", false],
     ["   Econômica = a opção mais em conta. Intermediária = boa qualidade. Premium = as melhores marcas.", false],

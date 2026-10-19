@@ -275,6 +275,10 @@ Foi assim que as 5 migrações e o seed entraram, e os hashes bateram em todas a
 
 ## Convenções
 
+**Na tela, quem compra é "cliente", nunca "pai" ou "pais"** (decisão do Guilherme, 19/10/2026).
+Vale para todo texto que a papelaria ou o comprador leem: telas, mensagens, planilha. Nomes no
+código (`comoPai`, "área do pai" nos comentários) ficam: não aparecem para ninguém.
+
 Domínio em português (`fornecedor`, `pedido`, `lista_item`); infraestrutura em inglês.
 Interface toda em pt-BR, valores em R$. Cores, fontes e raios só em `src/app/globals.css`
 (`@theme`), vindos do protótipo. Mobile-first na área do pai.

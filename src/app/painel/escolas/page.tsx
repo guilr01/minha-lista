@@ -36,7 +36,7 @@ export default async function Escolas() {
     <>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Escolas e listas</h1>
       <p className="mt-1 text-[15px] text-apagado">
-        Cada série tem uma lista por ano letivo. Os pais só veem a lista publicada.
+        Cada série tem uma lista por ano letivo. Os clientes só veem a lista publicada.
       </p>
 
       <section className={`${cartao} mt-5 p-4 lg:p-[22px]`}>

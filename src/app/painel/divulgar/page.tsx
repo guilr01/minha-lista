@@ -36,7 +36,7 @@ export default async function Divulgar() {
       <div className="print:hidden">
         <h1 className="titulo text-2xl font-bold lg:text-[30px]">Divulgar</h1>
         <p className="mt-1.5 max-w-[640px] text-[15px] text-apagado">
-          Mande o link da sua loja para os pais ou deixe o QR code no balcão. Quem abrir escolhe a escola, a série e faz o pedido.
+          Mande o link da sua loja para os clientes ou deixe o QR code no balcão. Quem abrir escolhe a escola, a série e faz o pedido.
         </p>
 
         <div className="mt-[18px] grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -52,7 +52,7 @@ export default async function Divulgar() {
                   <Icone nome="conversa" tamanho={18} />Enviar pelo WhatsApp
                 </a>
                 <Link href={`/${papelaria.slug}`} target="_blank" className={botaoContornoPequeno}>
-                  <Icone nome="seta" tamanho={18} />Ver como os pais veem
+                  <Icone nome="seta" tamanho={18} />Ver como os clientes veem
                 </Link>
               </div>
             </section>
