@@ -160,6 +160,22 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
   PNG, imprimir cartaz para o balcão) e o link de cada série publicada. A lista de séries vem da
   MESMA vitrine que os pais veem: só aparece o que de fato abre lá.
 
+## Catálogo pelo Excel (19/10/2026)
+
+- **`/painel/catalogo/importar`**: baixa o modelo (ou o catálogo atual, no mesmo formato), sobe o
+  `.xlsx`, CONFERE (mostra novos, atualizados e as linhas com problema, sem gravar) e só então
+  importa. Os dois passos recebem o MESMO arquivo e o leem de novo no servidor.
+- **Uma linha por produto**: Produto · Categoria · Unidade · marca e preço de cada faixa. A leitura
+  é pelo TÍTULO da coluna, não pela posição (`src/lib/planilha-catalogo.ts`).
+- **Regras da gravação** (`importarCatalogo` em `src/lib/cadastro.ts`), todas numa transação só:
+  nome igual (sem caixa, acento e espaço extra) ATUALIZA; o resto é criado; faixa em branco NÃO
+  mexe na faixa cadastrada; categoria e unidade em branco mantêm as atuais; **nada é apagado**.
+  Apagar por omissão numa planilha seria fácil demais de fazer sem querer.
+- **Linha com problema não entra, e as outras podem entrar**: a tela diz quantas ficam de fora.
+- O download fica em `/api/catalogo/planilha` (rota, não página; o lint recusa `<a>` para página).
+- O corpo de Server Action foi a 4 MB (`next.config.ts`), abaixo do teto de 4,5 MB da Vercel; o
+  arquivo é limitado a 3 MB e 3.000 produtos.
+
 ## Do protótipo, o que NÃO entra agora
 
 O protótipo tem leitura de lista por foto e por texto colado, e a fila "Itens não

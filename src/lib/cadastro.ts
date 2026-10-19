@@ -1,6 +1,7 @@
 import "server-only";
 import { comoUsuario, type Consulta } from "./db";
 import { FAIXAS, type Faixa } from "./faixa";
+import { chaveDoNome, type LinhaDaPlanilha } from "./planilha-catalogo";
 import { sugerirSlug } from "./slug";
 
 // O cadastro da papelaria: catálogo, escolas, séries, listas e os dados da
@@ -129,6 +130,62 @@ export async function salvarProduto(usuarioId: string, fornecedorId: string, id:
       }
     }
     return produtoId!;
+  });
+}
+
+export type ResultadoDaImportacao = { criados: number; atualizados: number };
+
+/**
+ * Grava as linhas da planilha (já conferidas por lerPlanilha) numa transação
+ * só: ou entra tudo, ou nada. Produto com o mesmo nome (sem caixa, acento e
+ * espaço extra) é atualizado; o resto é criado. Faixa em branco na planilha
+ * não mexe na faixa cadastrada, e nada é apagado: apagar por omissão numa
+ * planilha seria fácil demais de fazer sem querer.
+ */
+export async function importarCatalogo(usuarioId: string, fornecedorId: string, linhas: LinhaDaPlanilha[]) {
+  return rodar(usuarioId, async (q): Promise<ResultadoDaImportacao> => {
+    const existentes = new Map<string, string>();
+    for (const p of (await q<{ id: string; nome: string }>(
+      "select id, nome from public.produto where fornecedor_id = $1 order by criado_em", [fornecedorId],
+    )).rows) {
+      const k = chaveDoNome(p.nome);
+      if (!existentes.has(k)) existentes.set(k, p.id);
+    }
+    let criados = 0;
+    let atualizados = 0;
+    for (const l of linhas) {
+      let id = existentes.get(chaveDoNome(l.nome));
+      if (id) {
+        await q(
+          `update public.produto set nome = $2, categoria = coalesce(nullif($3, ''), categoria),
+                  unidade = coalesce(nullif($4, ''), unidade)
+            where id = $1`,
+          [id, l.nome, l.categoria, l.unidade],
+        );
+        atualizados++;
+      } else {
+        id = (await q<{ id: string }>(
+          `insert into public.produto (fornecedor_id, nome, categoria, unidade, ordem)
+           values ($1, $2, nullif($3, ''), coalesce(nullif($4, ''), 'un'),
+                   coalesce((select max(ordem) + 1 from public.produto where fornecedor_id = $1), 0))
+           returning id`,
+          [fornecedorId, l.nome, l.categoria, l.unidade],
+        )).rows[0].id;
+        existentes.set(chaveDoNome(l.nome), id);
+        criados++;
+      }
+      for (const f of FAIXAS) {
+        const o = l.opcoes[f];
+        if (!o) continue;
+        await q(
+          `insert into public.produto_opcao (fornecedor_id, produto_id, faixa, marca, preco_centavos)
+           values ($1, $2, $3, $4, $5)
+           on conflict (produto_id, faixa) do update set marca = excluded.marca, preco_centavos = excluded.preco_centavos`,
+          [fornecedorId, id, f, o.marca, o.preco_centavos],
+        );
+      }
+    }
+    return { criados, atualizados };
   });
 }
 

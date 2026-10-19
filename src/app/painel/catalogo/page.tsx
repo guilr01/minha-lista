@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Icone } from "@/components/icone";
-import { ChipFaixa, botaoPequeno, cartao } from "@/components/ui";
+import { ChipFaixa, botaoContornoPequeno, botaoPequeno, cartao } from "@/components/ui";
 import { listarProdutos, type ProdutoDoCadastro } from "@/lib/cadastro";
 import { reais } from "@/lib/dinheiro";
 import { FAIXAS, type Faixa } from "@/lib/faixa";
@@ -37,13 +37,17 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
             Cada item tem até três opções. Mudar um preço vale para os próximos pedidos; os já feitos não mudam.
           </p>
         </div>
-        <Link href="/painel/catalogo/novo" className={botaoPequeno}><Icone nome="mais" tamanho={18} />Novo produto</Link>
+        <div className="flex flex-wrap gap-2.5">
+          <Link href="/painel/catalogo/importar" className={botaoContornoPequeno}><Icone nome="lista" tamanho={18} />Importar planilha</Link>
+          <Link href="/painel/catalogo/novo" className={botaoPequeno}><Icone nome="mais" tamanho={18} />Novo produto</Link>
+        </div>
       </div>
       {salvo && <p role="status" className="mt-3 text-sm font-semibold text-ok">Produto salvo.</p>}
 
       {produtos.length === 0 ? (
         <div className={`${cartao} mt-5 px-5 py-10 text-center text-apagado`}>
-          Nenhum produto ainda. Comece pelo que mais aparece nas listas: cadernos, lápis, borracha.
+          Nenhum produto ainda. Cadastre um a um em “Novo produto” ou todos de uma vez pela{" "}
+          <Link href="/painel/catalogo/importar" className="font-semibold text-azul hover:underline">planilha do Excel</Link>.
         </div>
       ) : (
         <BuscaDoCatalogo>

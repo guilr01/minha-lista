@@ -146,3 +146,55 @@ describe("exclusões barradas pelo banco viram mensagem", () => {
     await expect(cad.excluirEscola(p.usuario, e.id)).rejects.toThrow(cad.ErroDeCadastro);
   });
 });
+
+describe("importação do catálogo pela planilha", () => {
+  const linha = (nome: string, economica?: number, premium?: number, categoria = "") => ({
+    linha: 2, nome, categoria, unidade: "",
+    opcoes: {
+      ...(economica ? { economica: { marca: "Básica", preco_centavos: economica } } : {}),
+      ...(premium ? { premium: { marca: "Top", preco_centavos: premium } } : {}),
+    },
+  });
+
+  it("cria o que é novo, atualiza pelo nome e não apaga nada", async () => {
+    const p = await papelariaNova();
+    const fica = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Fica como está", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(100) });
+    const muda = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Caderno Universitário", categoria: "Cadernos", unidade: "un", ativo: true, opcoes: opcoes(900, 1500) });
+
+    const r = await cad.importarCatalogo(p.usuario, p.fornecedor, [
+      linha("caderno  universitario", 990, 2500),
+      linha("Lápis", 150, undefined, "Escrita"),
+    ]);
+    expect(r).toEqual({ criados: 1, atualizados: 1 });
+
+    const todos = await cad.listarProdutos(p.usuario, p.fornecedor);
+    expect(todos).toHaveLength(3);
+    expect(todos.find((x) => x.id === fica)?.opcoes.map((o) => o.preco_centavos)).toEqual([100]);
+    const atualizado = todos.find((x) => x.id === muda)!;
+    // A categoria em branco na planilha mantém a cadastrada; a intermediária, em branco, fica.
+    expect(atualizado).toMatchObject({ nome: "caderno  universitario", categoria: "Cadernos" });
+    expect(atualizado.opcoes.map((o) => [o.faixa, o.marca, o.preco_centavos])).toEqual([
+      ["economica", "Básica", 990], ["intermediaria", "Boa", 1500], ["premium", "Top", 2500],
+    ]);
+    expect(todos.find((x) => x.nome === "Lápis")).toMatchObject({ categoria: "Escrita", unidade: "un" });
+  });
+
+  it("é tudo ou nada: um erro no banco desfaz a importação inteira", async () => {
+    const p = await papelariaNova();
+    await expect(cad.importarCatalogo(p.usuario, p.fornecedor, [
+      linha("Bom", 100),
+      { ...linha("Ruim", 100), opcoes: { economica: { marca: "x".repeat(81), preco_centavos: 100 } } },
+    ])).rejects.toThrow();
+    expect(await cad.listarProdutos(p.usuario, p.fornecedor)).toEqual([]);
+  });
+
+  it("não grava no catálogo de outra papelaria, nem casando o nome", async () => {
+    const a = await papelariaNova();
+    const b = await papelariaNova();
+    await cad.salvarProduto(b.usuario, b.fornecedor, null, { nome: "Borracha", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(300) });
+    // A pessoa de A tenta importar para o fornecedor de B: o RLS recusa.
+    await expect(cad.importarCatalogo(a.usuario, b.fornecedor, [linha("Borracha", 1)])).rejects.toThrow();
+    const deB = await cad.listarProdutos(b.usuario, b.fornecedor);
+    expect(deB.map((x) => x.opcoes[0].preco_centavos)).toEqual([300]);
+  });
+});
