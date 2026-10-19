@@ -24,7 +24,7 @@ export default async function VitrineDaPapelaria({ params, searchParams }: Props
     <main className="mx-auto w-full max-w-[1200px] px-5 pb-10 pt-5 lg:px-10 lg:pt-12">
       <div className="max-w-[720px]">
         <h1 className="titulo text-[30px] font-bold leading-[1.12] lg:text-[46px] lg:leading-[1.05]">
-          A lista de material do seu filho, pronta e entregue em casa.
+          A lista de material do aluno, pronta e entregue em casa.
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-apagado lg:mt-3 lg:text-lg">
           Escolha a escola e a série. Você vê a lista com os preços em três faixas, ajusta o que
