@@ -224,3 +224,51 @@ describe("importação do catálogo pela planilha", () => {
     expect(deB.map((x) => x.opcoes[0].preco_centavos)).toEqual([300]);
   });
 });
+
+describe("importação da lista da escola", () => {
+  async function listaCom(p: { usuario: string; fornecedor: string }) {
+    const escola = await cad.criarEscola(p.usuario, p.fornecedor, "Colégio Teste", "");
+    const serie = await cad.criarSerie(p.usuario, p.fornecedor, (escola as { id: string }).id, "3º ano");
+    return cad.criarLista(p.usuario, p.fornecedor, (serie as { id: string }).id, 2027);
+  }
+
+  it("soma linhas repetidas, troca a quantidade do que já estava e põe o que falta no recado", async () => {
+    const p = await papelariaNova();
+    const lapis = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Lápis", ativo: true, opcoes: opcoes(150) });
+    const cola = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Cola", ativo: true, opcoes: opcoes(390) });
+    const listaId = await listaCom(p);
+    await cad.adicionarItem(p.usuario, p.fornecedor, listaId, cola, 1, "");
+    await cad.salvarObservacoes(p.usuario, listaId, "Avental é comprado na escola.");
+
+    await cad.importarItensDaLista(p.usuario, p.fornecedor, listaId, [
+      { produto_id: lapis, quantidade: 2, observacao: "" },
+      { produto_id: lapis, quantidade: 1, observacao: "para o estojo" },
+      { produto_id: cola, quantidade: 3, observacao: "" },
+    ], ["Dicionário Aurélio"]);
+
+    const l = await cad.buscarListaDoEditor(p.usuario, listaId);
+    expect(l?.itens.map((i) => [i.nome, i.quantidade, i.observacao])).toEqual([["Cola", 3, null], ["Lápis", 3, "para o estojo"]]);
+    expect(l?.observacoes).toBe("Avental é comprado na escola.\n\nItens da lista da escola que não vendemos:\n• Dicionário Aurélio");
+  });
+
+  it("não grava na lista nem com produto de outra papelaria, e não deixa nada pela metade", async () => {
+    const a = await papelariaNova();
+    const b = await papelariaNova();
+    const deA = await cad.salvarProduto(a.usuario, a.fornecedor, null, { nome: "Borracha", ativo: true, opcoes: opcoes(150) });
+    const deB = await cad.salvarProduto(b.usuario, b.fornecedor, null, { nome: "Borracha", ativo: true, opcoes: opcoes(150) });
+    const listaDeB = await listaCom(b);
+    const listaDeA = await listaCom(a);
+    await expect(cad.importarItensDaLista(a.usuario, a.fornecedor, listaDeB, [{ produto_id: deA, quantidade: 1, observacao: "" }], [])).rejects.toThrow();
+    await expect(cad.importarItensDaLista(a.usuario, a.fornecedor, listaDeA,
+      [{ produto_id: deA, quantidade: 1, observacao: "" }, { produto_id: deB, quantidade: 1, observacao: "" }], [])).rejects.toThrow();
+    expect((await cad.buscarListaDoEditor(a.usuario, listaDeA))?.itens).toEqual([]);
+  });
+
+  it("série escolhida na lista padrão entra na ordem certa, a digitada vai depois", async () => {
+    const p = await papelariaNova();
+    const escola = (await cad.criarEscola(p.usuario, p.fornecedor, "Escola Ordem", "")) as { id: string };
+    for (const nome of ["Infantil 5", "2ª série do Ensino Médio", "9º ano", "1º ano"]) await cad.criarSerie(p.usuario, p.fornecedor, escola.id, nome);
+    const e = (await cad.listarEscolas(p.usuario, p.fornecedor)).find((x) => x.id === escola.id)!;
+    expect(e.series.map((s) => s.nome)).toEqual(["1º ano", "9º ano", "2ª série do Ensino Médio", "Infantil 5"]);
+  });
+});

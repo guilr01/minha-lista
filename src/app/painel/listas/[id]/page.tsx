@@ -28,8 +28,9 @@ const STATUS = {
   encerrada: { rotulo: "Encerrada", cor: "bg-linha-2 text-apagado", dica: "Fora do ar. Publicar de novo a devolve aos clientes." },
 } as const;
 
-export default async function EditorDeLista({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditorDeLista({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ importada?: string }> }) {
   const { id } = await params;
+  const { importada } = await searchParams;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const u = await exigirUsuario();
   const papelaria = (await papelariaAtual(u.id))!;
@@ -82,6 +83,21 @@ export default async function EditorDeLista({ params }: { params: Promise<{ id: 
             </FormAcao>
           )}
         </div>
+      </div>
+
+      {importada && (
+        <p role="status" className="mt-4 rounded-botao bg-ok-fundo px-4 py-3 text-sm font-semibold text-ok">
+          Lista da escola importada. Confira os itens abaixo e o recado com o que você não vende.
+        </p>
+      )}
+      <div className={`${cartao} mt-4 flex flex-wrap items-center justify-between gap-3 border-dashed p-4`}>
+        <span className="text-[15px]">
+          <strong>Recebeu a lista da escola?</strong>{" "}
+          <span className="text-apagado">Suba o arquivo e o sistema encontra cada item no seu catálogo.</span>
+        </span>
+        <Link href={`/painel/listas/${lista.id}/importar`} className={botaoContornoPequeno}>
+          <Icone nome="lista" tamanho={18} />Importar a lista da escola
+        </Link>
       </div>
 
       <section aria-label="Totais da lista" className="mt-5 grid grid-cols-3 gap-2.5 lg:gap-3">

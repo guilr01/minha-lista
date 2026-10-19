@@ -202,12 +202,29 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
 - **O pedido congela o desconto**: `pedido.desconto_centavos` e `pedido.descontos` (as regras que
   valeram) entram no gatilho de congelamento. O total passa a ser produtos − desconto + entrega.
 
+## Lista da escola e séries padrão (19/10/2026)
+
+- **A série vem de uma lista pronta** (`src/lib/series.ts`): 1º ao 9º ano e 1ª a 3ª série do
+  Ensino Médio, com "Outra série (digitar)" para o resto. A posição na lista vira `serie.ordem`, e
+  a série digitada vai depois de todas (ordem ≥ 100).
+- **Importar a lista da escola entrou** (decisão do Guilherme, 19/10/2026), e com isso deixa de
+  valer o "importação de lista fora do escopo" de 05/10. Continua de fora a FOTO: ler imagem
+  exigiria reconhecimento de texto. Entra PDF com texto, Word (.docx), Excel, CSV, .txt e texto
+  colado (`src/lib/arquivo-de-lista.ts`).
+- **A comparação SUGERE, a papelaria DECIDE** (`src/lib/lista-da-escola.ts`): `lerLinhas` separa
+  quantidade (no começo, no fim ou por extenso), descrição e o que vem entre parênteses (vira
+  observação); `sugerir` dá os 3 produtos mais parecidos por palavras em comum, sem acento, plural
+  e abreviação, com a primeira palavra pesando ("o que é") e número que contradiz pesando contra.
+  Abaixo de `NOTA_MINIMA` a linha começa como indisponível; título de seção começa ignorado.
+- **Nada é gravado sem a conferência**, e a gravação é uma transação só (`importarItensDaLista`):
+  linhas repetidas somam, produto que já estava fica com a quantidade da escola, e o que a
+  papelaria não vende vai para o RECADO da lista num bloco "Itens da lista da escola que não
+  vendemos:", que o cliente vê. Importar de novo troca o bloco em vez de repetir.
+
 ## Do protótipo, o que NÃO entra agora
 
-O protótipo tem leitura de lista por foto e por texto colado, e a fila "Itens não
-encontrados" que nasce dela. **Importação de lista está fora do escopo**: no produto o pai
-sempre parte de uma lista que a papelaria cadastrou, e por isso não existe item "em
-análise". Também ficam fora: gateway real e split, envio de WhatsApp (o ponto de integração é
+O protótipo tem leitura de lista por foto e a fila "Itens não encontrados" que nasce dela.
+**Foto continua fora**; PDF, Word, planilha e texto colado entraram em 19/10/2026 (acima). Também ficam fora: gateway real e split, envio de WhatsApp (o ponto de integração é
 `pedido_evento`), marketplace.
 
 ## Testes

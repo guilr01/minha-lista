@@ -3,6 +3,8 @@ import { comoUsuario, type Consulta } from "./db";
 import type { RegrasDeDesconto } from "./desconto";
 import { FAIXAS, type Faixa } from "./faixa";
 import { chaveDoNome, type LinhaDaPlanilha } from "./planilha-catalogo";
+import { recadoComIndisponiveis } from "./lista-da-escola";
+import { ordemPadrao } from "./series";
 import { sugerirSlug } from "./slug";
 
 // O cadastro da papelaria: catálogo, escolas, séries, listas e os dados da
@@ -256,10 +258,13 @@ export async function criarSerie(usuarioId: string, fornecedorId: string, escola
   return rodar(usuarioId, (q) =>
     inserirComSlug(q, nome, async (slug) =>
       (await q<{ id: string }>(
+        // Série padrão vai na posição dela (1º ano antes de 2º, Ensino Médio
+        // depois do 9º); a digitada à mão, depois de todas.
         `insert into public.serie (fornecedor_id, escola_id, nome, slug, ordem)
-         values ($1, $2, $3, $4, coalesce((select max(ordem) + 1 from public.serie where escola_id = $2), 0))
+         values ($1, $2, $3, $4, coalesce($5::int,
+                 greatest(100, coalesce((select max(ordem) + 1 from public.serie where escola_id = $2), 0))))
          returning id`,
-        [fornecedorId, escolaId, nome.trim(), slug],
+        [fornecedorId, escolaId, nome.trim(), slug, ordemPadrao(nome)],
       )).rows[0],
     ),
   );
@@ -363,6 +368,44 @@ export async function alterarItem(usuarioId: string, itemId: string, qtd: number
 export async function removerItem(usuarioId: string, itemId: string) {
   return rodar(usuarioId, async (q) => {
     await q(`delete from public.lista_item where id = $1`, [itemId]);
+  });
+}
+
+export type ItemImportado = { produto_id: string; quantidade: number; observacao: string };
+
+/**
+ * Grava o que a papelaria conferiu na importação da lista da escola, numa
+ * transação só: os itens (produto já na lista tem a quantidade trocada pela
+ * da escola) e, no recado, o bloco com o que ela não vende.
+ */
+export async function importarItensDaLista(usuarioId: string, fornecedorId: string, listaId: string,
+  itens: ItemImportado[], indisponiveis: string[]) {
+  // A mesma linha da escola pode aparecer duas vezes ("2 lápis" e "1 lápis
+  // para o estojo"): as quantidades se somam.
+  const porProduto = new Map<string, ItemImportado>();
+  for (const i of itens) {
+    validarQuantidade(i.quantidade);
+    const ja = porProduto.get(i.produto_id);
+    porProduto.set(i.produto_id, ja
+      ? { ...ja, quantidade: Math.min(99, ja.quantidade + i.quantidade), observacao: [ja.observacao, i.observacao].filter(Boolean).join("; ") }
+      : i);
+  }
+  return rodar(usuarioId, async (q) => {
+    const l = await q<{ observacoes: string | null }>("select observacoes from public.lista where id = $1", [listaId]);
+    if (!l.rowCount) throw new ErroDeCadastro("Lista não encontrada.");
+    for (const i of porProduto.values()) {
+      await q(
+        `insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, observacao, ordem)
+         values ($1, $2, $3, $4, nullif($5, ''),
+                 coalesce((select max(ordem) + 1 from public.lista_item where lista_id = $2), 0))
+         on conflict (lista_id, produto_id) do update
+           set quantidade = excluded.quantidade, observacao = coalesce(excluded.observacao, public.lista_item.observacao)`,
+        [fornecedorId, listaId, i.produto_id, i.quantidade, i.observacao.trim().slice(0, 200)],
+      );
+    }
+    await q("update public.lista set observacoes = nullif($2, '') where id = $1",
+      [listaId, recadoComIndisponiveis(l.rows[0].observacoes, indisponiveis.map((t) => t.trim().slice(0, 160)).filter(Boolean))]);
+    return { itens: porProduto.size, indisponiveis: indisponiveis.length };
   });
 }
 

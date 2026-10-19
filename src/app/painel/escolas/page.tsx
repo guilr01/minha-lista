@@ -5,6 +5,7 @@ import { Icone } from "@/components/icone";
 import { botaoContornoPequeno, botaoPequeno, campo, cartao, rotuloCampo } from "@/components/ui";
 import { listarEscolas, type ResumoDaLista } from "@/lib/cadastro";
 import { exigirUsuario, papelariaAtual } from "@/lib/sessao";
+import { SeletorDeSerie } from "./seletor-de-serie";
 import { criarEscolaAcao, criarListaAcao, criarSerieAcao, excluirEscolaAcao, excluirSerieAcao } from "../cadastro-acoes";
 
 export const metadata: Metadata = { title: "Escolas e listas" };
@@ -121,10 +122,7 @@ export default async function Escolas() {
 
             <FormAcao acao={criarSerieAcao} limparAoSalvar className="flex flex-wrap items-end gap-3 bg-[#fbfaf6] px-4 py-3.5 lg:px-[22px]">
               <input type="hidden" name="escola" value={e.id} />
-              <label className={`${rotuloCampo} min-w-[200px] flex-1`}>
-                Nova série
-                <input name="nome" required className={campo} placeholder="Ex.: 3º ano" />
-              </label>
+              <SeletorDeSerie existentes={e.series.map((s) => s.nome)} />
               <button type="submit" className={botaoContornoPequeno}><Icone nome="mais" tamanho={18} />Adicionar série</button>
             </FormAcao>
           </section>
