@@ -90,7 +90,7 @@ export function Importador() {
               <table className="w-full min-w-[640px] border-collapse text-sm">
                 <thead>
                   <tr className="bg-[#fbfaf6] text-left text-xs font-bold uppercase tracking-[0.04em] text-apagado">
-                    {["Linha", "Produto", "Categoria", "Econômica", "Intermediária", "Premium"].map((t) => (
+                    {["Linha", "Produto", "Econômica", "Intermediária", "Premium"].map((t) => (
                       <th key={t} className="border-b border-linha px-3 py-2">{t}</th>
                     ))}
                   </tr>
@@ -105,7 +105,6 @@ export function Importador() {
                           {l.novo ? "novo" : "atualiza"}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-apagado">{l.categoria || "–"}</td>
                       {FAIXAS.map((f) => {
                         const o = l.opcoes[f];
                         return (

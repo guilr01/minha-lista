@@ -253,7 +253,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
                   <strong className="text-[15px] font-semibold">{p.nome}</strong>
                   {o ? (
                     <span className="text-[13px] text-apagado">
-                      {o.marca} · {l.quantidade} {p.unidade}{l.quantidade > 1 ? ` × ${reais(o.preco_centavos)}` : ""}
+                      {o.marca}{l.quantidade > 1 ? ` · ${l.quantidade} × ${reais(o.preco_centavos)}` : ""}
                     </span>
                   ) : (
                     <span className="text-[13px] font-semibold text-aviso">Indisponível no momento: não entra no valor</span>

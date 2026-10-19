@@ -57,8 +57,6 @@ export async function salvarProdutoAcao(_: EstadoDaAcao, f: FormData): Promise<E
   const r = await executar(async (c) => {
     novoId = await cad.salvarProduto(c.usuarioId, c.fornecedorId, id, {
       nome: texto(f, "nome"),
-      categoria: texto(f, "categoria"),
-      unidade: texto(f, "unidade"),
       ativo: f.get("ativo") === "on",
       opcoes,
     });

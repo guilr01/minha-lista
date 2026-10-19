@@ -19,7 +19,7 @@ export function BuscaDoCatalogo({ children }: { children: React.ReactNode }) {
     <>
       <label className="my-4 block max-w-[360px]">
         <span className="sr-only">Buscar produto</span>
-        <input className={campo} placeholder="Buscar produto, categoria ou marca…" value={termo} onChange={(e) => setTermo(e.target.value)} />
+        <input className={campo} placeholder="Buscar produto ou marca…" value={termo} onChange={(e) => setTermo(e.target.value)} />
       </label>
       <div ref={area}>{children}</div>
     </>

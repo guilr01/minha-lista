@@ -142,7 +142,7 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
 
 - **A página inicial (`/`) é o cadastro da PAPELARIA.** Os pais nunca chegam nela: chegam pelo
   link da papelaria. `/cadastro` redireciona para `/#cadastro`, para quem tem o link antigo.
-- **A vitrine dos pais é uma caixa só**: seletor de escola e, embaixo, as séries dela
+- **A vitrine dos pais é uma caixa só**: seletor de escola e, embaixo, o seletor da série
   (`src/app/[papelaria]/escolha.tsx`). Sem JavaScript, o seletor volta para a página com
   `?escola=` e o servidor já traz a escola escolhida. As séries continuam links de verdade.
 - **O pedido dos pais tem TRÊS passos**: (1) lista e faixa na mesma tela, só leitura, com a marca
@@ -165,16 +165,24 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
 - **`/painel/catalogo/importar`**: baixa o modelo (ou o catálogo atual, no mesmo formato), sobe o
   `.xlsx`, CONFERE (mostra novos, atualizados e as linhas com problema, sem gravar) e só então
   importa. Os dois passos recebem o MESMO arquivo e o leem de novo no servidor.
-- **Uma linha por produto**: Produto · Categoria · Unidade · marca e preço de cada faixa. A leitura
-  é pelo TÍTULO da coluna, não pela posição (`src/lib/planilha-catalogo.ts`).
+- **Uma linha por produto**: Produto · marca e preço de cada faixa. A leitura é pelo TÍTULO da
+  coluna, não pela posição (`src/lib/planilha-catalogo.ts`); planilha antiga com Categoria e
+  Unidade ainda é lida, e essas colunas são ignoradas.
 - **Regras da gravação** (`importarCatalogo` em `src/lib/cadastro.ts`), todas numa transação só:
   nome igual (sem caixa, acento e espaço extra) ATUALIZA; o resto é criado; faixa em branco NÃO
-  mexe na faixa cadastrada; categoria e unidade em branco mantêm as atuais; **nada é apagado**.
+  mexe na faixa cadastrada; **nada é apagado**.
   Apagar por omissão numa planilha seria fácil demais de fazer sem querer.
 - **Linha com problema não entra, e as outras podem entrar**: a tela diz quantas ficam de fora.
 - O download fica em `/api/catalogo/planilha` (rota, não página; o lint recusa `<a>` para página).
 - O corpo de Server Action foi a 4 MB (`next.config.ts`), abaixo do teto de 4,5 MB da Vercel; o
   arquivo é limitado a 3 MB e 3.000 produtos.
+
+- **Sem categoria e sem unidade** (decisão do Guilherme, 19/10/2026): cada produto conta como 1
+  item (o pacote de 100 folhas é 1, não 100), e a categoria não ajudava ninguém. Saíram do
+  formulário, da lista do catálogo, da planilha e da tela dos pais. As colunas `produto.categoria`
+  e `produto.unidade` ficam no banco, sem uso, para não perder o que já foi cadastrado.
+- **A vitrine dos pais tem DUAS listas suspensas**: escola e, depois dela, a série; o botão "Ver a
+  lista" leva ao link da série.
 
 ## Do protótipo, o que NÃO entra agora
 

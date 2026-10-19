@@ -18,7 +18,7 @@ export type Previa = {
   novos?: number;
   atualizados?: number;
   erros?: LeituraDaPlanilha["erros"];
-  amostra?: { linha: number; nome: string; categoria: string; novo: boolean; opcoes: Partial<Record<Faixa, { marca: string; preco_centavos: number }>> }[];
+  amostra?: { linha: number; nome: string; novo: boolean; opcoes: Partial<Record<Faixa, { marca: string; preco_centavos: number }>> }[];
   resultado?: ResultadoDaImportacao;
 };
 
@@ -47,7 +47,7 @@ export async function conferirPlanilhaAcao(f: FormData): Promise<Previa> {
     novos: marcadas.filter((l) => l.novo).length,
     atualizados: marcadas.filter((l) => !l.novo).length,
     erros: r.leitura.erros,
-    amostra: marcadas.map(({ linha, nome, categoria, novo, opcoes }) => ({ linha, nome, categoria, novo, opcoes })),
+    amostra: marcadas.map(({ linha, nome, novo, opcoes }) => ({ linha, nome, novo, opcoes })),
   };
 }
 

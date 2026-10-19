@@ -74,7 +74,7 @@ const SELECT_PRODUTO = `
 export async function listarProdutos(usuarioId: string, fornecedorId: string) {
   return rodar(usuarioId, async (q) =>
     (await q<ProdutoDoCadastro>(`${SELECT_PRODUTO} where p.fornecedor_id = $1
-      order by p.ativo desc, p.categoria nulls last, p.ordem, p.nome`, [fornecedorId])).rows,
+      order by p.ativo desc, p.nome`, [fornecedorId])).rows,
   );
 }
 
@@ -82,10 +82,11 @@ export async function buscarProduto(usuarioId: string, id: string) {
   return rodar(usuarioId, async (q) => (await q<ProdutoDoCadastro>(`${SELECT_PRODUTO} where p.id = $1`, [id])).rows[0] ?? null);
 }
 
+// Categoria e unidade saíram da tela em 19/10/2026: cada produto conta como 1
+// (o pacote de 100 folhas é 1 item), e a categoria não ajudava ninguém. As
+// colunas ficam no banco, sem uso, para não perder o que já foi cadastrado.
 export type DadosDoProduto = {
   nome: string;
-  categoria: string;
-  unidade: string;
   ativo: boolean;
   /** Faixa sem marca e preço = a papelaria não vende essa faixa deste item. */
   opcoes: Partial<Record<Faixa, { marca: string; preco_centavos: number; disponivel: boolean }>>;
@@ -99,17 +100,16 @@ export async function salvarProduto(usuarioId: string, fornecedorId: string, id:
     let produtoId = id;
     if (produtoId) {
       const r = await q(
-        `update public.produto set nome = $2, categoria = nullif($3, ''), unidade = $4, ativo = $5 where id = $1`,
-        [produtoId, d.nome.trim(), d.categoria.trim(), d.unidade.trim() || "un", d.ativo],
+        `update public.produto set nome = $2, ativo = $3 where id = $1`,
+        [produtoId, d.nome.trim(), d.ativo],
       );
       if (!r.rowCount) throw new ErroDeCadastro("Produto não encontrado.");
     } else {
       const r = await q<{ id: string }>(
-        `insert into public.produto (fornecedor_id, nome, categoria, unidade, ativo, ordem)
-         values ($1, $2, nullif($3, ''), $4, $5,
-                 coalesce((select max(ordem) + 1 from public.produto where fornecedor_id = $1), 0))
+        `insert into public.produto (fornecedor_id, nome, ativo, ordem)
+         values ($1, $2, $3, coalesce((select max(ordem) + 1 from public.produto where fornecedor_id = $1), 0))
          returning id`,
-        [fornecedorId, d.nome.trim(), d.categoria.trim(), d.unidade.trim() || "un", d.ativo],
+        [fornecedorId, d.nome.trim(), d.ativo],
       );
       produtoId = r.rows[0].id;
     }
@@ -138,7 +138,7 @@ export type ResultadoDaImportacao = { criados: number; atualizados: number };
 /**
  * Grava as linhas da planilha (já conferidas por lerPlanilha) numa transação
  * só: ou entra tudo, ou nada. Produto com o mesmo nome (sem caixa, acento e
- * espaço extra) é atualizado; o resto é criado. Faixa em branco na planilha
+ * espaço extra) tem as faixas atualizadas; o resto é criado. Faixa em branco na planilha
  * não mexe na faixa cadastrada, e nada é apagado: apagar por omissão numa
  * planilha seria fácil demais de fazer sem querer.
  */
@@ -156,20 +156,14 @@ export async function importarCatalogo(usuarioId: string, fornecedorId: string, 
     for (const l of linhas) {
       let id = existentes.get(chaveDoNome(l.nome));
       if (id) {
-        await q(
-          `update public.produto set nome = $2, categoria = coalesce(nullif($3, ''), categoria),
-                  unidade = coalesce(nullif($4, ''), unidade)
-            where id = $1`,
-          [id, l.nome, l.categoria, l.unidade],
-        );
+        await q("update public.produto set nome = $2 where id = $1", [id, l.nome]);
         atualizados++;
       } else {
         id = (await q<{ id: string }>(
-          `insert into public.produto (fornecedor_id, nome, categoria, unidade, ordem)
-           values ($1, $2, nullif($3, ''), coalesce(nullif($4, ''), 'un'),
-                   coalesce((select max(ordem) + 1 from public.produto where fornecedor_id = $1), 0))
+          `insert into public.produto (fornecedor_id, nome, ordem)
+           values ($1, $2, coalesce((select max(ordem) + 1 from public.produto where fornecedor_id = $1), 0))
            returning id`,
-          [fornecedorId, l.nome, l.categoria, l.unidade],
+          [fornecedorId, l.nome],
         )).rows[0].id;
         existentes.set(chaveDoNome(l.nome), id);
         criados++;

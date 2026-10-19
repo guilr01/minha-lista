@@ -62,11 +62,11 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
               </thead>
               <tbody>
                 {produtos.map((p) => (
-                  <tr key={p.id} data-busca={paraBusca(`${p.nome} ${p.categoria ?? ""} ${p.opcoes.map((o) => o.marca).join(" ")}`)}
+                  <tr key={p.id} data-busca={paraBusca(`${p.nome} ${p.opcoes.map((o) => o.marca).join(" ")}`)}
                     className="border-b border-linha-2 align-top last:border-b-0 hover:bg-azul-fundo">
                     <td className="px-4 py-3">
                       <Link href={`/painel/catalogo/${p.id}`} className="font-semibold text-azul hover:underline">{p.nome}</Link>
-                      <span className="block text-[13px] text-apagado">{p.categoria ?? "Sem categoria"}{p.ativo ? "" : " · inativo"}</span>
+                      {!p.ativo && <span className="block text-[13px] text-apagado">inativo</span>}
                     </td>
                     {FAIXAS.map((f) => <td key={f} className="px-4 py-3"><Celula p={p} f={f} /></td>)}
                     <td className="px-4 py-3">{p.em_listas}</td>
@@ -77,11 +77,11 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
           </div>
           <ul className="flex flex-col gap-3 lg:hidden">
             {produtos.map((p) => (
-              <li key={p.id} data-busca={paraBusca(`${p.nome} ${p.categoria ?? ""} ${p.opcoes.map((o) => o.marca).join(" ")}`)}>
+              <li key={p.id} data-busca={paraBusca(`${p.nome} ${p.opcoes.map((o) => o.marca).join(" ")}`)}>
                 <Link href={`/painel/catalogo/${p.id}`} className={`${cartao} flex flex-col gap-2.5 p-3.5`}>
                   <span>
                     <strong>{p.nome}</strong>
-                    <span className="block text-[13px] text-apagado">{p.categoria ?? "Sem categoria"}{p.ativo ? "" : " · inativo"} · em {p.em_listas} {p.em_listas === 1 ? "lista" : "listas"}</span>
+                    <span className="block text-[13px] text-apagado">{p.ativo ? "" : "inativo · "}em {p.em_listas} {p.em_listas === 1 ? "lista" : "listas"}</span>
                   </span>
                   <span className="grid grid-cols-3 gap-2 text-sm">
                     {FAIXAS.map((f) => (

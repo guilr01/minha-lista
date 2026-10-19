@@ -39,24 +39,24 @@ afterAll(async () => {
 describe("catálogo", () => {
   it("cria, edita e tira uma faixa de um produto", async () => {
     const p = await papelariaNova();
-    const id = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Caderno", categoria: "Cadernos", unidade: "un", ativo: true, opcoes: opcoes(790, 1490) });
+    const id = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Caderno", ativo: true, opcoes: opcoes(790, 1490) });
     let lido = await cad.buscarProduto(p.usuario, id);
     expect(lido?.opcoes.map((o) => [o.faixa, o.preco_centavos])).toEqual([["economica", 790], ["intermediaria", 1490]]);
-    await cad.salvarProduto(p.usuario, p.fornecedor, id, { nome: "Caderno 96 fls", categoria: "", unidade: "", ativo: true, opcoes: opcoes(850) });
+    await cad.salvarProduto(p.usuario, p.fornecedor, id, { nome: "Caderno 96 fls", ativo: true, opcoes: opcoes(850) });
     lido = await cad.buscarProduto(p.usuario, id);
-    expect(lido).toMatchObject({ nome: "Caderno 96 fls", categoria: null, unidade: "un" });
+    expect(lido).toMatchObject({ nome: "Caderno 96 fls" });
     expect(lido?.opcoes.map((o) => [o.faixa, o.preco_centavos])).toEqual([["economica", 850]]);
   });
 
   it("produto sem nenhuma faixa é recusado", async () => {
     const p = await papelariaNova();
-    await expect(cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Nada", categoria: "", unidade: "un", ativo: true, opcoes: {} }))
+    await expect(cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Nada", ativo: true, opcoes: {} }))
       .rejects.toThrow(/pelo menos uma faixa/);
   });
 
   it("produto que está numa lista não se exclui, com mensagem que diz o que fazer", async () => {
     const p = await papelariaNova();
-    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Lápis", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(120) });
+    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Lápis", ativo: true, opcoes: opcoes(120) });
     const escola = await cad.criarEscola(p.usuario, p.fornecedor, "Escola X", "");
     const serie = await cad.criarSerie(p.usuario, p.fornecedor, escola.id, "1º ano");
     const lista = await cad.criarLista(p.usuario, p.fornecedor, serie.id, 2027);
@@ -67,8 +67,8 @@ describe("catálogo", () => {
   it("outra papelaria não edita o produto: para ela, ele não existe", async () => {
     const a = await papelariaNova();
     const b = await papelariaNova();
-    const id = await cad.salvarProduto(a.usuario, a.fornecedor, null, { nome: "Borracha", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(150) });
-    await expect(cad.salvarProduto(b.usuario, b.fornecedor, id, { nome: "Tomada", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(1) }))
+    const id = await cad.salvarProduto(a.usuario, a.fornecedor, null, { nome: "Borracha", ativo: true, opcoes: opcoes(150) });
+    await expect(cad.salvarProduto(b.usuario, b.fornecedor, id, { nome: "Tomada", ativo: true, opcoes: opcoes(1) }))
       .rejects.toThrow(/não encontrado/);
     expect(await cad.buscarProduto(b.usuario, id)).toBeNull();
     expect((await cad.buscarProduto(a.usuario, id))?.nome).toBe("Borracha");
@@ -76,7 +76,7 @@ describe("catálogo", () => {
 
   it("nem com o id da papelaria alheia: o RLS recusa a escrita", async () => {
     const b = await papelariaNova();
-    await expect(cad.salvarProduto(b.usuario, PAPELARIA_CENTRAL, null, { nome: "Intruso", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(100) }))
+    await expect(cad.salvarProduto(b.usuario, PAPELARIA_CENTRAL, null, { nome: "Intruso", ativo: true, opcoes: opcoes(100) }))
       .rejects.toThrow(/row-level security/);
   });
 });
@@ -95,7 +95,7 @@ describe("escolas, séries e listas", () => {
 
   it("copiar a lista de um ano para o seguinte leva itens e recado", async () => {
     const p = await papelariaNova();
-    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Cola", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(350) });
+    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Cola", ativo: true, opcoes: opcoes(350) });
     const e = await cad.criarEscola(p.usuario, p.fornecedor, "Escola Y", "");
     const s = await cad.criarSerie(p.usuario, p.fornecedor, e.id, "2º ano");
     const l26 = await cad.criarLista(p.usuario, p.fornecedor, s.id, 2026);
@@ -110,7 +110,7 @@ describe("escolas, séries e listas", () => {
 
   it("item repetido, quantidade fora de 1 a 99; publicar e só excluir rascunho", async () => {
     const p = await papelariaNova();
-    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Régua", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(250) });
+    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Régua", ativo: true, opcoes: opcoes(250) });
     const e = await cad.criarEscola(p.usuario, p.fornecedor, "Escola Z", "");
     const s = await cad.criarSerie(p.usuario, p.fornecedor, e.id, "5º ano");
     const l = await cad.criarLista(p.usuario, p.fornecedor, s.id, 2027);
@@ -137,7 +137,7 @@ describe("loja", () => {
 describe("exclusões barradas pelo banco viram mensagem", () => {
   it("série com lista e lista com pedido explicam o que fazer, no Postgres 16 e no 18", async () => {
     const p = await papelariaNova();
-    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Tesoura", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(690) });
+    const prod = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Tesoura", ativo: true, opcoes: opcoes(690) });
     const e = await cad.criarEscola(p.usuario, p.fornecedor, "Escola W", "");
     const s = await cad.criarSerie(p.usuario, p.fornecedor, e.id, "1º ano");
     const l = await cad.criarLista(p.usuario, p.fornecedor, s.id, 2027);
@@ -148,8 +148,8 @@ describe("exclusões barradas pelo banco viram mensagem", () => {
 });
 
 describe("importação do catálogo pela planilha", () => {
-  const linha = (nome: string, economica?: number, premium?: number, categoria = "") => ({
-    linha: 2, nome, categoria, unidade: "",
+  const linha = (nome: string, economica?: number, premium?: number) => ({
+    linha: 2, nome,
     opcoes: {
       ...(economica ? { economica: { marca: "Básica", preco_centavos: economica } } : {}),
       ...(premium ? { premium: { marca: "Top", preco_centavos: premium } } : {}),
@@ -158,12 +158,12 @@ describe("importação do catálogo pela planilha", () => {
 
   it("cria o que é novo, atualiza pelo nome e não apaga nada", async () => {
     const p = await papelariaNova();
-    const fica = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Fica como está", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(100) });
-    const muda = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Caderno Universitário", categoria: "Cadernos", unidade: "un", ativo: true, opcoes: opcoes(900, 1500) });
+    const fica = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Fica como está", ativo: true, opcoes: opcoes(100) });
+    const muda = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Caderno Universitário", ativo: true, opcoes: opcoes(900, 1500) });
 
     const r = await cad.importarCatalogo(p.usuario, p.fornecedor, [
       linha("caderno  universitario", 990, 2500),
-      linha("Lápis", 150, undefined, "Escrita"),
+      linha("Lápis", 150),
     ]);
     expect(r).toEqual({ criados: 1, atualizados: 1 });
 
@@ -171,12 +171,12 @@ describe("importação do catálogo pela planilha", () => {
     expect(todos).toHaveLength(3);
     expect(todos.find((x) => x.id === fica)?.opcoes.map((o) => o.preco_centavos)).toEqual([100]);
     const atualizado = todos.find((x) => x.id === muda)!;
-    // A categoria em branco na planilha mantém a cadastrada; a intermediária, em branco, fica.
-    expect(atualizado).toMatchObject({ nome: "caderno  universitario", categoria: "Cadernos" });
+    // A intermediária, em branco na planilha, fica como estava.
+    expect(atualizado).toMatchObject({ nome: "caderno  universitario" });
     expect(atualizado.opcoes.map((o) => [o.faixa, o.marca, o.preco_centavos])).toEqual([
       ["economica", "Básica", 990], ["intermediaria", "Boa", 1500], ["premium", "Top", 2500],
     ]);
-    expect(todos.find((x) => x.nome === "Lápis")).toMatchObject({ categoria: "Escrita", unidade: "un" });
+    expect(todos.find((x) => x.nome === "Lápis")?.opcoes.map((o) => o.preco_centavos)).toEqual([150]);
   });
 
   it("é tudo ou nada: um erro no banco desfaz a importação inteira", async () => {
@@ -191,7 +191,7 @@ describe("importação do catálogo pela planilha", () => {
   it("não grava no catálogo de outra papelaria, nem casando o nome", async () => {
     const a = await papelariaNova();
     const b = await papelariaNova();
-    await cad.salvarProduto(b.usuario, b.fornecedor, null, { nome: "Borracha", categoria: "", unidade: "un", ativo: true, opcoes: opcoes(300) });
+    await cad.salvarProduto(b.usuario, b.fornecedor, null, { nome: "Borracha", ativo: true, opcoes: opcoes(300) });
     // A pessoa de A tenta importar para o fornecedor de B: o RLS recusa.
     await expect(cad.importarCatalogo(a.usuario, b.fornecedor, [linha("Borracha", 1)])).rejects.toThrow();
     const deB = await cad.listarProdutos(b.usuario, b.fornecedor);

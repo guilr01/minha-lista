@@ -14,7 +14,7 @@ export default async function ImportarPlanilha() {
       <Link href="/painel/catalogo" className="inline-flex min-h-11 items-center gap-1 font-semibold text-azul"><Icone nome="voltar" />Catálogo</Link>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Importar catálogo pelo Excel</h1>
       <p className="mt-1.5 max-w-[680px] text-[15px] text-apagado">
-        Cadastre todos os produtos de uma vez: baixe o modelo, preencha uma linha por produto com a categoria e a marca e o preço
+        Cadastre todos os produtos de uma vez: baixe o modelo, preencha uma linha por produto com a marca e o preço
         de cada faixa, e suba o arquivo aqui.
       </p>
 

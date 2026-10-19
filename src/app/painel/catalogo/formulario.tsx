@@ -9,7 +9,7 @@ import { excluirProdutoAcao, salvarProdutoAcao } from "../cadastro-acoes";
 // Um produto e as suas até três faixas. Faixa com marca e preço em branco é
 // faixa que a papelaria não vende deste item: o pai que escolher ela recebe a
 // mais próxima abaixo.
-export function FormularioDeProduto({ produto, categorias }: { produto: ProdutoDoCadastro | null; categorias: string[] }) {
+export function FormularioDeProduto({ produto }: { produto: ProdutoDoCadastro | null }) {
   const opcao = (f: (typeof FAIXAS)[number]) => produto?.opcoes.find((o) => o.faixa === f);
   return (
     <>
@@ -19,19 +19,9 @@ export function FormularioDeProduto({ produto, categorias }: { produto: ProdutoD
           <h2 className="text-base font-bold">Item</h2>
           <label className={rotuloCampo}>
             Nome
-            <input name="nome" required defaultValue={produto?.nome} className={campo} placeholder="Ex.: Caderno brochura 96 folhas" />
+            <input name="nome" required defaultValue={produto?.nome} className={campo} placeholder="Ex.: Papel sulfite A4 pacote com 100 folhas" />
+            <span className="text-[13px] font-normal text-apagado">Cada produto conta como 1 item: o pacote de 100 folhas é 1, não 100.</span>
           </label>
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px]">
-            <label className={rotuloCampo}>
-              Categoria
-              <input name="categoria" list="categorias" defaultValue={produto?.categoria ?? ""} className={campo} placeholder="Ex.: Cadernos" />
-              <datalist id="categorias">{categorias.map((c) => <option key={c} value={c} />)}</datalist>
-            </label>
-            <label className={rotuloCampo}>
-              Unidade
-              <input name="unidade" defaultValue={produto?.unidade ?? "un"} className={campo} />
-            </label>
-          </div>
           <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[15px] font-semibold">
             <input type="checkbox" name="ativo" defaultChecked={produto?.ativo ?? true} className="size-[18px] accent-azul" />
             Ativo: aparece nas listas e no catálogo dos pais

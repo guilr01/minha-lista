@@ -2,7 +2,8 @@ import ExcelJS from "exceljs";
 import { FAIXAS, ROTULO_FAIXA, type Faixa } from "./faixa";
 
 // A planilha do catálogo: o modelo que a papelaria baixa, preenche e sobe.
-// Uma linha por produto, com marca e preço de cada faixa lado a lado: é
+// Uma linha por produto, com marca e preço de cada faixa lado a lado (sem
+// categoria nem unidade, decisão de 19/10/2026: cada produto conta como 1). É
 // assim que a papelaria pensa o item ("caderno: Tilibra a 18, Foroni a 25").
 //
 // Esta parte só LÊ e ESCREVE o arquivo, sem banco: a gravação fica em
@@ -16,18 +17,11 @@ export const LIMITE_DE_LINHAS = 3000;
 type Coluna = { chave: string; titulo: string; largura: number };
 
 const COLUNAS: Coluna[] = [
-  { chave: "produto", titulo: "Produto", largura: 38 },
-  { chave: "categoria", titulo: "Categoria", largura: 20 },
-  { chave: "unidade", titulo: "Unidade", largura: 10 },
+  { chave: "produto", titulo: "Produto", largura: 40 },
   ...FAIXAS.flatMap((f) => [
     { chave: `${f}:marca`, titulo: `${ROTULO_FAIXA[f]} · marca`, largura: 20 },
     { chave: `${f}:preco`, titulo: `${ROTULO_FAIXA[f]} · preço (R$)`, largura: 17 },
   ]),
-];
-
-export const CATEGORIAS_SUGERIDAS = [
-  "Cadernos", "Escrita", "Arte e pintura", "Colas e fitas", "Papéis", "Corte e medição",
-  "Organização", "Mochilas e estojos", "Livros", "Higiene",
 ];
 
 const normalizar = (s: string) =>
@@ -61,8 +55,6 @@ export function lerPreco(v: ExcelJS.CellValue): number | null {
 export type LinhaDaPlanilha = {
   linha: number;
   nome: string;
-  categoria: string;
-  unidade: string;
   opcoes: Partial<Record<Faixa, { marca: string; preco_centavos: number }>>;
 };
 
@@ -147,13 +139,7 @@ export async function lerPlanilha(arquivo: ArrayBuffer): Promise<LeituraDaPlanil
       erros.push({ linha: r, mensagem: `${nome || "Sem nome"}: ${problemas.join("; ")}` });
       continue;
     }
-    linhas.push({
-      linha: r,
-      nome,
-      categoria: texto(valor(row, "categoria")).slice(0, 60),
-      unidade: texto(valor(row, "unidade")).slice(0, 12),
-      opcoes,
-    });
+    linhas.push({ linha: r, nome, opcoes });
   }
   return { linhas, erros };
 }
@@ -163,8 +149,6 @@ export const chaveDoNome = normalizar;
 
 export type ProdutoParaPlanilha = {
   nome: string;
-  categoria: string | null;
-  unidade: string;
   opcoes: { faixa: Faixa; marca: string; preco_centavos: number }[];
 };
 
@@ -188,7 +172,7 @@ export async function gerarPlanilha(produtos: ProdutoParaPlanilha[] = []): Promi
   cabecalho.height = 32;
 
   for (const p of produtos) {
-    const linha: Record<string, string | number> = { produto: p.nome, categoria: p.categoria ?? "", unidade: p.unidade };
+    const linha: Record<string, string | number> = { produto: p.nome };
     for (const o of p.opcoes) {
       linha[`${o.faixa}:marca`] = o.marca;
       linha[`${o.faixa}:preco`] = o.preco_centavos / 100;
@@ -209,15 +193,6 @@ export async function gerarPlanilha(produtos: ProdutoParaPlanilha[] = []): Promi
         };
       }
     }
-    if (c.chave === "categoria") {
-      for (let r = 2; r <= ultima; r++) {
-        // Sugestão, não obrigação: a lista aparece, mas aceita outra categoria.
-        aba.getCell(r, i + 1).dataValidation = {
-          type: "list", allowBlank: true, showErrorMessage: false,
-          formulae: [`"${CATEGORIAS_SUGERIDAS.join(",")}"`],
-        };
-      }
-    }
   });
 
   const ajuda = wb.addWorksheet("Como preencher");
@@ -226,22 +201,21 @@ export async function gerarPlanilha(produtos: ProdutoParaPlanilha[] = []): Promi
     ["Como preencher o catálogo", true],
     ["", false],
     ["1. Use a aba \"Catálogo\". Uma linha por produto. Não mude os títulos da primeira linha.", false],
-    ["2. Produto: o nome como o pai vai ver. Ex.: Caderno universitário 10 matérias.", false],
-    ["3. Categoria: escolha na lista ou escreva a sua. Ex.: Cadernos, Escrita, Arte e pintura.", false],
-    ["4. Unidade: como o item é contado (un, pct, cx). Em branco vira \"un\".", false],
-    ["5. Faixas: preencha a MARCA e o PREÇO de cada faixa que você vende. Pode preencher só uma ou duas.", false],
+    ["2. Produto: o nome como o pai vai ver, já dizendo o que vem nele. Ex.: Papel sulfite A4 pacote com 100 folhas.", false],
+    ["   Cada produto conta como 1 item: o pacote de 100 folhas é 1, não 100.", false],
+    ["3. Faixas: preencha a MARCA e o PREÇO de cada faixa que você vende. Pode preencher só uma ou duas.", false],
     ["   Econômica = a opção mais em conta. Intermediária = boa qualidade. Premium = as melhores marcas.", false],
-    ["6. Preço: só o número, com vírgula. Ex.: 12,90.", false],
+    ["4. Preço: só o número, com vírgula. Ex.: 12,90.", false],
     ["", false],
     ["Ao subir a planilha:", true],
-    ["• Produto com o mesmo nome de um que já existe é ATUALIZADO (categoria, unidade, marcas e preços).", false],
+    ["• Produto com o mesmo nome de um que já existe é ATUALIZADO (marcas e preços).", false],
     ["• Produto novo é criado.", false],
     ["• Faixa deixada em branco não muda nada no que já está cadastrado.", false],
     ["• Nenhum produto é apagado. Para tirar um produto, desative-o no painel.", false],
     ["• Antes de gravar, o painel mostra o que vai entrar e aponta as linhas com problema.", false],
     ["", false],
     ["Exemplo de linha:", true],
-    ["Caderno universitário 10 matérias | Cadernos | un | Tilibra | 18,90 | Foroni | 26,50 | Jandaia | 34,90", false],
+    ["Caderno universitário 10 matérias | Tilibra | 18,90 | Foroni | 26,50 | Jandaia | 34,90", false],
   ] as const;
   instrucoes.forEach(([t, negrito], i) => {
     const cel = ajuda.getCell(i + 1, 1);
