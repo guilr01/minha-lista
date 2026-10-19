@@ -23,7 +23,7 @@ export function FormularioDeEntrada() {
       </div>
       <button type="submit" className={botao} disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
       <p className="text-center text-sm text-apagado">
-        Ainda não tem conta? <Link href="/cadastro" className={link}>Cadastrar a papelaria</Link>
+        Ainda não tem conta? <Link href="/#cadastro" className={link}>Cadastrar a papelaria</Link>
       </p>
     </form>
   );

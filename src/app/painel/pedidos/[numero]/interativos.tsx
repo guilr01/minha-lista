@@ -76,10 +76,12 @@ export function Avancar(p: { pedidoId: string; para: string; rotulo: string; blo
   );
 }
 
+/** Imprime a folha do pedido: a lista para conferir na prateleira e, no pé,
+ *  a identificação do kit (aluno, série, entrega) para prender no pacote. */
 export function Imprimir() {
   return (
     <button type="button" className={botaoContornoPequeno} onClick={() => window.print()}>
-      <Icone nome="lista" tamanho={18} />Imprimir lista e etiqueta
+      <Icone nome="imprimir" tamanho={18} />Imprimir pedido
     </button>
   );
 }

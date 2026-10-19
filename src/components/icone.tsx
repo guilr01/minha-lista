@@ -15,6 +15,8 @@ const CAMINHOS = {
   conversa: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12Z" />,
   seta: <path d="m9 18 6-6-6-6" />,
   etiqueta: (<><path d="M20 12 12 20l-8-8V4h8Z" /><circle cx="8" cy="8" r="1.5" /></>),
+  compartilhar: (<><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" /></>),
+  imprimir: (<><path d="M6 9V3h12v6" /><rect x="3" y="9" width="18" height="8" rx="2" /><path d="M6 14h12v7H6Z" /></>),
 } as const;
 
 export type NomeIcone = keyof typeof CAMINHOS;

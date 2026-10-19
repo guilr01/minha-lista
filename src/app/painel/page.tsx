@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChipFaixa, cartao } from "@/components/ui";
+import { ChipFaixa, botaoPequeno, cartao } from "@/components/ui";
 import { reais } from "@/lib/dinheiro";
 import type { Faixa } from "@/lib/faixa";
 import { listarPedidos, type ResumoDoPedido } from "@/lib/painel";
@@ -61,8 +61,8 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
           {todos.length === 0 ? (
             <>
               <span>Nenhum pedido pago ainda.</span>
-              <span className="text-sm">Os pedidos aparecem aqui assim que o pagamento é confirmado. Divulgue o link:{" "}
-                <Link href={`/${papelaria.slug}`} className="font-semibold text-azul hover:underline" target="_blank">/{papelaria.slug}</Link>
+              <span className="text-sm">Os pedidos aparecem aqui assim que o pagamento é confirmado.{" "}
+                <Link href="/painel/divulgar" className="font-semibold text-azul hover:underline">Divulgue o link e o QR code da sua loja</Link>.
               </span>
             </>
           ) : "Nenhum pedido neste filtro."}
@@ -73,8 +73,8 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-[#fbfaf6] text-left text-xs font-bold uppercase tracking-[0.04em] text-apagado">
-                  {["Pedido", "Aluno", "Responsável", "Escola · série", "Faixa", "Separação", "Total", "Status"].map((t) => (
-                    <th key={t} className="border-b border-linha px-4 py-3">{t}</th>
+                  {["Pedido", "Aluno", "Responsável", "Escola · série", "Faixa", "Separação", "Total", "Status", ""].map((t, i) => (
+                    <th key={i} className="border-b border-linha px-4 py-3">{t}</th>
                   ))}
                 </tr>
               </thead>
@@ -82,7 +82,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
                 {lista.map((p) => (
                   <tr key={p.id} className="border-b border-linha-2 last:border-b-0 hover:bg-azul-fundo">
                     <td className="px-4 py-3">
-                      <Link href={`/painel/pedidos/${p.numero}`} className="font-bold text-azul hover:underline">#{p.numero}</Link>
+                      <span className="font-bold">#{p.numero}</span>
                       <span className="block text-[13px] text-apagado">{haQuanto(p.pago_em ?? p.criado_em)}</span>
                     </td>
                     <td className="px-4 py-3 font-semibold">{p.aluno_nome}</td>
@@ -92,6 +92,11 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
                     <td className="px-4 py-3">{p.separados}/{p.itens}</td>
                     <td className="px-4 py-3 font-bold">{reais(p.total_centavos)}</td>
                     <td className="px-4 py-3"><Status s={p.status} /></td>
+                    <td className="px-4 py-3 text-right">
+                      <Link href={`/painel/pedidos/${p.numero}`} className={`${botaoPequeno} whitespace-nowrap`}>
+                        Abrir pedido
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -111,6 +116,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
                     <span>{p.separados}/{p.itens} separados · {p.modalidade === "entrega" ? "entrega" : "retirada"}</span>
                     <strong className="text-[15px]">{reais(p.total_centavos)}</strong>
                   </span>
+                  <span className={`${botaoPequeno} mt-1.5 w-full`}>Abrir pedido</span>
                 </Link>
               </li>
             ))}

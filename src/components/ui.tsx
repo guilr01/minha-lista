@@ -34,9 +34,9 @@ export function ChipFaixa({ faixa }: { faixa: Faixa | "mista" }) {
   );
 }
 
-const ETAPAS = ["Lista", "Faixa", "Revisão", "Pagamento"];
+const ETAPAS = ["Lista e faixa", "Revisão", "Pagamento"];
 
-/** Os quatro passos, no alto da tela larga (o protótipo usa "Passo n de 4" no celular). */
+/** Os três passos, no alto da tela larga (no celular, "Passo n de 3"). */
 export function Etapas({ atual }: { atual: number }) {
   return (
     <ol className="hidden items-center gap-2.5 lg:flex" aria-label="Etapas">

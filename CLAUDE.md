@@ -138,6 +138,28 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
   `<form action>` é LIMPO depois do envio mesmo quando o banco recusa; a papelaria perderia o
   produto inteiro por um preço inválido.
 
+## Ajustes do Guilherme (19/10/2026)
+
+- **A página inicial (`/`) é o cadastro da PAPELARIA.** Os pais nunca chegam nela: chegam pelo
+  link da papelaria. `/cadastro` redireciona para `/#cadastro`, para quem tem o link antigo.
+- **A vitrine dos pais é uma caixa só**: seletor de escola e, embaixo, as séries dela
+  (`src/app/[papelaria]/escolha.tsx`). Sem JavaScript, o seletor volta para a página com
+  `?escola=` e o servidor já traz a escola escolhida. As séries continuam links de verdade.
+- **O pedido dos pais tem TRÊS passos**: (1) lista e faixa na mesma tela, só leitura, com a marca
+  de cada item na faixa escolhida; (2) revisão, onde se tira, muda quantidade, troca a faixa de um
+  item e inclui outro; (3) entrega e pagamento. `?etapa=4` antigo cai no 3.
+- **Painel**: o pedido abre por um botão "Abrir pedido", não pelo número. "Imprimir lista e
+  etiqueta" virou **"Imprimir pedido"**: a folha é a lista de conferência e, no pé, a
+  identificação do kit; a palavra "etiqueta" fazia pensar em adesivo.
+- **WhatsApp ao cliente: NÃO há envio automático, e nunca houve.** `notificarMudancaDeStatus`
+  só escreve no log (envio de WhatsApp está fora do escopo). O que existe é o botão **"Avisar o
+  cliente no WhatsApp"** no pedido: abre o WhatsApp DA PAPELARIA com a mensagem do status atual e
+  o link de acompanhamento, escrita por `mensagemDeStatus` (`src/lib/status.ts`). Quem envia é a
+  papelaria; a tela diz isso.
+- **`/painel/divulgar`**: o link da loja (copiar, mandar pelo WhatsApp), o QR code (baixar em
+  PNG, imprimir cartaz para o balcão) e o link de cada série publicada. A lista de séries vem da
+  MESMA vitrine que os pais veem: só aparece o que de fato abre lá.
+
 ## Do protótipo, o que NÃO entra agora
 
 O protótipo tem leitura de lista por foto e por texto colado, e a fila "Itens não

@@ -53,3 +53,31 @@ export function haQuanto(iso: string, agora = Date.now()): string {
   const d = Math.round(h / 24);
   return `há ${d} ${d > 1 ? "dias" : "dia"}`;
 }
+
+/**
+ * A mensagem para avisar o responsável de que o pedido andou. A plataforma
+ * NÃO envia WhatsApp (fora do escopo, sem API de negócio): o botão do painel
+ * abre o WhatsApp da papelaria com este texto escrito, e quem envia é ela.
+ * Vai sempre o link de acompanhamento, que mostra o status ao vivo.
+ */
+export function mensagemDeStatus(p: {
+  status: StatusPedido;
+  numero: number;
+  aluno_nome: string;
+  responsavel_nome: string;
+  papelaria: string;
+  acompanhamento: string;
+}): string | null {
+  const ola = `Olá, ${p.responsavel_nome.split(" ")[0]}! Aqui é da ${p.papelaria}.`;
+  const kit = `o material de ${p.aluno_nome} (pedido #${p.numero})`;
+  const corpo: Partial<Record<StatusPedido, string>> = {
+    pago: `Recebemos o pagamento e ${kit} já está na fila de separação.`,
+    em_separacao: `Começamos a separar ${kit}.`,
+    saiu_para_entrega: `${kit[0].toUpperCase()}${kit.slice(1)} saiu para entrega e chega em breve.`,
+    pronto_para_retirada: `${kit[0].toUpperCase()}${kit.slice(1)} está pronto para retirada na loja.`,
+    entregue: `${kit[0].toUpperCase()}${kit.slice(1)} foi entregue. Obrigado pela compra!`,
+  };
+  const t = corpo[p.status];
+  if (!t) return null;
+  return `${ola} ${t}\n\nAcompanhe o pedido: ${p.acompanhamento}`;
+}

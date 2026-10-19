@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icone } from "@/components/icone";
-import { cartao } from "@/components/ui";
+import { botaoContornoPequeno, cartao } from "@/components/ui";
 import { reais } from "@/lib/dinheiro";
 import { ROTULO_FAIXA } from "@/lib/faixa";
 import { buscarPedidoDoPainel } from "@/lib/painel";
 import { exigirUsuario, papelariaAtual } from "@/lib/sessao";
-import { COR_STATUS, ROTULO_STATUS, haQuanto, proximoPasso } from "@/lib/status";
+import { headers } from "next/headers";
+import { enderecoPublico } from "@/lib/endereco";
+import { COR_STATUS, ROTULO_STATUS, haQuanto, mensagemDeStatus, proximoPasso } from "@/lib/status";
 import { formatarCep, formatarTelefone, linkWhatsApp } from "@/lib/whatsapp";
 import { Avancar, Checklist, Imprimir } from "./interativos";
 
@@ -37,6 +39,13 @@ export default async function PedidoNoPainel({ params }: Props) {
     ? `${e.logradouro}, ${e.numero}${e.complemento ? ` · ${e.complemento}` : ""}${e.bairro ? ` · ${e.bairro}` : ""}${e.cidade ? ` · ${e.cidade}` : ""} · CEP ${formatarCep(e.cep)}`
     : "Retirada na loja";
   const whats = linkWhatsApp(p.responsavel_whatsapp, `Olá, ${p.responsavel_nome}! Aqui é da ${papelaria.nome}, sobre o pedido #${p.numero}.`);
+  // O aviso de status abre o WhatsApp DA PAPELARIA com a mensagem pronta:
+  // a plataforma não envia nada sozinha (src/lib/notificacao.ts).
+  const textoAviso = mensagemDeStatus({
+    status: p.status, numero: p.numero, aluno_nome: p.aluno_nome, responsavel_nome: p.responsavel_nome,
+    papelaria: papelaria.nome, acompanhamento: `${enderecoPublico((await headers()).get("host"))}/pedido/${p.token}`,
+  });
+  const aviso = textoAviso ? linkWhatsApp(p.responsavel_whatsapp, textoAviso) : null;
 
   // O que a papelaria precisa notar antes de separar.
   const atencao = [
@@ -61,6 +70,11 @@ export default async function PedidoNoPainel({ params }: Props) {
           </div>
           <div className="flex flex-wrap gap-2.5">
             <Imprimir />
+            {aviso && (
+              <a href={aviso} target="_blank" rel="noopener noreferrer" className={botaoContornoPequeno}>
+                <Icone nome="conversa" tamanho={18} />Avisar o cliente no WhatsApp
+              </a>
+            )}
             {passo && <Avancar pedidoId={p.id} para={passo.para} rotulo={passo.rotulo} bloqueado={bloqueado} faltam={faltam} final={passo.para === "entregue"} />}
           </div>
         </div>
@@ -97,6 +111,17 @@ export default async function PedidoNoPainel({ params }: Props) {
               </section>
             )}
 
+            {aviso && (
+              <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm leading-snug`}>
+                <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">Aviso ao cliente</h2>
+                <span>
+                  O cliente não recebe mensagem automática. A cada mudança de status, toque em{" "}
+                  <strong>Avisar o cliente no WhatsApp</strong>: abre o seu WhatsApp com a mensagem pronta
+                  ({ROTULO_STATUS[p.status].toLowerCase()}) e o link de acompanhamento.
+                </span>
+              </section>
+            )}
+
             <section className={`${cartao} flex flex-col gap-1 p-4 text-sm`}>
               <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">Histórico</h2>
               {p.eventos.map((ev, i) => (
@@ -110,7 +135,8 @@ export default async function PedidoNoPainel({ params }: Props) {
         </div>
       </div>
 
-      {/* Só no papel: a lista para conferir na prateleira e a etiqueta do kit. */}
+      {/* Só no papel: a lista para conferir na prateleira e, no pé, a
+          identificação do kit para prender no pacote. */}
       <div className="hidden text-black print:block">
         <p className="text-[20pt] font-bold">Pedido #{p.numero} · {p.aluno_nome}</p>
         <p>{p.serie_nome} · {p.escola_nome} · {p.metodo_pagamento === "pix" ? "Pix" : `Cartão ${p.parcelas}x`}</p>

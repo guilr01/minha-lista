@@ -81,7 +81,9 @@ function validar(m: Montagem): Record<string, string> {
 export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; catalogo: ProdutoDoCatalogo[] }) {
   const router = useRouter();
   const busca = useSearchParams();
-  const etapa = Math.min(4, Math.max(1, Number(busca.get("etapa")) || 1));
+  // Três passos: lista e faixa → revisão → entrega e pagamento. Um ?etapa=4
+  // de antes da mudança cai no último.
+  const etapa = Math.min(3, Math.max(1, Number(busca.get("etapa")) || 1));
   const { papelaria, escola, serie, lista, itens } = vitrine;
   const chave = `lp:montagem:${lista.id}`;
   const base = `/${papelaria.slug}/${escola.slug}/${serie.slug}`;
@@ -155,7 +157,6 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
   const taxa = m.modalidade === "entrega" ? papelaria.taxa_entrega_centavos : 0;
   const total = sub + taxa;
   const faixaAtual = faixaDoCarrinho(m.linhas, produtos);
-  const indisponiveis = m.linhas.filter((l) => !l.removida && !opcaoDaLinha(l, produtos));
   const nomeDaLista = `${serie.nome} · ${escola.nome}`;
 
   function enviar() {
@@ -209,86 +210,74 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
   let valorTotal: number | null = sub;
 
   if (etapa === 1) {
+    // Lista e faixa numa tela só, sem nada para editar: escolhe a faixa no
+    // alto e confere a lista inteira naquela faixa, com a marca de cada item.
+    // Trocar, tirar e incluir é na revisão.
+    const visiveis = m.linhas.filter((l) => !l.removida);
+    const removidas = m.linhas.length - visiveis.length;
     titulo = `Lista do ${nomeDaLista}`;
-    subtitulo = `${itens.length} ${itens.length === 1 ? "item pedido" : "itens pedidos"} pela escola para ${lista.ano_letivo}. Confira antes de ver os preços.`;
-    valorTotal = null;
-    corpo = (
-      <div className="flex flex-col gap-3.5">
-        {lista.observacoes && <Informacao>{lista.observacoes}</Informacao>}
-        <ul className={`${cartao} px-4 py-0.5`}>
-          {itens.map((i) => {
-            const ok = i.opcoes.length > 0;
-            return (
-              <li key={i.produto_id} className="flex items-start gap-3 border-b border-linha-2 py-3 last:border-b-0">
-                <span className={`mt-px flex size-6 flex-none items-center justify-center rounded-full ${ok ? "bg-ok-fundo text-ok" : "bg-aviso-fundo text-aviso"}`}>
-                  {ok ? <Icone nome="check" tamanho={14} traco={3} /> : <span className="text-sm font-extrabold">!</span>}
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <strong className="text-[15px] font-semibold">{i.nome}</strong>
-                  {i.observacao && <span className="text-[13px] text-apagado">{i.observacao}</span>}
-                  {!ok && <span className="text-[13px] font-semibold text-aviso">Indisponível no momento</span>}
-                </div>
-                <span className="whitespace-nowrap text-sm font-bold text-apagado">{i.quantidade} {i.unidade}</span>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-    acao = { rotulo: "Ver opções de preço", fazer: () => irPara(2) };
-  } else if (etapa === 2) {
-    const comPreco = m.linhas.filter((l) => !l.removida && opcaoDaLinha(l, produtos)).length;
-    const primeira = m.linhas.find((l) => !l.removida && opcaoDaLinha(l, produtos));
-    titulo = "Escolha a faixa da sua lista";
-    subtitulo = `${comPreco} itens com preço. Na próxima tela você pode trocar a faixa de um item específico.`;
+    subtitulo = `${itens.length} ${itens.length === 1 ? "item pedido" : "itens pedidos"} pela escola para ${lista.ano_letivo}. Escolha a faixa de preço e confira a lista.`;
     rotuloTotal = ROTULO_FAIXA[m.faixaBase];
     valorTotal = totalNaFaixa(m.linhas, produtos, m.faixaBase);
     corpo = (
       <div className="flex flex-col gap-3.5">
-        <div className="flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:gap-3.5" role="radiogroup" aria-label="Faixa de preço">
+        {lista.observacoes && <Informacao>{lista.observacoes}</Informacao>}
+        <div className="grid grid-cols-3 gap-2 lg:gap-3.5" role="radiogroup" aria-label="Faixa de preço">
           {FAIXAS.map((f) => {
             const on = m.faixaBase === f;
-            const semAFaixa = m.linhas.filter((l) => {
-              const o = !l.removida && opcaoDaLinha(l, produtos, f);
-              return o && o.faixa !== f;
-            }).length;
-            const ex = primeira && opcaoDaLinha(primeira, produtos, f);
             return (
               <button key={f} type="button" role="radio" aria-checked={on}
                 onClick={() => setM((a) => ({ ...a, faixaBase: f, linhas: a.linhas.map((l) => ({ ...l, faixa: f })) }))}
-                className={`flex w-full flex-col gap-2 rounded-cartao bg-white text-left lg:p-5 ${on ? "border-2 border-azul bg-azul-fundo p-[15px] lg:p-[19px]" : "border border-linha p-4 hover:border-[#9fb4cf]"}`}>
-                <span className="flex w-full flex-wrap items-center gap-3">
-                  <span className={`size-[22px] flex-none rounded-full ${on ? "border-[7px] border-azul" : "border-2 border-[#9aa3ae]"}`} />
+                className={`flex min-w-0 flex-col items-start gap-1.5 rounded-cartao bg-white text-left lg:gap-2 ${on ? "border-2 border-azul bg-azul-fundo p-[9px] lg:p-[17px]" : "border border-linha p-2.5 hover:border-[#9fb4cf] lg:p-[18px]"}`}>
+                <span className="flex items-center gap-2">
+                  <span className={`hidden size-[18px] flex-none rounded-full lg:block ${on ? "border-[6px] border-azul" : "border-2 border-[#9aa3ae]"}`} />
                   <ChipFaixa faixa={f} />
-                  <span className="titulo ml-auto text-2xl font-bold lg:ml-0 lg:mt-1.5 lg:w-full lg:text-[30px]">
-                    {reais(totalNaFaixa(m.linhas, produtos, f))}
-                  </span>
                 </span>
-                <span className="pl-[34px] text-sm text-apagado lg:pl-0">{DESCRICAO_FAIXA[f]}</span>
-                {ex && primeira && (
-                  <span className="pl-[34px] text-[13px] lg:pl-0">
-                    Ex.: {produtos.get(primeira.produto_id)?.nome}, {ex.marca}, por {reais(ex.preco_centavos)}
-                  </span>
-                )}
-                {semAFaixa > 0 && (
-                  <span className="pl-[34px] text-[13px] text-aviso lg:pl-0">
-                    {semAFaixa} {semAFaixa === 1 ? "item não tem" : "itens não têm"} esta faixa: usamos a mais próxima.
-                  </span>
-                )}
+                <span className="titulo text-[17px] font-bold leading-tight lg:text-[26px]">
+                  {reais(totalNaFaixa(m.linhas, produtos, f))}
+                </span>
+                <span className="hidden text-[13px] leading-snug text-apagado lg:block">{DESCRICAO_FAIXA[f]}</span>
               </button>
             );
           })}
         </div>
-        {indisponiveis.length > 0 && (
-          <Aviso>
-            {indisponiveis.length} {indisponiveis.length === 1 ? "item está indisponível" : "itens estão indisponíveis"} e não{" "}
-            {indisponiveis.length === 1 ? "entra" : "entram"} neste valor.
-          </Aviso>
+
+        <ul className={`${cartao} px-4 py-0.5`} aria-label={`Lista na faixa ${ROTULO_FAIXA[m.faixaBase]}`}>
+          {visiveis.map((l) => {
+            const p = produtos.get(l.produto_id);
+            if (!p) return null;
+            const o = opcaoDaLinha(l, produtos);
+            return (
+              <li key={l.produto_id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-0.5 border-b border-linha-2 py-3 last:border-b-0">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <strong className="text-[15px] font-semibold">{p.nome}</strong>
+                  {o ? (
+                    <span className="text-[13px] text-apagado">
+                      {o.marca} · {l.quantidade} {p.unidade}{l.quantidade > 1 ? ` × ${reais(o.preco_centavos)}` : ""}
+                    </span>
+                  ) : (
+                    <span className="text-[13px] font-semibold text-aviso">Indisponível no momento: não entra no valor</span>
+                  )}
+                  {o && o.faixa !== l.faixa && (
+                    <span className="text-[13px] text-aviso">Sem a faixa {ROTULO_FAIXA[l.faixa]}: vai a {ROTULO_FAIXA[o.faixa]}.</span>
+                  )}
+                  {p.observacao && <span className="text-[13px] text-apagado">{p.observacao}</span>}
+                </div>
+                <strong className="whitespace-nowrap text-[15px]">{o ? reais(o.preco_centavos * l.quantidade) : "–"}</strong>
+              </li>
+            );
+          })}
+        </ul>
+        {removidas > 0 && (
+          <p className="text-[13px] text-apagado">
+            {removidas} {removidas === 1 ? "item foi retirado" : "itens foram retirados"} na revisão e não {removidas === 1 ? "aparece" : "aparecem"} aqui.
+          </p>
         )}
+        <p className="text-[13px] text-apagado">Na próxima tela você pode retirar o que já tem, mudar quantidades, trocar a faixa de um item ou incluir outro.</p>
       </div>
     );
-    acao = { rotulo: `Continuar com a ${ROTULO_FAIXA[m.faixaBase]}`, fazer: () => irPara(3) };
-  } else if (etapa === 3) {
+    acao = { rotulo: `Continuar com a ${ROTULO_FAIXA[m.faixaBase]}`, fazer: () => irPara(2) };
+  } else if (etapa === 2) {
     const naLista = new Set(m.linhas.map((l) => l.produto_id));
     const paraAdicionar = catalogo.filter((c) => !naLista.has(c.produto_id) && c.opcoes.length > 0);
     titulo = "Revise sua lista";
@@ -372,7 +361,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
         )}
       </div>
     );
-    acao = { rotulo: "Ir para entrega e pagamento", fazer: () => irPara(4), desligado: noPedido.length === 0 };
+    acao = { rotulo: "Ir para entrega e pagamento", fazer: () => irPara(3), desligado: noPedido.length === 0 };
   } else {
     titulo = "Entrega e pagamento";
     valorTotal = total;
@@ -473,7 +462,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
       <div className="mx-auto w-full max-w-[1200px] flex-1 px-5 pb-8 lg:px-10">
         <div className="flex min-h-[60px] items-center justify-between lg:hidden">
           <BotaoVoltar etapa={etapa} base={base} raiz={`/${papelaria.slug}`} />
-          <span className="text-[13px] font-bold text-apagado">Passo {etapa} de 4</span>
+          <span className="text-[13px] font-bold text-apagado">Passo {etapa} de 3</span>
         </div>
         <div className="hidden pt-[22px] lg:block"><Etapas atual={etapa} /></div>
 
@@ -490,10 +479,10 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
             <div className={`${cartao} flex flex-col gap-3 p-5`}>
               <h2 className="text-lg font-bold">Resumo da lista</h2>
               <Linha2 rotulo="Lista">{nomeDaLista}</Linha2>
-              {etapa > 1 && <Linha2 rotulo="Itens com preço">{noPedido.length}</Linha2>}
-              {etapa > 1 && faixaAtual && <Linha2 rotulo="Faixa">{etapa === 2 ? ROTULO_FAIXA[m.faixaBase] : faixaAtual === "mista" ? "Mista" : ROTULO_FAIXA[faixaAtual]}</Linha2>}
-              {etapa === 4 && <Linha2 rotulo="Produtos">{reais(sub)}</Linha2>}
-              {etapa === 4 && <Linha2 rotulo="Entrega">{taxa ? reais(taxa) : "Grátis"}</Linha2>}
+              <Linha2 rotulo="Itens com preço">{noPedido.length}</Linha2>
+              {faixaAtual && <Linha2 rotulo="Faixa">{etapa === 1 ? ROTULO_FAIXA[m.faixaBase] : faixaAtual === "mista" ? "Mista" : ROTULO_FAIXA[faixaAtual]}</Linha2>}
+              {etapa === 3 && <Linha2 rotulo="Produtos">{reais(sub)}</Linha2>}
+              {etapa === 3 && <Linha2 rotulo="Entrega">{taxa ? reais(taxa) : "Grátis"}</Linha2>}
               {valorTotal !== null && (
                 <div className="flex items-baseline justify-between border-t border-linha-2 pt-3">
                   <span className="font-bold">Total</span>
