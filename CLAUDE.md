@@ -184,6 +184,24 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
 - **A vitrine dos pais tem DUAS listas suspensas**: escola e, depois dela, a série; o botão "Ver a
   lista" leva ao link da série.
 
+## Descontos da papelaria (19/10/2026, migração 0008)
+
+- **Quatro regras, cada uma ligada ou não, com o percentual da papelaria** (card "Descontos" na
+  Loja): lista completa · pagamento no Pix · valor mínimo (a partir de R$ X) · faixa da lista
+  (todos os itens escolhidos na faixa Y). Guardadas em `fornecedor.descontos` (jsonb), validadas
+  por `app.descontos_validos` numa restrição: percentual inteiro de 1 a 50.
+- **Lista completa**: todo item da lista que está à venda, na quantidade da escola OU MAIS. Trocar
+  faixa e incluir itens não tira o desconto; item fora de venda não conta.
+- **As regras cumpridas se SOMAM, com teto de 50%**, e valem só sobre os PRODUTOS (a entrega fica
+  fora). O valor é truncado no centavo (`subtotal * % / 100`), para nunca passar do teto; há uma
+  restrição no pedido que garante isso.
+- **A regra existe em DOIS lugares, e o teste os amarra**, como a da faixa: `app.descontos_aplicados`
+  (banco, cobra) e `descontoDoPedido` (`src/lib/desconto.ts`, tela). `test/db/carrinho-paridade.test.ts`
+  sorteia 300 carrinhos e exige o mesmo valor e as mesmas regras, e exige que cada regra E o teto
+  tenham valido em algum carrinho. Tela sem o desconto é recusada com `preco_mudou`.
+- **O pedido congela o desconto**: `pedido.desconto_centavos` e `pedido.descontos` (as regras que
+  valeram) entram no gatilho de congelamento. O total passa a ser produtos − desconto + entrega.
+
 ## Do protótipo, o que NÃO entra agora
 
 O protótipo tem leitura de lista por foto e por texto colado, e a fila "Itens não

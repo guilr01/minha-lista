@@ -1,5 +1,6 @@
 import "server-only";
 import { comoUsuario, type Consulta } from "./db";
+import type { RegrasDeDesconto } from "./desconto";
 import { FAIXAS, type Faixa } from "./faixa";
 import { chaveDoNome, type LinhaDaPlanilha } from "./planilha-catalogo";
 import { sugerirSlug } from "./slug";
@@ -396,13 +397,14 @@ export type DadosDaLoja = {
   aceita_retirada: boolean;
   taxa_entrega_centavos: number;
   parcelas_maximas: number;
+  descontos: RegrasDeDesconto;
 };
 
 export async function buscarLoja(usuarioId: string, fornecedorId: string) {
   return rodar(usuarioId, async (q) =>
     (await q<DadosDaLoja>(
       `select nome, slug, whatsapp, endereco_retirada, aceita_entrega, aceita_retirada,
-              taxa_entrega_centavos, parcelas_maximas from public.fornecedor where id = $1`,
+              taxa_entrega_centavos, parcelas_maximas, descontos from public.fornecedor where id = $1`,
       [fornecedorId],
     )).rows[0] ?? null,
   );
@@ -415,14 +417,22 @@ export async function salvarLoja(usuarioId: string, fornecedorId: string, d: Omi
   if (!Number.isInteger(d.parcelas_maximas) || d.parcelas_maximas < 1 || d.parcelas_maximas > 12) {
     throw new ErroDeCadastro("Parcelas de 1 a 12.");
   }
+  for (const r of Object.values(d.descontos)) {
+    if (!Number.isInteger(r.percentual) || r.percentual < 1 || r.percentual > 50) {
+      throw new ErroDeCadastro("Cada desconto vai de 1% a 50%.");
+    }
+  }
+  if (d.descontos.valor_minimo && !(d.descontos.valor_minimo.minimo_centavos > 0)) {
+    throw new ErroDeCadastro("Informe a partir de qual valor vale o desconto por valor mínimo.");
+  }
   return rodar(usuarioId, async (q) => {
     await q(
       `update public.fornecedor
           set nome = $2, whatsapp = $3, endereco_retirada = nullif($4, ''), aceita_entrega = $5,
-              aceita_retirada = $6, taxa_entrega_centavos = $7, parcelas_maximas = $8
+              aceita_retirada = $6, taxa_entrega_centavos = $7, parcelas_maximas = $8, descontos = $9
         where id = $1`,
       [fornecedorId, d.nome.trim(), d.whatsapp, d.endereco_retirada?.trim() ?? "", d.aceita_entrega,
-        d.aceita_retirada, d.taxa_entrega_centavos, d.parcelas_maximas],
+        d.aceita_retirada, d.taxa_entrega_centavos, d.parcelas_maximas, JSON.stringify(d.descontos)],
     );
   });
 }

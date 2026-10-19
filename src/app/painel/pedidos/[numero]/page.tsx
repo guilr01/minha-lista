@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icone } from "@/components/icone";
 import { botaoContornoPequeno, cartao } from "@/components/ui";
+import { resumoDosDescontos } from "@/lib/desconto";
 import { reais } from "@/lib/dinheiro";
 import { ROTULO_FAIXA } from "@/lib/faixa";
 import { buscarPedidoDoPainel } from "@/lib/painel";
@@ -100,6 +101,12 @@ export default async function PedidoNoPainel({ params }: Props) {
               <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">Pagamento</h2>
               <span className="font-bold text-ok">{p.metodo_pagamento === "pix" ? "Pix" : `Cartão ${p.parcelas}x`} · pago</span>
               <span className="flex justify-between"><span className="text-apagado">Produtos</span><span>{reais(p.subtotal_centavos)}</span></span>
+              {p.desconto_centavos > 0 && (
+                <span className="flex justify-between gap-3 text-ok">
+                  <span>Desconto ({resumoDosDescontos(p.descontos)})</span>
+                  <span className="whitespace-nowrap">− {reais(p.desconto_centavos)}</span>
+                </span>
+              )}
               <span className="flex justify-between"><span className="text-apagado">Entrega</span><span>{p.modalidade === "entrega" ? reais(p.taxa_entrega_centavos) : "Retirada"}</span></span>
               <span className="flex justify-between font-bold"><span>Total</span><span>{reais(p.total_centavos)}</span></span>
             </section>

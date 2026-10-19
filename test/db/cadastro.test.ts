@@ -126,11 +126,37 @@ describe("escolas, séries e listas", () => {
 describe("loja", () => {
   it("salva e valida os dados que os pais veem", async () => {
     const p = await papelariaNova();
-    const base = { nome: "Papelaria Nova", whatsapp: "11988887777", endereco_retirada: "Rua A, 1", aceita_entrega: true, aceita_retirada: false, taxa_entrega_centavos: 1200, parcelas_maximas: 4 };
+    const base = { nome: "Papelaria Nova", whatsapp: "11988887777", endereco_retirada: "Rua A, 1", aceita_entrega: true, aceita_retirada: false, taxa_entrega_centavos: 1200, parcelas_maximas: 4, descontos: {} };
     await cad.salvarLoja(p.usuario, p.fornecedor, base);
     expect(await cad.buscarLoja(p.usuario, p.fornecedor)).toMatchObject(base);
     await expect(cad.salvarLoja(p.usuario, p.fornecedor, { ...base, aceita_entrega: false })).rejects.toThrow(/entrega, retirada/);
     await expect(cad.salvarLoja(p.usuario, p.fornecedor, { ...base, whatsapp: "123" })).rejects.toThrow(/WhatsApp/);
+  });
+
+  it("guarda as regras de desconto, e o banco recusa regra malformada mesmo vinda por fora da tela", async () => {
+    const p = await papelariaNova();
+    const base = { nome: "Papelaria Nova", whatsapp: null, endereco_retirada: "", aceita_entrega: true, aceita_retirada: true, taxa_entrega_centavos: 0, parcelas_maximas: 3 };
+    const descontos = {
+      lista_completa: { ativo: true, percentual: 5 },
+      pix: { ativo: false, percentual: 3 },
+      valor_minimo: { ativo: true, percentual: 2, minimo_centavos: 30000 },
+      faixa: { ativo: true, percentual: 4, faixa: "premium" as const },
+    };
+    await cad.salvarLoja(p.usuario, p.fornecedor, { ...base, descontos });
+    expect((await cad.buscarLoja(p.usuario, p.fornecedor))?.descontos).toEqual(descontos);
+    await expect(cad.salvarLoja(p.usuario, p.fornecedor, { ...base, descontos: { pix: { ativo: true, percentual: 60 } } })).rejects.toThrow(/1% a 50%/);
+
+    const c = new pg.Client({ connectionString: urlDoBanco() });
+    await c.connect();
+    try {
+      for (const ruim of [{ pix: { ativo: true, percentual: 2.5 } }, { frete: { ativo: true, percentual: 5 } },
+        { faixa: { ativo: true, percentual: 5, faixa: "ouro" } }, { valor_minimo: { ativo: true, percentual: 5 } }]) {
+        await expect(c.query("update public.fornecedor set descontos = $2 where id = $1", [p.fornecedor, JSON.stringify(ruim)]), JSON.stringify(ruim))
+          .rejects.toThrow(/descontos_check|check constraint/);
+      }
+    } finally {
+      await c.end();
+    }
   });
 });
 

@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { Icone } from "@/components/icone";
 import { Aviso, ChipFaixa, Informacao, botaoPequeno, cartao } from "@/components/ui";
 import { buscarPedido } from "@/lib/area-publica";
+import { resumoDosDescontos } from "@/lib/desconto";
 import { reais } from "@/lib/dinheiro";
 import { ROTULO_FAIXA } from "@/lib/faixa";
 import { simulacaoLiberada } from "@/lib/pagamento";
@@ -191,6 +192,12 @@ export default async function PaginaDoPedido({ params }: Props) {
                 <span className="whitespace-nowrap">{reais(i.preco_unitario_centavos * i.quantidade)}</span>
               </li>
             ))}
+            {p.desconto_centavos > 0 && (
+              <li className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm text-ok">
+                <span>Desconto ({resumoDosDescontos(p.descontos)})</span>
+                <span className="whitespace-nowrap">− {reais(p.desconto_centavos)}</span>
+              </li>
+            )}
             <li className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm">
               <span className="text-apagado">Entrega</span>
               <span>{p.modalidade === "entrega" ? (p.taxa_entrega_centavos ? reais(p.taxa_entrega_centavos) : "Grátis") : "Retirada · grátis"}</span>

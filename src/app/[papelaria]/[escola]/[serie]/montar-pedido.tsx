@@ -31,6 +31,7 @@ import {
   type Linha,
 } from "@/lib/carrinho";
 import { reais } from "@/lib/dinheiro";
+import { descontoDoPedido, fraseDaRegra, listaCompleta, regrasAtivas, resumoDosDescontos } from "@/lib/desconto";
 import { DESCRICAO_FAIXA, FAIXAS, ROTULO_FAIXA, type Faixa } from "@/lib/faixa";
 import { guardarPedido } from "@/lib/meus-pedidos";
 import type { ProdutoDoCatalogo, VitrineLista } from "@/lib/vitrine";
@@ -155,7 +156,11 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
   const noPedido = linhasNoPedido(m.linhas, produtos);
   const sub = subtotal(m.linhas, produtos);
   const taxa = m.modalidade === "entrega" ? papelaria.taxa_entrega_centavos : 0;
-  const total = sub + taxa;
+  // O desconto é calculado aqui e de novo no banco (app.descontos_aplicados);
+  // se as duas contas divergirem, criar_pedido recusa com preco_mudou.
+  const desc = descontoDoPedido({ regras: papelaria.descontos, itens, linhas: m.linhas, produtos, metodo: m.metodo, subtotal: sub });
+  const ativas = regrasAtivas(papelaria.descontos);
+  const total = sub - desc.centavos + taxa;
   const faixaAtual = faixaDoCarrinho(m.linhas, produtos);
   const nomeDaLista = `${serie.nome} · ${escola.nome}`;
 
@@ -222,6 +227,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
     corpo = (
       <div className="flex flex-col gap-3.5">
         {lista.observacoes && <Informacao>{lista.observacoes}</Informacao>}
+        {ativas.length > 0 && <AvisoDeDescontos frases={ativas.map((r) => fraseDaRegra(r, papelaria.descontos, reais))} />}
         <div className="grid grid-cols-3 gap-2 lg:gap-3.5" role="radiogroup" aria-label="Faixa de preço">
           {FAIXAS.map((f) => {
             const on = m.faixaBase === f;
@@ -283,8 +289,19 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
     titulo = "Revise sua lista";
     subtitulo = "Remova o que já tem em casa, ajuste quantidades ou troque a faixa de um item.";
     rotuloTotal = `${noPedido.length} ${noPedido.length === 1 ? "item" : "itens"} no pedido`;
+    const pctLista = papelaria.descontos?.lista_completa?.ativo ? papelaria.descontos.lista_completa.percentual : 0;
+    const completa = listaCompleta(itens, m.linhas, produtos);
     corpo = (
       <div className="flex flex-col gap-3">
+        {pctLista > 0 && (
+          completa ? (
+            <div className="rounded-xl bg-ok-fundo px-3.5 py-3 text-[13px] font-semibold leading-snug text-ok">
+              Lista completa: você ganha {pctLista}% de desconto. Tirar um item ou diminuir uma quantidade da lista faz perder o desconto.
+            </div>
+          ) : (
+            <Informacao>Leve todos os itens da lista, nas quantidades da escola, e ganhe {pctLista}% de desconto.</Informacao>
+          )
+        )}
         {m.linhas.map((l) => {
           const p = produtos.get(l.produto_id);
           if (!p) return null;
@@ -428,7 +445,8 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
         <section className={`${cartao} ${secao}`}>
           <h2 className="text-base font-bold">Pagamento</h2>
           <div className="grid grid-cols-2 gap-2.5">
-            {opcao("metodo", m.metodo === "pix", () => setM((a) => ({ ...a, metodo: "pix" })), "pix", "Pix", "Aprovação na hora")}
+            {opcao("metodo", m.metodo === "pix", () => setM((a) => ({ ...a, metodo: "pix" })), "pix", "Pix",
+              papelaria.descontos?.pix?.ativo ? `${papelaria.descontos.pix.percentual}% de desconto` : "Aprovação na hora")}
             {opcao("metodo", m.metodo === "cartao", () => setM((a) => ({ ...a, metodo: "cartao" })), "cartao", "Cartão de crédito",
               papelaria.parcelas_maximas > 1 ? `Até ${papelaria.parcelas_maximas}x sem juros` : "À vista")}
           </div>
@@ -446,6 +464,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
         <section className={`${cartao} ${secao} lg:hidden`}>
           <h2 className="text-base font-bold">Resumo</h2>
           <div className="flex justify-between gap-3 text-[15px]"><span className="text-apagado">{noPedido.length} itens · {faixaAtual === "mista" ? "Mista" : faixaAtual ? ROTULO_FAIXA[faixaAtual] : ""}</span><span>{reais(sub)}</span></div>
+          <LinhasDeDesconto desc={desc} />
           <div className="flex justify-between gap-3 text-[15px]"><span className="text-apagado">Entrega</span><span>{taxa ? reais(taxa) : "Grátis"}</span></div>
         </section>
       </div>
@@ -482,6 +501,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
               <Linha2 rotulo="Itens com preço">{noPedido.length}</Linha2>
               {faixaAtual && <Linha2 rotulo="Faixa">{etapa === 1 ? ROTULO_FAIXA[m.faixaBase] : faixaAtual === "mista" ? "Mista" : ROTULO_FAIXA[faixaAtual]}</Linha2>}
               {etapa === 3 && <Linha2 rotulo="Produtos">{reais(sub)}</Linha2>}
+              {etapa === 3 && <LinhasDeDesconto desc={desc} />}
               {etapa === 3 && <Linha2 rotulo="Entrega">{taxa ? reais(taxa) : "Grátis"}</Linha2>}
               {valorTotal !== null && (
                 <div className="flex items-baseline justify-between border-t border-linha-2 pt-3">
@@ -504,6 +524,34 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
         )}
         {botaoAcao}
       </div>
+    </div>
+  );
+}
+
+function AvisoDeDescontos({ frases }: { frases: string[] }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-xl border border-[#cfe5d6] bg-ok-fundo px-3.5 py-3 text-[13px] leading-snug text-ok">
+      <strong className="text-[14px]">Descontos desta papelaria</strong>
+      {frases.map((f) => <span key={f}>• {f}</span>)}
+      {frases.length > 1 && <span className="text-tinta/70">Os descontos se somam, até 50%, e valem sobre os produtos.</span>}
+    </div>
+  );
+}
+
+/** Uma linha por regra que o pedido cumpre. Mesma conta do banco (src/lib/desconto.ts). */
+function LinhasDeDesconto({ desc }: { desc: ReturnType<typeof descontoDoPedido> }) {
+  if (!desc.centavos) return null;
+  const soma = desc.aplicadas.reduce((t, a) => t + a.percentual, 0);
+  return (
+    <div className="flex justify-between gap-3 text-[15px] font-semibold text-ok">
+      <span className="flex flex-col">
+        Desconto de {desc.percentual}%
+        <span className="text-[13px] font-normal">
+          {resumoDosDescontos(desc.aplicadas)}
+          {desc.percentual < soma ? " (teto de 50%)" : ""}
+        </span>
+      </span>
+      <span className="whitespace-nowrap">− {reais(desc.centavos)}</span>
     </div>
   );
 }

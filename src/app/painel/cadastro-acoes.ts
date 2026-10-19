@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import type { EstadoDaAcao } from "@/components/form-acao";
 import * as cad from "@/lib/cadastro";
 import { centavosDe } from "@/lib/dinheiro";
-import { FAIXAS } from "@/lib/faixa";
+import { REGRAS, TITULO_REGRA, type RegrasDeDesconto } from "@/lib/desconto";
+import { FAIXAS, type Faixa } from "@/lib/faixa";
 import { exigirUsuario, papelariaAtual } from "@/lib/sessao";
 
 // As ações do cadastro. Cada uma confere a sessão (exigirUsuario) e roda como
@@ -155,7 +156,42 @@ export async function excluirListaAcao(_: EstadoDaAcao, f: FormData): Promise<Es
 
 // -------------------------------------------------------------------- loja
 
+/**
+ * Lê o card de descontos. Regra com percentual em branco e desligada some;
+ * ligada sem percentual é erro. O percentual fica guardado mesmo desligado,
+ * para a papelaria religar sem digitar de novo.
+ */
+function lerDescontos(f: FormData): RegrasDeDesconto | string {
+  const out: RegrasDeDesconto = {};
+  for (const regra of REGRAS) {
+    const ativo = f.get(`desc_${regra}`) === "on";
+    const bruto = texto(f, `desc_${regra}_pct`).replace("%", "").trim();
+    if (!bruto) {
+      if (ativo) return `${TITULO_REGRA[regra]}: informe a porcentagem do desconto.`;
+      continue;
+    }
+    const percentual = Number(bruto.replace(",", "."));
+    if (!Number.isInteger(percentual) || percentual < 1 || percentual > 50) {
+      return `${TITULO_REGRA[regra]}: a porcentagem vai de 1 a 50, sem casas decimais.`;
+    }
+    if (regra === "valor_minimo") {
+      const minimo = centavosDe(texto(f, "desc_valor_minimo_min"));
+      if (minimo === null) return "Valor mínimo: informe a partir de quantos reais vale o desconto.";
+      out.valor_minimo = { ativo, percentual, minimo_centavos: minimo };
+    } else if (regra === "faixa") {
+      const faixa = texto(f, "desc_faixa_faixa") as Faixa;
+      if (!FAIXAS.includes(faixa)) return "Faixa da lista: escolha a faixa.";
+      out.faixa = { ativo, percentual, faixa };
+    } else {
+      out[regra] = { ativo, percentual };
+    }
+  }
+  return out;
+}
+
 export async function salvarLojaAcao(_: EstadoDaAcao, f: FormData): Promise<EstadoDaAcao> {
+  const descontos = lerDescontos(f);
+  if (typeof descontos === "string") return { erro: descontos };
   const whats = texto(f, "whatsapp").replace(/\D/g, "");
   const taxa = texto(f, "taxa").trim();
   const taxaCentavos = taxa === "" || /^0+([,.]0+)?$/.test(taxa) ? 0 : centavosDe(taxa);
@@ -169,6 +205,7 @@ export async function salvarLojaAcao(_: EstadoDaAcao, f: FormData): Promise<Esta
       aceita_retirada: f.get("aceita_retirada") === "on",
       taxa_entrega_centavos: taxaCentavos,
       parcelas_maximas: inteiro(f, "parcelas"),
+      descontos,
     });
     return "Dados da loja salvos.";
   });

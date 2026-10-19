@@ -1,3 +1,4 @@
+import type { Regra, RegrasDeDesconto } from "./desconto";
 import type { Faixa } from "./faixa";
 
 // O formato que as funções da área pública devolvem (db/migrations/0003).
@@ -21,6 +22,7 @@ export type Papelaria = {
   aceita_retirada: boolean;
   taxa_entrega_centavos: number;
   parcelas_maximas: number;
+  descontos: RegrasDeDesconto;
 };
 
 export type VitrinePapelaria = {
@@ -86,6 +88,8 @@ export type PedidoPublico = {
   metodo_pagamento: "pix" | "cartao";
   parcelas: number;
   subtotal_centavos: number;
+  desconto_centavos: number;
+  descontos: { regra: Regra; percentual: number }[];
   taxa_entrega_centavos: number;
   total_centavos: number;
   criado_em: string;

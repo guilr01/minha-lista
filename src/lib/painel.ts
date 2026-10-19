@@ -1,5 +1,6 @@
 import "server-only";
 import { comoUsuario } from "./db";
+import type { Regra } from "./desconto";
 import type { Faixa } from "./faixa";
 import type { StatusPedido } from "./vitrine";
 
@@ -64,6 +65,8 @@ export type PedidoDoPainel = {
   metodo_pagamento: "pix" | "cartao";
   parcelas: number;
   subtotal_centavos: number;
+  desconto_centavos: number;
+  descontos: { regra: Regra; percentual: number }[];
   taxa_entrega_centavos: number;
   total_centavos: number;
   criado_em: string;
@@ -89,7 +92,8 @@ export async function buscarPedidoDoPainel(usuarioId: string, fornecedorId: stri
     const p = await q<Omit<PedidoDoPainel, "itens" | "eventos">>(
       `select id, numero, status, aluno_nome, responsavel_nome, responsavel_whatsapp, escola_nome,
               serie_nome, ano_letivo, modalidade, endereco, metodo_pagamento, parcelas,
-              subtotal_centavos, taxa_entrega_centavos, total_centavos, criado_em, pago_em, token
+              subtotal_centavos, desconto_centavos, descontos, taxa_entrega_centavos, total_centavos,
+              criado_em, pago_em, token
          from public.pedido where fornecedor_id = $1 and numero = $2`,
       [fornecedorId, numero],
     );
