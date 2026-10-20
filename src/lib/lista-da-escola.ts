@@ -672,3 +672,28 @@ export function recadoComIndisponiveis(recado: string | null, itens: string[]): 
   const bloco = [TITULO_INDISPONIVEIS, ...itens.map((i) => `• ${i}`)].join("\n");
   return semBloco ? `${semBloco}\n\n${bloco}` : bloco;
 }
+
+export type BlocoDoRecado = { tipo: "texto"; texto: string } | { tipo: "lista"; titulo: string | null; itens: string[] };
+
+/**
+ * O recado em blocos, para a página do cliente mostrar um item embaixo do
+ * outro: linhas com marcador ("• ", "- ", "* ") viram lista, e a linha que
+ * termina em ":" logo antes delas é o título dela. O resto é parágrafo.
+ */
+export function blocosDoRecado(recado: string): BlocoDoRecado[] {
+  const blocos: BlocoDoRecado[] = [];
+  for (const bruta of recado.replace(/\r/g, "").split("\n")) {
+    const linha = bruta.trim();
+    if (!linha) continue;
+    const item = linha.match(/^[•\-*]\s*(.+)$/);
+    const ultimo = blocos[blocos.length - 1];
+    if (item) {
+      if (ultimo?.tipo === "lista") ultimo.itens.push(item[1].trim());
+      else if (ultimo?.tipo === "texto" && ultimo.texto.endsWith(":")) blocos[blocos.length - 1] = { tipo: "lista", titulo: ultimo.texto, itens: [item[1].trim()] };
+      else blocos.push({ tipo: "lista", titulo: null, itens: [item[1].trim()] });
+    } else {
+      blocos.push({ tipo: "texto", texto: linha });
+    }
+  }
+  return blocos;
+}

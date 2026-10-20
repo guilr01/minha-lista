@@ -33,6 +33,7 @@ import {
 import { reais } from "@/lib/dinheiro";
 import { descontoDoPedido, fraseDaRegra, listaCompleta, regrasAtivas, resumoDosDescontos } from "@/lib/desconto";
 import { DESCRICAO_FAIXA, FAIXAS, ROTULO_FAIXA, type Faixa } from "@/lib/faixa";
+import { blocosDoRecado } from "@/lib/lista-da-escola";
 import { guardarPedido } from "@/lib/meus-pedidos";
 import type { ProdutoDoCatalogo, VitrineLista } from "@/lib/vitrine";
 import { formatarCep, formatarTelefone } from "@/lib/whatsapp";
@@ -226,7 +227,6 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
     valorTotal = totalNaFaixa(m.linhas, produtos, m.faixaBase);
     corpo = (
       <div className="flex flex-col gap-3.5">
-        {lista.observacoes && <Informacao>{lista.observacoes}</Informacao>}
         {ativas.length > 0 && <AvisoDeDescontos frases={ativas.map((r) => fraseDaRegra(r, papelaria.descontos, reais))} />}
         <div className="grid grid-cols-3 gap-2 lg:gap-3.5" role="radiogroup" aria-label="Faixa de preço">
           {FAIXAS.map((f) => {
@@ -280,6 +280,8 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
           </p>
         )}
         <p className="text-[13px] text-apagado">Na próxima tela você pode retirar o que já tem, mudar quantidades, trocar a faixa de um item ou incluir outro.</p>
+        {/* O recado vai no fim: quem chega quer ver a faixa e a lista primeiro; o que a loja não vende é o último aviso. */}
+        {lista.observacoes && <RecadoDaLista recado={lista.observacoes} />}
       </div>
     );
     acao = { rotulo: `Continuar com a ${ROTULO_FAIXA[m.faixaBase]}`, fazer: () => irPara(2) };
@@ -571,5 +573,27 @@ function BotaoVoltar({ etapa, base, raiz }: { etapa: number; base: string; raiz:
     <Link href={destino} className="inline-flex min-h-11 items-center gap-1 pr-1 text-[15px] font-semibold text-azul">
       <Icone nome="voltar" />Voltar
     </Link>
+  );
+}
+
+/** O recado da lista, com cada item do "não vendemos" numa linha. */
+function RecadoDaLista({ recado }: { recado: string }) {
+  return (
+    <Informacao>
+      <div className="flex flex-col gap-2">
+        {blocosDoRecado(recado).map((b, i) =>
+          b.tipo === "texto" ? (
+            <p key={i}>{b.texto}</p>
+          ) : (
+            <div key={i}>
+              {b.titulo && <p className="font-semibold">{b.titulo}</p>}
+              <ul className="mt-1 flex list-disc flex-col gap-0.5 pl-5">
+                {b.itens.map((item, j) => <li key={j}>{item}</li>)}
+              </ul>
+            </div>
+          ),
+        )}
+      </div>
+    </Informacao>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NOTA_MINIMA, emDuvida, lerLinhas, recadoComIndisponiveis, sugerir } from "@/lib/lista-da-escola";
+import { NOTA_MINIMA, blocosDoRecado, emDuvida, lerLinhas, recadoComIndisponiveis, sugerir } from "@/lib/lista-da-escola";
 
 const catalogo = ["Apontador com depósito", "Borracha branca", "Caderno brochura 96 folhas", "Caderno de desenho 48 folhas",
   "Caderno universitário 10 matérias", "Canetinha hidrográfica 12 cores", "Cola bastão 10 g", "Cola branca 90 g", "Estojo escolar",
@@ -232,5 +232,16 @@ describe("recado com o que falta", () => {
     const dois = recadoComIndisponiveis(um, ["Livro de inglês"]);
     expect(dois).toBe("Avental é comprado na escola.\n\nItens da lista da escola que não vendemos:\n• Livro de inglês");
     expect(recadoComIndisponiveis(dois, [])).toBe("Avental é comprado na escola.");
+  });
+
+  it("o cliente vê o recado em blocos: o parágrafo da papelaria e a lista do que não vendemos, um item por linha", () => {
+    const recado = recadoComIndisponiveis("Avental é comprado na escola.\nEntregamos em 2 dias.", ["Dicionário Aurélio", "Jaleco"]);
+    expect(blocosDoRecado(recado)).toEqual([
+      { tipo: "texto", texto: "Avental é comprado na escola." },
+      { tipo: "texto", texto: "Entregamos em 2 dias." },
+      { tipo: "lista", titulo: "Itens da lista da escola que não vendemos:", itens: ["Dicionário Aurélio", "Jaleco"] },
+    ]);
+    // Lista digitada pela papelaria com hífen, sem título, também vira lista.
+    expect(blocosDoRecado("- Agenda\n- Uniforme")).toEqual([{ tipo: "lista", titulo: null, itens: ["Agenda", "Uniforme"] }]);
   });
 });
