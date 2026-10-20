@@ -229,6 +229,29 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
   crepom azul e amarelo" também. Parágrafo que o PDF quebrou no fim da linha volta a ser uma frase.
 - **O que não parece item NÃO some**: vai para um bloco recolhido na conferência, com "É um item"
   para trazer de volta. Errar para o lado de esconder sem mostrar seria pior que o defeito antigo.
+- **Regras tiradas de quatro listas reais (20/10/2026)**, uma por padrão, que estão como fixture em
+  `test/fixtures/listas-de-escolas/` (contatos trocados por fictícios) e são afirmadas item por item
+  em `test/listas-reais.test.ts`. Mexeu numa regra, rode esse arquivo: frase que vira item quebra.
+  - **Livro NÃO entra** (decisão do Guilherme): sai com `motivo: "livro"`, em grupo próprio na tela.
+    Três jeitos de reconhecer, porque as listas usam os três: começa por livro ("Livro:",
+    dicionário, atlas, apostila, gramática, sistema de ensino); tem editora, ISBN ou edição; ou está
+    debaixo de "LIVROS"/"Literatura"/"Paradidáticos". O título SEM marca nenhuma ("Capitães de
+    areia") sai porque a linha de baixo é "Autor:"/"Editora:"/"ISBN:", e a ficha gruda no título.
+  - **Comprado na própria escola** ("adquirida no Colégio") sai com `motivo: "escola"`: o cliente
+    não compra na papelaria, e "indisponível" no recado o faria procurar.
+  - **Instrução colada no item** ("- colocar o nome completo do(a) aluno(a)", ", devidamente
+    identificada", "para ser utilizado nas aulas", "sugestão Canson") vai para a OBSERVAÇÃO: o
+    cliente lê, e a comparação com o catálogo não tropeça nela.
+  - **Sem quantidade, só passa o que COMEÇA por um objeto.** A regra antiga ("até 10 palavras
+    numa seção de lista é item") deixava passar "Uso de tênis" e título de livro.
+  - **Debaixo de "Importante"/"Observações" não se garimpa item em parágrafo**, e "2. Trazer…" é
+    numeração, não quantidade.
+  - **A planilha é lida por COLUNA** (`arquivo-de-lista.ts`): coluna de preço pelo título ou por ter
+    centavos, coluna de quantidade por só ter inteiros pequenos. Lida pela posição, o preço do livro
+    (70) virava a quantidade dele. Texto separado por muitos espaços na mesma célula ("…   Inglês")
+    é outra coluna e vira observação. Duas linhas vazias encerram a seção.
+  - **Previstos, sem lista real ainda**: caixinha de marcar "( )", pontilhado até a quantidade,
+    "Qtd: 2", colunas por tabulação (colado do Excel), CSV com ponto e vírgula, e editora no fim.
 - **"Confira" também quando EMPATA** (`emDuvida`): "cola" casa igual com "Cola bastão" e "Cola
   branca", e escolher um pela papelaria seria adivinhar. A nota soma a semelhança com quanto de um
   nome cabe no outro, nos dois sentidos, porque a escola ora escreve mais que o catálogo, ora menos.

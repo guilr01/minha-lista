@@ -32,11 +32,11 @@ describe("leitura da lista da escola", () => {
       [4, "lápis pretos nº 2", "", true],
       [2, "borrachas brancas macias", "", true],
       [3, "colas bastão grandes", "", true],
-      [1, "tesoura sem ponta com nome gravado", "", true],
+      [1, "tesoura sem ponta", "com nome gravado", true],
       [1, "caixa de lápis de cor 24 cores", "", true],
       [1, "Canetinha hidrocor 12 cores", "", true],
       [1, "Régua de 30 cm", "", true],
-      [1, "dicionário Aurélio atualizado", "", true],
+      [1, "dicionário Aurélio atualizado", "", false],
       [1, "avental de plástico para pintura", "", true],
     ]);
   });
@@ -85,7 +85,6 @@ Atenciosamente, a Coordenação Pedagógica.`;
       [1, "Agenda do colégio"],
       [1, "500 folhas de papel sulfite"],
       [1, "caixa de sapato encapada"],
-      [1, "Ápis Língua Portuguesa 1º ano – Editora Ática"],
     ]);
     expect(textos(COMPLETA)).toEqual([
       "COLÉGIO SÃO JOSÉ",
@@ -95,6 +94,7 @@ Atenciosamente, a Coordenação Pedagógica.`;
       "MATERIAL DE USO INDIVIDUAL",
       "MATERIAL DE USO COLETIVO (entregar na primeira semana de aula)",
       "LIVROS",
+      "Ápis Língua Portuguesa 1º ano – Editora Ática",
       "OBSERVAÇÕES:",
       "Todo material deverá ser identificado com o nome do aluno.",
       "Os livros serão utilizados a partir do primeiro dia de aula.",
@@ -150,12 +150,12 @@ caixa de giz de cera.`;
   });
 
   it("número que não é quantidade: série, data, hora, medida e preço", () => {
-    expect(itens("1º ano\n30/01 reunião\n500 folhas de papel sulfite\n24 cores de lápis")).toEqual([
-      [1, "500 folhas de papel sulfite"], [1, "24 cores de lápis"],
+    expect(itens("1º ano\n30/01 reunião\n500 folhas de papel sulfite\n1o. Ano Ensino Fundamental")).toEqual([
+      [1, "500 folhas de papel sulfite"],
     ]);
     // Planilha com colunas de preço ao lado do item.
     expect(itens("1 tesoura escolar sem ponta com nome 8.6 8.6\n2 colas bastão R$ 4,50")).toEqual([
-      [1, "tesoura escolar sem ponta com nome"], [2, "colas bastão"],
+      [1, "tesoura escolar sem ponta"], [2, "colas bastão"],
     ]);
   });
 

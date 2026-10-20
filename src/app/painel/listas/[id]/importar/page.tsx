@@ -27,9 +27,10 @@ export default async function ImportarListaDaEscola({ params }: { params: Promis
       </Link>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Importar a lista da escola</h1>
       <p className="mt-1.5 max-w-[720px] text-[15px] text-apagado">
-        Suba o arquivo que a escola mandou ou cole o texto, mesmo que a lista venha em parágrafo. O sistema separa os itens dos
-        recados da escola, compara cada item com o seu catálogo e sugere o produto; você confere antes de gravar. O que você não vende
-        fica descrito como indisponível no recado da lista, para o cliente saber que precisa comprar em outro lugar.
+        Suba o arquivo que a escola mandou ou cole o texto, mesmo que a lista venha em parágrafo. O sistema separa os itens de
+        material dos livros e dos recados da escola, compara cada item com o seu catálogo e sugere o produto; você confere antes de
+        gravar. O que você não vende fica descrito como indisponível no recado da lista, para o cliente saber que precisa comprar em
+        outro lugar. Livros não entram.
       </p>
       <Importador listaId={id} catalogo={catalogo} tipos={TIPOS_ACEITOS} jaNaLista={lista.itens.map((i) => i.produto_id)} />
     </>

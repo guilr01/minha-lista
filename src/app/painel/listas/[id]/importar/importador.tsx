@@ -5,10 +5,17 @@ import { Icone } from "@/components/icone";
 import { Aviso, ChipFaixa, botao, botaoContornoPequeno, campo, cartao, rotuloCampo } from "@/components/ui";
 import { reais } from "@/lib/dinheiro";
 import type { Faixa } from "@/lib/faixa";
-import { NOTA_MINIMA, emDuvida } from "@/lib/lista-da-escola";
+import { NOTA_MINIMA, emDuvida, type MotivoFora } from "@/lib/lista-da-escola";
 import { conferirListaDaEscolaAcao, gravarListaDaEscolaAcao, type Decisao, type LinhaConferida } from "./acoes";
 
 type ProdutoDoCatalogo = { id: string; nome: string; opcoes: { faixa: Faixa; marca: string; preco_centavos: number }[] };
+
+/** Os grupos do bloco "fora da lista": livro primeiro, porque é o que a papelaria mais quer conferir. */
+const GRUPOS_FORA: [MotivoFora, string, string][] = [
+  ["livro", "Livros (não entram na lista de material)", "livros"],
+  ["escola", "Comprados na própria escola", "da escola"],
+  ["texto", "Títulos, avisos e recados", "avisos e títulos"],
+];
 
 const INDISPONIVEL = "__indisponivel";
 const IGNORAR = "__ignorar";
@@ -84,6 +91,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
   escolhas.forEach((e) => (e.valor === INDISPONIVEL ? conta.indisponivel++ : e.valor === IGNORAR ? conta.ignorar++ : conta.produto++));
   const itens = linhas.map((_, i) => i).filter((i) => naConferencia[i]);
   const fora = linhas.map((_, i) => i).filter((i) => !naConferencia[i]);
+  const porMotivo = (m: MotivoFora) => fora.filter((i) => (linhas[i].motivo ?? "texto") === m);
 
   const gravar = () => {
     const decisoes: Decisao[] = [];
@@ -192,22 +200,35 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
         <details className={`${cartao} group p-3.5 lg:p-4`} open={itens.length === 0}>
           <summary className="flex min-h-11 cursor-pointer list-none items-center [&::-webkit-details-marker]:hidden justify-between gap-3 font-semibold">
             <span>
-              {fora.length} {fora.length === 1 ? "trecho do arquivo não parece item" : "trechos do arquivo não parecem itens"} e {fora.length === 1 ? "ficou" : "ficaram"} fora da lista
+              {fora.length} {fora.length === 1 ? "trecho do arquivo ficou" : "trechos do arquivo ficaram"} fora da lista
+              <span className="block text-[13px] font-normal text-apagado">
+                {GRUPOS_FORA.map(([m, , rotulo]) => [porMotivo(m).length, rotulo] as const).filter(([n]) => n > 0)
+                  .map(([n, rotulo]) => `${n} ${rotulo}`).join(" · ")}
+              </span>
             </span>
             <span className="flex-none text-[14px] text-azul group-open:hidden">Ver</span>
             <span className="hidden flex-none text-[14px] text-azul group-open:inline">Esconder</span>
           </summary>
           <p className="mt-1 text-[13px] text-apagado">
-            Títulos, recados, datas e contatos da escola. Não vão para a lista nem para o recado. Se algum for item, traga para a conferência.
+            Não vão para a lista nem para o recado do cliente. Se o sistema errou em algum, traga para a conferência.
           </p>
-          <ul className="mt-3 flex flex-col divide-y divide-linha">
-            {fora.map((i) => (
-              <li key={i} className="flex items-center justify-between gap-3 py-2">
-                <span className="min-w-0 text-[14px] text-apagado">{linhas[i].original}</span>
-                <button type="button" className={`${botaoContornoPequeno} flex-none`} onClick={() => trazer(i)}>É um item</button>
-              </li>
-            ))}
-          </ul>
+          {GRUPOS_FORA.map(([motivo, titulo]) => {
+            const doGrupo = porMotivo(motivo);
+            if (!doGrupo.length) return null;
+            return (
+              <section key={motivo} className="mt-3">
+                <h3 className="text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">{titulo}</h3>
+                <ul className="flex flex-col divide-y divide-linha">
+                  {doGrupo.map((i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 py-2">
+                      <span className="min-w-0 text-[14px] text-apagado">{linhas[i].original}</span>
+                      <button type="button" className={`${botaoContornoPequeno} flex-none`} onClick={() => trazer(i)}>É um item</button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
         </details>
       )}
 
