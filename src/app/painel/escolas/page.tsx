@@ -76,7 +76,7 @@ export default async function Escolas() {
               {e.series.map((s) => {
                 const temDoAno = s.listas.some((l) => l.ano_letivo === ano);
                 return (
-                  <li key={s.id} className="flex flex-col gap-2.5 border-b border-linha-2 px-4 py-3.5 lg:flex-row lg:items-start lg:justify-between lg:px-[22px]">
+                  <li key={s.id} className="flex flex-col gap-2.5 border-b border-linha-2 px-4 py-3.5 @min-[40rem]/pagina:flex-row @min-[40rem]/pagina:items-start @min-[40rem]/pagina:justify-between lg:px-[22px]">
                     <div className="flex min-w-0 flex-col gap-2">
                       <strong className="text-[15px] lg:text-base">{s.nome}</strong>
                       {s.listas.length === 0 ? (

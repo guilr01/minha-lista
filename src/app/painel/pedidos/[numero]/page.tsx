@@ -80,9 +80,9 @@ export default async function PedidoNoPainel({ params }: Props) {
           </div>
         </div>
 
-        {/* Duas colunas só a partir de 1280 px: em 1024 a lista de separação ficava com 330 px e os
-            nomes quebravam a cada palavra. Abaixo disso, um bloco embaixo do outro, como no celular. */}
-        <div className="mt-[18px] grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
+        {/* Duas colunas quando a lista de separação fica com pelo menos ~580 px: com menos, os nomes
+            quebravam a cada palavra. Abaixo disso, um bloco embaixo do outro, como no celular. */}
+        <div className="mt-[18px] grid items-start gap-5 @min-[58rem]/pagina:grid-cols-[minmax(0,1fr)_330px]">
           <Checklist itens={p.itens} habilitado={podeMarcar} />
 
           <div className="flex flex-col gap-3">

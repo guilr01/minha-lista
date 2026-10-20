@@ -52,7 +52,7 @@ export default async function Inicio() {
                 </span>
                 <span className="flex flex-col gap-0.5">
                   <strong className="text-base">{i + 1}. {p.titulo}</strong>
-                  <span className="text-[15px] lg:text-base leading-snug text-apagado">{p.texto}</span>
+                  <span className="leitura text-[15px] lg:text-base leading-snug text-apagado">{p.texto}</span>
                 </span>
               </li>
             ))}

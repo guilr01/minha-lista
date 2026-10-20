@@ -51,8 +51,11 @@ export default async function MolduraDoPainel({ children }: { children: React.Re
 
       <main className="min-w-0 flex-1 px-4 pb-12 pt-[18px] lg:px-8 lg:pt-7 print:p-0">
         {/* Largura máxima: num monitor grande o conteúdo se espalhava por 2.300 px, e o nome do
-            item ficava a mais de mil pixels do preço na mesma linha. */}
-        <div className="mx-auto w-full max-w-[1280px] print:max-w-none">
+            item ficava a mais de mil pixels do preço na mesma linha.
+            E é um CONTÊINER ("pagina"): tabela, duas colunas e linha de cartão decidem o arranjo
+            pela largura que o conteúdo tem de verdade (@min-[…]/pagina:), não pela da janela. Pela
+            janela, o mesmo arranjo servia num catálogo e espremia o nome no catálogo seguinte. */}
+        <div className="@container/pagina mx-auto w-full max-w-[1280px] print:max-w-none">
           {papelaria ? children : (
             <p className="text-apagado">Esta conta não está ligada a nenhuma papelaria.</p>
           )}

@@ -51,14 +51,14 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
         </div>
       ) : (
         <BuscaDoCatalogo>
-          <div className={`${cartao} hidden overflow-hidden lg:block`}>
+          {/* A tabela precisa de 60rem de conteúdo para o nome do produto e as três marcas caberem;
+              com menos, cada produto vira um cartão. */}
+          <div className={`${cartao} hidden overflow-hidden @min-[60rem]/pagina:block`}>
             <table className="w-full border-collapse text-sm lg:text-[15px]">
               <thead>
                 <tr className="bg-[#fbfaf6] text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">
                   <th className="border-b border-linha px-4 py-3">Produto</th>
-                  {/* Preço em coluna estreita em 1024 px: com 170 px cada, o nome do produto ficava espremido
-                      em linhas de 8 letras ("Caneta / esferográ- / fica azul"). */}
-                  {FAIXAS.map((f) => <th key={f} className="w-[132px] border-b border-linha px-3.5 py-3 xl:w-[170px]"><ChipFaixa faixa={f} /></th>)}
+                  {FAIXAS.map((f) => <th key={f} className="w-[170px] border-b border-linha px-3.5 py-3"><ChipFaixa faixa={f} /></th>)}
                   <th className="w-[88px] border-b border-linha px-3.5 py-3">Em listas</th>
                 </tr>
               </thead>
@@ -77,7 +77,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
               </tbody>
             </table>
           </div>
-          <ul className="flex flex-col gap-3 lg:hidden">
+          <ul className="flex flex-col gap-3 @min-[60rem]/pagina:hidden">
             {produtos.map((p) => (
               <li key={p.id} data-busca={paraBusca(`${p.nome} ${p.opcoes.map((o) => o.marca).join(" ")}`)}>
                 <Link href={`/painel/catalogo/${p.id}`} className={`${cartao} flex flex-col gap-2.5 p-3.5`}>

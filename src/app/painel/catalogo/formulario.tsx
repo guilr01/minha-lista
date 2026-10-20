@@ -28,7 +28,7 @@ export function FormularioDeProduto({ produto }: { produto: ProdutoDoCadastro | 
           </label>
         </section>
 
-        <div className="grid gap-3 lg:grid-cols-3">
+        <div className="grid gap-3 @min-[46rem]/pagina:grid-cols-3">
           {FAIXAS.map((f) => {
             const o = opcao(f);
             return (

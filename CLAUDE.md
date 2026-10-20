@@ -270,10 +270,26 @@ Medido em 16 telas × 7 larguras (1024 a 2560), antes de mexer. O celular estava
   no computador é 13 px.
 - **O painel tem largura máxima de 1280 px** (`painel/layout.tsx`). Sem ela, em 2560 o conteúdo
   ia a 2.300 px e o nome do item ficava a mais de mil pixels do preço na mesma linha.
-- **Duas colunas e tabela larga só a partir de 1280 px (`xl:`)**, não de 1024: em notebook de 1024
-  a tabela de pedidos cortava o status e o botão, e a coluna estreita do pedido aberto e do
-  Divulgar quebrava nome a cada palavra. Entre 1024 e 1279 os blocos ficam um embaixo do outro, e
-  os pedidos em cartões em duas colunas.
+- **A JANELA decide a moldura; o CONTEÚDO decide o próprio arranjo** (20/10/2026). Ponto de quebra
+  da janela (`lg:`) só para o que depende da tela: menu lateral, cabeçalho, coluna do resumo,
+  tamanho de letra. Tudo que reparte uma linha entre texto e outra coisa (tabela, cartão de item,
+  duas colunas dentro da página, link + botão) decide pela largura que TEM: `@container` e
+  `@min-[…]:`. No painel o conteúdo é o contêiner `pagina` (`@min-[60rem]/pagina:`); na revisão do
+  pedido, a própria lista; no Divulgar, o cartão.
+  O motivo é o que aconteceu duas vezes seguidas: pela janela, o arranjo que servia com os nomes
+  do catálogo de exemplo espremia "Bloco de desenho A4, 20 folhas" uma palavra por linha no catálogo
+  de uma papelaria de verdade, e cada correção de ponto de quebra empurrava o defeito para outra
+  largura (estreitar as colunas de preço salvou o nome e espremeu a marca).
+- **O limiar sai do mínimo que o texto precisa**, não de um tamanho de tela: o cartão da revisão só
+  fica numa linha com 54rem = nome com ~260 px + faixa 250 + quantidade 136 + preço 118 + vãos.
+  Nome ao lado de etiqueta usa `flex-wrap` com o nome em `flex-[1_1_14rem]`: sem espaço, a
+  etiqueta desce, em vez de o nome espremer.
+- **`pnpm varredura`** (`scripts/varredura.mjs`) abre todas as telas redimensionando a janela de
+  640 a 1920 px, de 32 em 32, e acusa texto espremido, cortado, linha de mais de 85 caracteres e
+  rolagem lateral. **`ESTRESSE=1` alonga nomes, marcas e escolas até ~32 caracteres** antes de
+  medir, porque o catálogo de exemplo tem nomes curtos e foi isso que escondeu o defeito. Mexeu em
+  tela: rode os dois modos (precisa do `pnpm dev` no ar; o painel pede `VARREDURA_EMAIL` e
+  `VARREDURA_SENHA`). Sai com código 1 se achar problema.
 - **Parágrafo de explicação leva `leitura`** (`globals.css`, até ~72 caracteres por linha). Em
   `em`, não em `ch`: nesta fonte o "0" é largo e 68ch dava 95 caracteres.
 

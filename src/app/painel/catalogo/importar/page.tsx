@@ -18,7 +18,7 @@ export default async function ImportarPlanilha() {
         de cada faixa, e suba o arquivo aqui.
       </p>
 
-      <div className="mt-[18px] grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="mt-[18px] grid grid-cols-[minmax(0,1fr)] items-start gap-5 @min-[48rem]/pagina:grid-cols-[320px_minmax(0,1fr)]">
         <section className={`${cartao} flex flex-col gap-3 p-[18px]`}>
           <h2 className="text-base font-bold">1. Baixe a planilha</h2>
           <a download href="/api/catalogo/planilha" className={botaoContornoPequeno}>

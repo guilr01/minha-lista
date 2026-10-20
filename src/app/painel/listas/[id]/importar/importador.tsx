@@ -62,7 +62,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
           });
         }}>
         {erro && <div role="alert"><Aviso>{erro}</Aviso></div>}
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 @min-[40rem]/pagina:grid-cols-2">
           <label className="flex min-h-[150px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-campo bg-[#fbfaf6] px-4 text-center hover:border-azul">
             <Icone nome="lista" tamanho={26} className="text-azul" />
             <span className="font-semibold">{nomeArquivo || "Escolher o arquivo da escola"}</span>
@@ -209,7 +209,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
             <span className="flex-none text-[14px] lg:text-[15px] text-azul group-open:hidden">Ver</span>
             <span className="hidden flex-none text-[14px] lg:text-[15px] text-azul group-open:inline">Esconder</span>
           </summary>
-          <p className="mt-1 text-[13px] lg:text-sm text-apagado">
+          <p className="leitura mt-1 text-[13px] lg:text-sm text-apagado">
             Não vão para a lista nem para o recado do cliente. Se o sistema errou em algum, traga para a conferência.
           </p>
           {GRUPOS_FORA.map(([motivo, titulo]) => {

@@ -42,7 +42,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
         <span className="text-[13px] lg:text-sm text-apagado">{todos.length} {todos.length === 1 ? "pedido pago" : "pedidos pagos"} no total</span>
       </div>
 
-      <nav aria-label="Filtrar pedidos" className="my-[18px] grid grid-cols-2 gap-2.5 lg:grid-cols-5 lg:gap-3">
+      <nav aria-label="Filtrar pedidos" className="my-[18px] grid grid-cols-2 gap-2.5 @min-[46rem]/pagina:grid-cols-5 lg:gap-3">
         {[{ chave: "", rotulo: "Todos", status: [] as StatusPedido[] }, ...FILTROS].map((f) => {
           const n = f.chave ? todos.filter((p) => f.status.includes(p.status)).length : todos.length;
           const ativo = (status ?? "") === f.chave || (!filtro && f.chave === "");
@@ -69,13 +69,13 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
         </div>
       ) : (
         <>
-          {/* A tabela só cabe a partir de 1280 px: em notebook de 1024 o status e o botão ficavam
-              cortados. Abaixo disso vale a lista em cartões, em duas colunas no computador. */}
-          <div className={`${cartao} hidden overflow-hidden xl:block`}>
+          {/* A tabela precisa de 60rem de conteúdo: com menos, o status e o botão ficavam cortados.
+              Abaixo disso, cartões, em duas colunas quando cabem. */}
+          <div className={`${cartao} hidden overflow-hidden @min-[60rem]/pagina:block`}>
             <table className="w-full border-collapse text-sm lg:text-[15px]">
               <thead>
                 <tr className="bg-[#fbfaf6] text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">
-                  {["Pedido", "Aluno", "Responsável", "Faixa", "Separação", "Total", "Status", ""].map((t, i) => (
+                  {["Pedido", "Aluno e responsável", "Faixa", "Separação", "Total", "Status", ""].map((t, i) => (
                     <th key={i} className="whitespace-nowrap border-b border-linha px-3.5 py-3">{t}</th>
                   ))}
                 </tr>
@@ -89,9 +89,8 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
                     </td>
                     <td className="px-3.5 py-3">
                       <span className="font-semibold">{p.aluno_nome}</span>
-                      <span className="block text-[13px] lg:text-sm text-apagado">{p.serie_nome} · {p.escola_nome}</span>
+                      <span className="block text-[13px] lg:text-sm text-apagado">{p.serie_nome} · {p.escola_nome} · resp. {p.responsavel_nome}</span>
                     </td>
-                    <td className="px-3.5 py-3">{p.responsavel_nome}</td>
                     <td className="px-3.5 py-3"><ChipFaixa faixa={faixaDoPedido(p.faixas)} /></td>
                     <td className="px-3.5 py-3">{p.separados}/{p.itens}</td>
                     <td className="whitespace-nowrap px-3.5 py-3 font-bold">{reais(p.total_centavos)}</td>
@@ -107,12 +106,14 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
             </table>
           </div>
 
-          <ul className="grid gap-3 lg:grid-cols-2 xl:hidden">
+          <ul className="grid gap-3 @min-[40rem]/pagina:grid-cols-2 @min-[60rem]/pagina:hidden">
             {lista.map((p) => (
               <li key={p.id}>
                 <Link href={`/painel/pedidos/${p.numero}`} className={`${cartao} flex h-full flex-col gap-1.5 p-4 hover:border-[#9fb4cf]`}>
-                  <span className="flex items-center justify-between gap-3">
-                    <strong>#{p.numero} · {p.aluno_nome}</strong>
+                  {/* O nome tem no mínimo 14rem; sem espaço para a etiqueta ao lado, ela desce. Com as
+                      duas espremidas na mesma linha, nome longo saía uma palavra por linha. */}
+                  <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                    <strong className="min-w-0 flex-[1_1_14rem]">#{p.numero} · {p.aluno_nome}</strong>
                     <Status s={p.status} />
                   </span>
                   <span className="text-[13px] lg:text-sm text-apagado">{p.serie_nome} · {p.escola_nome} · {haQuanto(p.pago_em ?? p.criado_em)}</span>

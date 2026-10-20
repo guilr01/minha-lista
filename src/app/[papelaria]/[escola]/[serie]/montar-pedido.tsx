@@ -293,8 +293,11 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
     rotuloTotal = `${noPedido.length} ${noPedido.length === 1 ? "item" : "itens"} no pedido`;
     const pctLista = papelaria.descontos?.lista_completa?.ativo ? papelaria.descontos.lista_completa.percentual : 0;
     const completa = listaCompleta(itens, m.linhas, produtos);
+    // A lista é um CONTÊINER: o cartão do item fica numa linha só quando ELA tem 54rem (o nome
+    // com ~260 px, mais faixa, quantidade e preço). Pela janela, o nome ficava com a sobra das
+    // colunas fixas e, dependendo do catálogo, saía uma palavra por linha.
     corpo = (
-      <div className="flex flex-col gap-3">
+      <div className="@container flex flex-col gap-3">
         {pctLista > 0 && (
           completa ? (
             <div className="rounded-xl bg-ok-fundo px-3.5 py-3 text-[13px] lg:text-sm font-semibold leading-snug text-ok">
@@ -326,7 +329,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
           const nota = p.quantidade_lista === 0 ? " · fora da lista" : l.quantidade !== p.quantidade_lista ? ` · a lista pede ${p.quantidade_lista}` : "";
           return (
             <div key={l.produto_id}
-              className={`${cartao} grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2.5 p-3.5 [grid-template-areas:'info_preco''faixa_qtd'] lg:grid-cols-[minmax(0,1fr)_250px_136px_118px] lg:px-[18px] lg:[grid-template-areas:'info_faixa_qtd_preco']`}>
+              className={`${cartao} grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2.5 p-3.5 [grid-template-areas:'info_preco''faixa_qtd'] lg:px-[18px] @min-[54rem]:grid-cols-[minmax(0,1fr)_250px_136px_118px] @min-[54rem]:[grid-template-areas:'info_faixa_qtd_preco']`}>
               <div className="flex min-w-0 flex-col gap-0.5 [grid-area:info]">
                 <strong className="text-[15px] lg:text-base font-semibold">{p.nome}</strong>
                 <span className="text-[13px] lg:text-sm text-apagado">{o.marca} · {reais(o.preco_centavos)} cada{nota}</span>
@@ -409,9 +412,9 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
           {campoTexto("aluno", "Nome do aluno (vai na etiqueta)", { obrigatorio: true, dica: "Ex.: Pedro Souza" })}
           <span className="text-[13px] lg:text-sm text-apagado">Lista: {nomeDaLista}</span>
         </section>
-        <section className={`${cartao} ${secao}`}>
+        <section className={`${cartao} ${secao} @container`}>
           <h2 className="text-base font-bold">Responsável</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 @min-[30rem]:grid-cols-2">
             {campoTexto("responsavel", "Seu nome", { obrigatorio: true, auto: "name" })}
             {campoTexto("whatsapp", "WhatsApp", { obrigatorio: true, dica: "(00) 00000-0000", modo: "tel", auto: "tel", mascara: formatarTelefone })}
           </div>
