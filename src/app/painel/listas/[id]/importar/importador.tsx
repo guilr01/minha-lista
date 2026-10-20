@@ -5,7 +5,7 @@ import { Icone } from "@/components/icone";
 import { Aviso, ChipFaixa, botao, botaoContornoPequeno, campo, cartao, rotuloCampo } from "@/components/ui";
 import { reais } from "@/lib/dinheiro";
 import type { Faixa } from "@/lib/faixa";
-import { NOTA_MINIMA } from "@/lib/lista-da-escola";
+import { NOTA_MINIMA, emDuvida } from "@/lib/lista-da-escola";
 import { conferirListaDaEscolaAcao, gravarListaDaEscolaAcao, type Decisao, type LinhaConferida } from "./acoes";
 
 type ProdutoDoCatalogo = { id: string; nome: string; opcoes: { faixa: Faixa; marca: string; preco_centavos: number }[] };
@@ -15,11 +15,15 @@ const IGNORAR = "__ignorar";
 
 type Escolha = { valor: string; quantidade: number; observacao: string };
 
-/** O ponto de partida de cada linha: a melhor sugestão, se for boa; título de seção, ignorado; o resto, indisponível. */
-function escolhaInicial(l: LinhaConferida): Escolha {
+/** Item: a melhor sugestão, se for boa, ou indisponível. */
+function comoItem(l: LinhaConferida): string {
   const melhor = l.sugestoes[0];
-  const valor = l.cabecalho ? IGNORAR : melhor && melhor.pontos >= NOTA_MINIMA ? melhor.produto_id : INDISPONIVEL;
-  return { valor, quantidade: l.quantidade, observacao: l.observacao };
+  return melhor && melhor.pontos >= NOTA_MINIMA ? melhor.produto_id : INDISPONIVEL;
+}
+
+/** O ponto de partida de cada trecho: item como item; título, recado e aviso, fora da lista. */
+function escolhaInicial(l: LinhaConferida): Escolha {
+  return { valor: l.item ? comoItem(l) : IGNORAR, quantidade: l.quantidade, observacao: l.observacao };
 }
 
 export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
@@ -27,6 +31,8 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
 }) {
   const [linhas, setLinhas] = useState<LinhaConferida[] | null>(null);
   const [escolhas, setEscolhas] = useState<Escolha[]>([]);
+  /** Quais trechos estão na conferência. O que não parece item começa fora, no bloco recolhido. */
+  const [naConferencia, setNaConferencia] = useState<boolean[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [ocupado, iniciar] = useTransition();
@@ -45,6 +51,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
             if (r.erro || !r.linhas) return setErro(r.erro ?? "Não foi possível ler a lista.");
             setLinhas(r.linhas);
             setEscolhas(r.linhas.map(escolhaInicial));
+            setNaConferencia(r.linhas.map((l) => l.item));
           });
         }}>
         {erro && <div role="alert"><Aviso>{erro}</Aviso></div>}
@@ -69,8 +76,14 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
   }
 
   const mudar = (i: number, m: Partial<Escolha>) => setEscolhas((a) => a.map((e, j) => (j === i ? { ...e, ...m } : e)));
+  const trazer = (i: number) => {
+    setNaConferencia((a) => a.map((v, j) => (j === i ? true : v)));
+    mudar(i, { valor: comoItem(linhas[i]) });
+  };
   const conta = { produto: 0, indisponivel: 0, ignorar: 0 };
   escolhas.forEach((e) => (e.valor === INDISPONIVEL ? conta.indisponivel++ : e.valor === IGNORAR ? conta.ignorar++ : conta.produto++));
+  const itens = linhas.map((_, i) => i).filter((i) => naConferencia[i]);
+  const fora = linhas.map((_, i) => i).filter((i) => !naConferencia[i]);
 
   const gravar = () => {
     const decisoes: Decisao[] = [];
@@ -89,7 +102,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
   return (
     <div className="mt-5 flex flex-col gap-4">
       <div className="grid grid-cols-3 gap-2.5">
-        {([["Encontrados no catálogo", conta.produto, "text-ok"], ["Indisponíveis", conta.indisponivel, "text-erro"], ["Ignorados", conta.ignorar, "text-apagado"]] as const).map(([t, n, cor]) => (
+        {([["Encontrados no catálogo", conta.produto, "text-ok"], ["Indisponíveis", conta.indisponivel, "text-erro"], ["Fora da lista", conta.ignorar, "text-apagado"]] as const).map(([t, n, cor]) => (
           <div key={t} className="flex flex-col rounded-botao border border-linha bg-white px-3 py-2.5">
             <span className="text-[13px] font-bold text-apagado">{t}</span>
             <span className={`titulo text-2xl font-bold ${cor}`}>{n}</span>
@@ -97,12 +110,17 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
         ))}
       </div>
 
+      {itens.length === 0 && (
+        <Aviso>Nenhum trecho do arquivo pareceu item de material. Confira o bloco abaixo e traga para a lista o que for item.</Aviso>
+      )}
       <ol className="flex flex-col gap-2.5">
-        {linhas.map((l, i) => {
+        {itens.map((i) => {
+          const l = linhas[i];
           const e = escolhas[i];
           const produto = porId.get(e.valor);
           const sugestao = l.sugestoes.find((s) => s.produto_id === e.valor);
-          const confira = sugestao && sugestao.pontos < 0.6;
+          // Confira: a sugestão que o sistema escolheu tem nota baixa ou empata com outra.
+          const confira = sugestao && (sugestao.produto_id === l.sugestoes[0]?.produto_id ? emDuvida(l.sugestoes) : sugestao.pontos < NOTA_MINIMA);
           const status = e.valor === IGNORAR ? ["Ignorada", "bg-linha-2 text-apagado"]
             : e.valor === INDISPONIVEL ? ["Item indisponível", "bg-[#fdecea] text-erro"]
             : confira ? ["Confira", "bg-aviso-fundo text-aviso"] : ["Encontrado", "bg-ok-fundo text-ok"];
@@ -169,6 +187,29 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
           );
         })}
       </ol>
+
+      {fora.length > 0 && (
+        <details className={`${cartao} group p-3.5 lg:p-4`} open={itens.length === 0}>
+          <summary className="flex min-h-11 cursor-pointer list-none items-center [&::-webkit-details-marker]:hidden justify-between gap-3 font-semibold">
+            <span>
+              {fora.length} {fora.length === 1 ? "trecho do arquivo não parece item" : "trechos do arquivo não parecem itens"} e {fora.length === 1 ? "ficou" : "ficaram"} fora da lista
+            </span>
+            <span className="flex-none text-[14px] text-azul group-open:hidden">Ver</span>
+            <span className="hidden flex-none text-[14px] text-azul group-open:inline">Esconder</span>
+          </summary>
+          <p className="mt-1 text-[13px] text-apagado">
+            Títulos, recados, datas e contatos da escola. Não vão para a lista nem para o recado. Se algum for item, traga para a conferência.
+          </p>
+          <ul className="mt-3 flex flex-col divide-y divide-linha">
+            {fora.map((i) => (
+              <li key={i} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0 text-[14px] text-apagado">{linhas[i].original}</span>
+                <button type="button" className={`${botaoContornoPequeno} flex-none`} onClick={() => trazer(i)}>É um item</button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {erro && <div role="alert"><Aviso>{erro}</Aviso></div>}
       <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-2.5 border-t border-linha bg-fundo px-4 py-3 lg:mx-0 lg:rounded-botao lg:border">

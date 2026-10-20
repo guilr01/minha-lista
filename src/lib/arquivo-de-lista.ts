@@ -100,6 +100,10 @@ async function textoDaPlanilha(dados: ArrayBuffer): Promise<string> {
         t = t.replace(/\s+/g, " ").trim();
         if (t) cels.push(t);
       }
+      // "Caderno brochura | 2": a coluna de quantidade depois do nome vai para a
+      // frente, que é onde a leitura procura a quantidade.
+      const qtd = cels.findIndex((t, i) => i > 0 && /^\d{1,2}$/.test(t));
+      if (qtd > 0 && !/^\d/.test(cels[0])) cels.unshift(...cels.splice(qtd, 1));
       if (cels.length) linhas.push(cels.join(" "));
     }
   }

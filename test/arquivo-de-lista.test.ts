@@ -41,6 +41,16 @@ describe("texto do arquivo da escola", () => {
     expect(texto).toBe("LISTA DE MATERIAL & LIVROS\n2 caderno brochura\n1 tesoura sem ponta");
   });
 
+  it("a coluna de quantidade depois do nome vai para a frente", async () => {
+    const wb = new ExcelJS.Workbook();
+    const aba = wb.addWorksheet("Lista");
+    aba.addRow(["Material", "Qtd"]);
+    aba.addRow(["Cadernos brochura", 2]);
+    aba.addRow(["Tesoura sem ponta", 1, 8.6]);
+    const texto = await textoDoArquivo("lista.xlsx", (await wb.xlsx.writeBuffer()) as ArrayBuffer);
+    expect(lerLinhas(texto).filter((l) => l.item).map((l) => [l.quantidade, l.descricao])).toEqual([[2, "Cadernos brochura"], [1, "Tesoura sem ponta"]]);
+  });
+
   it("explica o que fazer com o .xls antigo, mesmo renomeado para .xlsx", async () => {
     const ole = Uint8Array.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
     await expect(textoDoArquivo("lista.xlsx", ab(ole))).rejects.toThrow(/Salvar como/);

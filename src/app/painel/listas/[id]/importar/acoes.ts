@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ArquivoIlegivel, textoDoArquivo } from "@/lib/arquivo-de-lista";
 import { ErroDeCadastro, importarItensDaLista, listarProdutos } from "@/lib/cadastro";
-import { lerLinhas, sugerir, type LinhaDaEscola, type Sugestao } from "@/lib/lista-da-escola";
+import { lerLinhas, sugeridor, vocabularioDoCatalogo, type LinhaDaEscola, type Sugestao } from "@/lib/lista-da-escola";
 import { exigirUsuario, papelariaAtual } from "@/lib/sessao";
 
 // Conferir não grava nada: lê a lista da escola e devolve, por linha, os
@@ -13,7 +13,7 @@ import { exigirUsuario, papelariaAtual } from "@/lib/sessao";
 // ou lista de outra papelaria.
 
 const TAMANHO_MAXIMO = 3 * 1024 * 1024;
-const LINHAS_MAXIMAS = 300;
+const LINHAS_MAXIMAS = 400;
 
 export type LinhaConferida = LinhaDaEscola & { sugestoes: Sugestao[] };
 export type Conferencia = { erro?: string; linhas?: LinhaConferida[] };
@@ -39,10 +39,14 @@ export async function conferirListaDaEscolaAcao(f: FormData): Promise<Conferenci
     }
   }
   if (!texto.trim()) return { erro: "Envie o arquivo da lista ou cole o texto dela." };
-  const linhas = lerLinhas(texto).slice(0, LINHAS_MAXIMAS);
-  if (!linhas.length) return { erro: "Não encontrei itens neste texto. Confira se é a lista de material." };
   const produtos = (await listarProdutos(c.usuarioId, c.fornecedorId)).filter((p) => p.ativo).map((p) => ({ id: p.id, nome: p.nome }));
-  return { linhas: linhas.map((l) => ({ ...l, sugestoes: sugerir(l.descricao, produtos) })) };
+  // O catálogo entra também na LEITURA: o que a loja vende é material escolar,
+  // e isso ajuda a separar item de recado.
+  const linhas = lerLinhas(texto, { vocabulario: vocabularioDoCatalogo(produtos) }).slice(0, LINHAS_MAXIMAS);
+  if (!linhas.length) return { erro: "Não encontrei texto nenhum neste arquivo. Confira se é a lista de material." };
+  const sugerir = sugeridor(produtos);
+  // A observação entra na comparação: "(24 cores)" é o que separa o lápis de 12 do de 24.
+  return { linhas: linhas.map((l) => ({ ...l, sugestoes: sugerir(`${l.descricao} ${l.observacao}`) })) };
 }
 
 export type Decisao =

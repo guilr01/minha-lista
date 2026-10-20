@@ -215,7 +215,24 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
   quantidade (no começo, no fim ou por extenso), descrição e o que vem entre parênteses (vira
   observação); `sugerir` dá os 3 produtos mais parecidos por palavras em comum, sem acento, plural
   e abreviação, com a primeira palavra pesando ("o que é") e número que contradiz pesando contra.
-  Abaixo de `NOTA_MINIMA` a linha começa como indisponível; título de seção começa ignorado.
+  Abaixo de `NOTA_MINIMA` a linha começa como indisponível.
+- **Item ou texto (20/10/2026, era o gargalo do cadastro de listas).** A primeira versão tratava
+  TODA linha como item: recado, endereço, data e "Observações" viravam "item indisponível" e iam
+  parar no recado que o cliente lê, e lista em parágrafo ("os alunos deverão trazer caderno, lápis
+  e borracha") virava um item só. Agora cada trecho é `item: true | false`, e o que decide é o
+  conjunto, não o formato da linha: quantidade, começar por um objeto (vocabulário próprio MAIS a
+  primeira palavra de cada produto do catálogo da loja), fala de recado (`FRASE`: "deverá",
+  "solicitamos", "todos"), fala da escola (`CONTEXTO`), data, contato, e a SEÇÃO em que está
+  ("Observações:" é texto; "Material de uso individual:" é lista). Texto corrido é cortado no verbo
+  que abre a lista (`INTRODUTOR`) e dividido em vírgula, ponto e vírgula e "e", **juntando de
+  volta o que é continuação**: "2 cadernos brochura, capa dura, 96 folhas" é UM item, e "papel
+  crepom azul e amarelo" também. Parágrafo que o PDF quebrou no fim da linha volta a ser uma frase.
+- **O que não parece item NÃO some**: vai para um bloco recolhido na conferência, com "É um item"
+  para trazer de volta. Errar para o lado de esconder sem mostrar seria pior que o defeito antigo.
+- **"Confira" também quando EMPATA** (`emDuvida`): "cola" casa igual com "Cola bastão" e "Cola
+  branca", e escolher um pela papelaria seria adivinhar. A nota soma a semelhança com quanto de um
+  nome cabe no outro, nos dois sentidos, porque a escola ora escreve mais que o catálogo, ora menos.
+  A observação ("24 cores") entra na comparação.
 - **Nada é gravado sem a conferência**, e a gravação é uma transação só (`importarItensDaLista`):
   linhas repetidas somam, produto que já estava fica com a quantidade da escola, e o que a
   papelaria não vende vai para o RECADO da lista num bloco "Itens da lista da escola que não
