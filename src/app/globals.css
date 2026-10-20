@@ -46,6 +46,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Linha de leitura: até ~75 caracteres por linha, que é onde o olho ainda
+ * acha o começo da linha seguinte. Vai nos parágrafos de explicação; sem ela,
+ * em tela larga, a frase de ajuda saía com 110 caracteres numa linha só.
+ * Em "em", não em "ch": nesta fonte o algarismo 0, que define o "ch", é
+ * largo, e 68ch dava 680 px (95 caracteres).
+ */
+@utility leitura {
+  max-width: 36em;
+}
+
 .titulo {
   font-family: var(--font-titulo);
   letter-spacing: -0.01em;

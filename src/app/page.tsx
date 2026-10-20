@@ -33,10 +33,10 @@ export default async function Inicio() {
         </Link>
       </header>
 
-      <main className="mx-auto grid w-full max-w-[1200px] flex-1 items-start gap-8 px-5 pb-12 pt-4 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-14 lg:px-10 lg:pt-10">
+      <main className="mx-auto grid w-full max-w-[1200px] flex-1 items-start gap-8 px-5 pb-12 pt-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10 lg:px-10 lg:pt-10 xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-14">
         <section className="flex flex-col gap-6">
-          <span className="w-fit rounded-full bg-amarelo px-3 py-1 text-[13px] font-bold text-tinta">Para papelarias</span>
-          <h1 className="titulo text-[32px] font-bold leading-[1.08] lg:text-[48px] lg:leading-[1.04]">
+          <span className="w-fit rounded-full bg-amarelo px-3 py-1 text-[13px] lg:text-sm font-bold text-tinta">Para papelarias</span>
+          <h1 className="titulo text-[32px] font-bold leading-[1.08] lg:text-[40px] lg:leading-[1.05] xl:text-[48px] xl:leading-[1.04]">
             Venda as listas de material escolar das escolas da sua região, pelo celular dos clientes.
           </h1>
           <p className="max-w-[560px] text-[17px] leading-relaxed text-apagado">
@@ -52,7 +52,7 @@ export default async function Inicio() {
                 </span>
                 <span className="flex flex-col gap-0.5">
                   <strong className="text-base">{i + 1}. {p.titulo}</strong>
-                  <span className="text-[15px] leading-snug text-apagado">{p.texto}</span>
+                  <span className="text-[15px] lg:text-base leading-snug text-apagado">{p.texto}</span>
                 </span>
               </li>
             ))}
@@ -63,14 +63,14 @@ export default async function Inicio() {
           {logado ? (
             <div className="flex flex-col gap-3 rounded-cartao border border-linha bg-cartao p-[22px]">
               <h2 id="cadastro" className="titulo text-2xl font-bold">Você já está conectado</h2>
-              <p className="text-[15px] text-apagado">Siga para o painel da sua papelaria.</p>
+              <p className="text-[15px] lg:text-base text-apagado">Siga para o painel da sua papelaria.</p>
               <Link href="/painel" className={botao}>Ir para o painel</Link>
             </div>
           ) : (
             <>
               <div>
                 <h2 id="cadastro" className="titulo text-2xl font-bold">Cadastre a sua papelaria</h2>
-                <p className="mt-1 text-[15px] text-apagado">Leva um minuto. Você escolhe o endereço do link que vai mandar para os clientes.</p>
+                <p className="mt-1 text-[15px] lg:text-base text-apagado">Leva um minuto. Você escolhe o endereço do link que vai mandar para os clientes.</p>
               </div>
               <FormularioDeCadastro host={host} />
             </>

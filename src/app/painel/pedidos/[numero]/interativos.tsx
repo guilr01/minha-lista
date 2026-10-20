@@ -23,12 +23,12 @@ export function Checklist({ itens, habilitado }: { itens: Item[]; habilitado: bo
       <div className="flex flex-col gap-2 border-b border-linha px-[18px] py-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="font-bold">{feitos} de {itens.length} itens separados</span>
-          <span className="text-[13px] text-apagado">{habilitado ? "Marque conforme pega na prateleira" : "Separação encerrada"}</span>
+          <span className="text-[13px] lg:text-sm text-apagado">{habilitado ? "Marque conforme pega na prateleira" : "Separação encerrada"}</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-linha-2" role="progressbar" aria-valuemin={0} aria-valuemax={itens.length} aria-valuenow={feitos}>
           <i className="block h-full rounded-full bg-ok" style={{ width: `${itens.length ? (feitos / itens.length) * 100 : 0}%` }} />
         </div>
-        {erro && <span role="alert" className="text-sm font-semibold text-erro">{erro}</span>}
+        {erro && <span role="alert" className="text-sm lg:text-[15px] font-semibold text-erro">{erro}</span>}
       </div>
       <ul>
         {itens.map((i) => {
@@ -46,8 +46,8 @@ export function Checklist({ itens, habilitado }: { itens: Item[]; habilitado: bo
                       if (r.erro) setErro(r.erro);
                     });
                   }} />
-                <span className={`text-[15px] ${on ? "text-apagado line-through" : ""}`}>
-                  {i.nome_produto} <span className="text-[13px] text-apagado">· {i.marca}</span>
+                <span className={`text-[15px] lg:text-base ${on ? "text-apagado line-through" : ""}`}>
+                  {i.nome_produto} <span className="text-[13px] lg:text-sm text-apagado">· {i.marca}</span>
                 </span>
                 <span className="hidden lg:inline"><ChipFaixa faixa={i.faixa} /></span>
                 <span className="text-right text-[17px] font-bold">{i.quantidade}</span>
@@ -70,8 +70,8 @@ export function Avancar(p: { pedidoId: string; para: string; rotulo: string; blo
         className={`${botaoPequeno} ${p.final ? "bg-ok hover:bg-[#246540]" : ""}`}>
         {enviando ? "Salvando…" : p.rotulo}
       </button>
-      {p.bloqueado && <span className="text-[13px] text-apagado">Faltam {p.faltam} {p.faltam === 1 ? "item" : "itens"} para separar</span>}
-      {estado.erro && <span role="alert" className="text-sm font-semibold text-erro">{estado.erro}</span>}
+      {p.bloqueado && <span className="text-[13px] lg:text-sm text-apagado">Faltam {p.faltam} {p.faltam === 1 ? "item" : "itens"} para separar</span>}
+      {estado.erro && <span role="alert" className="text-sm lg:text-[15px] font-semibold text-erro">{estado.erro}</span>}
     </form>
   );
 }

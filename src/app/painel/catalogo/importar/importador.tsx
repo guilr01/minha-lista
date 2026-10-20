@@ -28,7 +28,7 @@ export function Importador() {
     return (
       <section className={`${cartao} flex flex-col gap-3 p-[18px]`} role="status">
         <h2 className="flex items-center gap-2 text-lg font-bold text-ok"><Icone nome="check" />Catálogo importado</h2>
-        <p className="text-[15px]">
+        <p className="text-[15px] lg:text-base">
           {criados} {criados === 1 ? "produto criado" : "produtos criados"} e {atualizados} {atualizados === 1 ? "atualizado" : "atualizados"}.
         </p>
         <div className="flex flex-wrap gap-2.5">
@@ -49,7 +49,7 @@ export function Importador() {
       <label className="flex min-h-[110px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-campo bg-[#fbfaf6] px-4 text-center hover:border-azul">
         <Icone nome="lista" tamanho={26} className="text-azul" />
         <span className="font-semibold">{arquivo ? arquivo.name : "Escolher a planilha (.xlsx)"}</span>
-        <span className="text-[13px] text-apagado">{arquivo ? "Toque para trocar" : "Excel, até 3 MB"}</span>
+        <span className="text-[13px] lg:text-sm text-apagado">{arquivo ? "Toque para trocar" : "Excel, até 3 MB"}</span>
         <input type="file" className="sr-only"
           accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={(e) => { setArquivo(e.target.files?.[0] ?? null); setPrevia(null); setMostrarTodas(false); }} />
@@ -68,14 +68,14 @@ export function Importador() {
           <div className="grid grid-cols-3 gap-2.5">
             {[["Produtos novos", previa.novos ?? 0], ["Atualizados", previa.atualizados ?? 0], ["Com problema", erros.length]].map(([t, n]) => (
               <div key={t} className="flex flex-col rounded-botao border border-linha bg-white px-3 py-2.5">
-                <span className="text-[13px] font-bold text-apagado">{t}</span>
+                <span className="text-[13px] lg:text-sm font-bold text-apagado">{t}</span>
                 <span className={`titulo text-2xl font-bold ${t === "Com problema" && Number(n) > 0 ? "text-erro" : ""}`}>{n}</span>
               </div>
             ))}
           </div>
 
           {erros.length > 0 && (
-            <div className="flex flex-col gap-1.5 rounded-botao bg-aviso-fundo px-4 py-3.5 text-sm leading-snug text-aviso">
+            <div className="flex flex-col gap-1.5 rounded-botao bg-aviso-fundo px-4 py-3.5 text-sm lg:text-[15px] leading-snug text-aviso">
               <strong className="text-tinta">
                 {erros.length} {erros.length === 1 ? "linha não vai entrar" : "linhas não vão entrar"}. Corrija na planilha e confira de novo, ou importe o resto.
               </strong>
@@ -87,9 +87,9 @@ export function Importador() {
 
           {amostra.length > 0 && (
             <div className="overflow-x-auto rounded-botao border border-linha">
-              <table className="w-full min-w-[640px] border-collapse text-sm">
+              <table className="w-full min-w-[640px] border-collapse text-sm lg:text-[15px]">
                 <thead>
-                  <tr className="bg-[#fbfaf6] text-left text-xs font-bold uppercase tracking-[0.04em] text-apagado">
+                  <tr className="bg-[#fbfaf6] text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">
                     {["Linha", "Produto", "Econômica", "Intermediária", "Premium"].map((t) => (
                       <th key={t} className="border-b border-linha px-3 py-2">{t}</th>
                     ))}
@@ -101,7 +101,7 @@ export function Importador() {
                       <td className="px-3 py-2 text-apagado">{l.linha}</td>
                       <td className="px-3 py-2">
                         <strong className="font-semibold">{l.nome}</strong>
-                        <span className={`ml-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${l.novo ? "bg-ok-fundo text-ok" : "bg-azul-claro text-azul"}`}>
+                        <span className={`ml-1.5 rounded-full px-2 py-0.5 text-[11px] lg:text-xs font-bold ${l.novo ? "bg-ok-fundo text-ok" : "bg-azul-claro text-azul"}`}>
                           {l.novo ? "novo" : "atualiza"}
                         </span>
                       </td>
@@ -109,7 +109,7 @@ export function Importador() {
                         const o = l.opcoes[f];
                         return (
                           <td key={f} className="px-3 py-2">
-                            {o ? <><strong>{reais(o.preco_centavos)}</strong><span className="block text-[12px] text-apagado">{o.marca}</span></> : <span className="text-apagado">–</span>}
+                            {o ? <><strong>{reais(o.preco_centavos)}</strong><span className="block text-[12px] lg:text-[13px] text-apagado">{o.marca}</span></> : <span className="text-apagado">–</span>}
                           </td>
                         );
                       })}
@@ -120,7 +120,7 @@ export function Importador() {
             </div>
           )}
           {amostra.length > 15 && !mostrarTodas && (
-            <button type="button" className={`${link} self-start text-sm`} onClick={() => setMostrarTodas(true)}>
+            <button type="button" className={`${link} self-start text-sm lg:text-[15px]`} onClick={() => setMostrarTodas(true)}>
               Mostrar as {amostra.length} linhas
             </button>
           )}

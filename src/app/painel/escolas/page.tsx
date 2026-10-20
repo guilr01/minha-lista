@@ -36,7 +36,7 @@ export default async function Escolas() {
   return (
     <>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Escolas e listas</h1>
-      <p className="mt-1 text-[15px] text-apagado">
+      <p className="leitura mt-1 text-[15px] lg:text-base text-apagado">
         Cada série tem uma lista por ano letivo. Os clientes só veem a lista publicada.
       </p>
 
@@ -61,13 +61,13 @@ export default async function Escolas() {
                 <span className="flex size-10 flex-none items-center justify-center rounded-xl bg-azul-claro text-azul"><Icone nome="escola" /></span>
                 <div>
                   <h2 id={`esc-${e.id}`} className="text-[17px] font-bold">{e.nome}</h2>
-                  <span className="text-[13px] text-apagado">{e.cidade ? `${e.cidade} · ` : ""}/{papelaria.slug}/{e.slug}</span>
+                  <span className="text-[13px] lg:text-sm text-apagado">{e.cidade ? `${e.cidade} · ` : ""}/{papelaria.slug}/{e.slug}</span>
                 </div>
               </div>
               {e.series.length === 0 && (
                 <FormAcao acao={excluirEscolaAcao} confirmar={`Excluir a escola “${e.nome}”?`}>
                   <input type="hidden" name="id" value={e.id} />
-                  <button type="submit" className="min-h-11 text-sm font-semibold text-erro hover:underline">Excluir escola</button>
+                  <button type="submit" className="min-h-11 text-sm lg:text-[15px] font-semibold text-erro hover:underline">Excluir escola</button>
                 </FormAcao>
               )}
             </div>
@@ -78,17 +78,17 @@ export default async function Escolas() {
                 return (
                   <li key={s.id} className="flex flex-col gap-2.5 border-b border-linha-2 px-4 py-3.5 lg:flex-row lg:items-start lg:justify-between lg:px-[22px]">
                     <div className="flex min-w-0 flex-col gap-2">
-                      <strong className="text-[15px]">{s.nome}</strong>
+                      <strong className="text-[15px] lg:text-base">{s.nome}</strong>
                       {s.listas.length === 0 ? (
-                        <span className="text-[13px] text-apagado">Sem lista ainda.</span>
+                        <span className="text-[13px] lg:text-sm text-apagado">Sem lista ainda.</span>
                       ) : (
                         <ul className="flex flex-wrap gap-2">
                           {s.listas.map((l) => (
                             <li key={l.id}>
                               <Link href={`/painel/listas/${l.id}`}
-                                className="flex min-h-11 items-center gap-2 rounded-xl border border-linha bg-white px-3 text-sm hover:border-azul">
+                                className="flex min-h-11 items-center gap-2 rounded-xl border border-linha bg-white px-3 text-sm lg:text-[15px] hover:border-azul">
                                 <strong>{l.ano_letivo}</strong>
-                                <span className={`inline-flex h-6 items-center rounded-full px-2 text-xs font-bold ${COR_LISTA[l.status]}`}>{ROTULO_LISTA[l.status]}</span>
+                                <span className={`inline-flex h-6 items-center rounded-full px-2 text-xs lg:text-[13px] font-bold ${COR_LISTA[l.status]}`}>{ROTULO_LISTA[l.status]}</span>
                                 <span className="text-apagado">{l.itens} {l.itens === 1 ? "item" : "itens"}{l.pedidos ? ` · ${l.pedidos} pedidos` : ""}</span>
                               </Link>
                             </li>
@@ -111,7 +111,7 @@ export default async function Escolas() {
                       {s.listas.length === 0 && (
                         <FormAcao acao={excluirSerieAcao} confirmar={`Excluir a série “${s.nome}”?`}>
                           <input type="hidden" name="id" value={s.id} />
-                          <button type="submit" className="min-h-11 px-2 text-sm font-semibold text-erro hover:underline">Excluir</button>
+                          <button type="submit" className="min-h-11 px-2 text-sm lg:text-[15px] font-semibold text-erro hover:underline">Excluir</button>
                         </FormAcao>
                       )}
                     </div>

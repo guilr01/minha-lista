@@ -61,9 +61,9 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <h1 className="titulo text-2xl font-bold lg:text-[30px]">{lista.serie.nome} · {lista.escola.nome}</h1>
-          <span className="flex flex-wrap items-center gap-2 text-[13px] text-apagado">
+          <span className="flex flex-wrap items-center gap-2 text-[13px] lg:text-sm text-apagado">
             <strong className="text-tinta">Lista de {lista.ano_letivo}</strong>
-            <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs font-bold ${st.cor}`}>{st.rotulo}</span>
+            <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs lg:text-[13px] font-bold ${st.cor}`}>{st.rotulo}</span>
             {st.dica}{lista.pedidos > 0 && ` ${lista.pedidos} ${lista.pedidos === 1 ? "pedido" : "pedidos"} feitos por ela.`}
           </span>
         </div>
@@ -86,12 +86,12 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
       </div>
 
       {importada && (
-        <p role="status" className="mt-4 rounded-botao bg-ok-fundo px-4 py-3 text-sm font-semibold text-ok">
+        <p role="status" className="mt-4 rounded-botao bg-ok-fundo px-4 py-3 text-sm lg:text-[15px] font-semibold text-ok">
           Lista da escola importada. Confira os itens abaixo e o recado com o que você não vende.
         </p>
       )}
       <div className={`${cartao} mt-4 flex flex-wrap items-center justify-between gap-3 border-dashed p-4`}>
-        <span className="text-[15px]">
+        <span className="text-[15px] lg:text-base">
           <strong>Recebeu a lista da escola?</strong>{" "}
           <span className="text-apagado">Suba o arquivo e o sistema encontra cada item no seu catálogo.</span>
         </span>
@@ -108,7 +108,7 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
           </div>
         ))}
       </section>
-      <p className="mt-2 text-[13px] text-apagado">O total que os clientes veem em cada faixa, com os preços de hoje.</p>
+      <p className="mt-2 text-[13px] lg:text-sm text-apagado">O total que os clientes veem em cada faixa, com os preços de hoje.</p>
       {foraDoAr.length > 0 && (
         <div className="mt-3"><Aviso>
           Os clientes não veem {foraDoAr.length === 1 ? "este item, inativo ou sem estoque" : "estes itens, inativos ou sem estoque"}:{" "}
@@ -126,7 +126,7 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
               <FormAcao acao={alterarItemAcao} className="flex flex-wrap items-end gap-3">
                 <input type="hidden" name="item" value={i.id} />
                 <span className="min-w-[180px] flex-[2] self-center font-semibold">
-                  {i.nome}{!i.ativo && <span className="ml-1.5 text-[13px] font-normal text-aviso">inativo</span>}
+                  {i.nome}{!i.ativo && <span className="ml-1.5 text-[13px] lg:text-sm font-normal text-aviso">inativo</span>}
                 </span>
                 <label className={`${rotuloCampo} w-[90px]`}>Qtd<input name="quantidade" type="number" min={1} max={99} required defaultValue={i.quantidade} className={campo} /></label>
                 <label className={`${rotuloCampo} min-w-[160px] flex-[2]`}>Observação da escola<input name="observacao" defaultValue={i.observacao ?? ""} className={campo} placeholder="Ex.: capa dura" /></label>
@@ -134,7 +134,7 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
               </FormAcao>
               <FormAcao acao={removerItemAcao} className="mt-1 flex justify-end">
                 <input type="hidden" name="item" value={i.id} />
-                <button type="submit" className="min-h-9 text-sm font-semibold text-erro hover:underline">Remover da lista</button>
+                <button type="submit" className="min-h-9 text-sm lg:text-[15px] font-semibold text-erro hover:underline">Remover da lista</button>
               </FormAcao>
             </li>
           ))}
@@ -153,7 +153,7 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
           <button type="submit" className={botaoPequeno}><Icone nome="mais" tamanho={18} />Adicionar</button>
         </FormAcao>
         {paraAdicionar.length === 0 && (
-          <p className="px-4 pb-4 text-[13px] text-apagado lg:px-[22px]">
+          <p className="px-4 pb-4 text-[13px] lg:text-sm text-apagado lg:px-[22px]">
             Todo o catálogo ativo já está na lista. <Link href="/painel/catalogo/novo" className="font-semibold text-azul hover:underline">Cadastrar produto</Link>
           </p>
         )}

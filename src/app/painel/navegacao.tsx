@@ -22,7 +22,7 @@ export function NavegacaoDoPainel({ compacta = false }: { compacta?: boolean }) 
           || (i.tambem ?? []).some((t) => caminho.startsWith(t));
         return (
           <Link key={i.href} href={i.href} aria-current={ativo ? "page" : undefined}
-            className={`flex min-h-11 flex-none items-center gap-2.5 rounded-campo ${compacta ? "px-2 text-[14px]" : "px-3 text-[15px]"} ${
+            className={`flex min-h-11 flex-none items-center gap-2.5 rounded-campo ${compacta ? "px-2 text-[14px] lg:text-[15px]" : "px-3 text-[15px] lg:text-base"} ${
               ativo ? "bg-amarelo font-bold text-tinta" : "font-medium text-[#d6dce4] hover:bg-[#26364a] hover:text-white"}`}>
             {!compacta && <Icone nome={i.icone} tamanho={18} />}{compacta ? (i.curto ?? i.rotulo) : i.rotulo}
           </Link>

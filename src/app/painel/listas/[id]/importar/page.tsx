@@ -26,7 +26,7 @@ export default async function ImportarListaDaEscola({ params }: { params: Promis
         <Icone nome="voltar" />{lista.serie.nome} · {lista.escola.nome}
       </Link>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Importar a lista da escola</h1>
-      <p className="mt-1.5 max-w-[720px] text-[15px] text-apagado">
+      <p className="leitura mt-1.5 text-[15px] lg:text-base text-apagado">
         Suba o arquivo que a escola mandou ou cole o texto, mesmo que a lista venha em parágrafo. O sistema separa os itens de
         material dos livros e dos recados da escola, compara cada item com o seu catálogo e sugere o produto; você confere antes de
         gravar. O que você não vende fica descrito como indisponível no recado da lista, para o cliente saber que precisa comprar em

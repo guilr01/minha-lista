@@ -66,7 +66,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
           <label className="flex min-h-[150px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-campo bg-[#fbfaf6] px-4 text-center hover:border-azul">
             <Icone nome="lista" tamanho={26} className="text-azul" />
             <span className="font-semibold">{nomeArquivo || "Escolher o arquivo da escola"}</span>
-            <span className="text-[13px] text-apagado">PDF, Word, Excel, CSV ou texto · até 3 MB</span>
+            <span className="text-[13px] lg:text-sm text-apagado">PDF, Word, Excel, CSV ou texto · até 3 MB</span>
             <input type="file" name="arquivo" accept={tipos} className="sr-only" onChange={(e) => setNomeArquivo(e.target.files?.[0]?.name ?? "")} />
           </label>
           <label className={rotuloCampo}>
@@ -112,7 +112,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
       <div className="grid grid-cols-3 gap-2.5">
         {([["Encontrados no catálogo", conta.produto, "text-ok"], ["Indisponíveis", conta.indisponivel, "text-erro"], ["Fora da lista", conta.ignorar, "text-apagado"]] as const).map(([t, n, cor]) => (
           <div key={t} className="flex flex-col rounded-botao border border-linha bg-white px-3 py-2.5">
-            <span className="text-[13px] font-bold text-apagado">{t}</span>
+            <span className="text-[13px] lg:text-sm font-bold text-apagado">{t}</span>
             <span className={`titulo text-2xl font-bold ${cor}`}>{n}</span>
           </div>
         ))}
@@ -137,12 +137,12 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
             <li key={i} className={`${cartao} flex flex-col gap-3 p-3.5 lg:p-4 ${e.valor === IGNORAR ? "opacity-70" : ""}`}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <span className="text-[12px] font-bold uppercase tracking-[0.04em] text-apagado">Lista da escola</span>
-                  <p className="text-[15px] font-semibold">{l.original}</p>
+                  <span className="text-[12px] lg:text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">Lista da escola</span>
+                  <p className="text-[15px] lg:text-base font-semibold">{l.original}</p>
                 </div>
                 <div className="flex flex-none items-center gap-2">
-                  {sugestao && <span className="text-[13px] font-semibold text-apagado">{Math.round(sugestao.pontos * 100)}% parecido</span>}
-                  <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs font-bold ${status[1]}`}>{status[0]}</span>
+                  {sugestao && <span className="text-[13px] lg:text-sm font-semibold text-apagado">{Math.round(sugestao.pontos * 100)}% parecido</span>}
+                  <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs lg:text-[13px] font-bold ${status[1]}`}>{status[0]}</span>
                 </div>
               </div>
               <div className="flex flex-wrap items-end gap-3">
@@ -180,7 +180,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
                 )}
               </div>
               {produto && (
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] lg:text-sm">
                   {produto.opcoes.length === 0 && <span className="text-aviso">Este produto não tem nenhuma faixa com preço.</span>}
                   {produto.opcoes.map((o) => (
                     <span key={o.faixa} className="flex items-center gap-1.5"><ChipFaixa faixa={o.faixa} />{o.marca} · {reais(o.preco_centavos)}</span>
@@ -189,7 +189,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
                 </div>
               )}
               {e.valor === INDISPONIVEL && (
-                <p className="text-[13px] text-apagado">Vai para o recado da lista: “{l.descricao}”, para o cliente comprar em outro lugar.</p>
+                <p className="text-[13px] lg:text-sm text-apagado">Vai para o recado da lista: “{l.descricao}”, para o cliente comprar em outro lugar.</p>
               )}
             </li>
           );
@@ -201,15 +201,15 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
           <summary className="flex min-h-11 cursor-pointer list-none items-center [&::-webkit-details-marker]:hidden justify-between gap-3 font-semibold">
             <span>
               {fora.length} {fora.length === 1 ? "trecho do arquivo ficou" : "trechos do arquivo ficaram"} fora da lista
-              <span className="block text-[13px] font-normal text-apagado">
+              <span className="block text-[13px] lg:text-sm font-normal text-apagado">
                 {GRUPOS_FORA.map(([m, , rotulo]) => [porMotivo(m).length, rotulo] as const).filter(([n]) => n > 0)
                   .map(([n, rotulo]) => `${n} ${rotulo}`).join(" · ")}
               </span>
             </span>
-            <span className="flex-none text-[14px] text-azul group-open:hidden">Ver</span>
-            <span className="hidden flex-none text-[14px] text-azul group-open:inline">Esconder</span>
+            <span className="flex-none text-[14px] lg:text-[15px] text-azul group-open:hidden">Ver</span>
+            <span className="hidden flex-none text-[14px] lg:text-[15px] text-azul group-open:inline">Esconder</span>
           </summary>
-          <p className="mt-1 text-[13px] text-apagado">
+          <p className="mt-1 text-[13px] lg:text-sm text-apagado">
             Não vão para a lista nem para o recado do cliente. Se o sistema errou em algum, traga para a conferência.
           </p>
           {GRUPOS_FORA.map(([motivo, titulo]) => {
@@ -217,11 +217,11 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
             if (!doGrupo.length) return null;
             return (
               <section key={motivo} className="mt-3">
-                <h3 className="text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">{titulo}</h3>
+                <h3 className="text-[13px] lg:text-sm font-bold uppercase tracking-[0.04em] text-apagado">{titulo}</h3>
                 <ul className="flex flex-col divide-y divide-linha">
                   {doGrupo.map((i) => (
                     <li key={i} className="flex items-center justify-between gap-3 py-2">
-                      <span className="min-w-0 text-[14px] text-apagado">{linhas[i].original}</span>
+                      <span className="min-w-0 text-[14px] lg:text-[15px] text-apagado">{linhas[i].original}</span>
                       <button type="button" className={`${botaoContornoPequeno} flex-none`} onClick={() => trazer(i)}>É um item</button>
                     </li>
                   ))}
@@ -240,7 +240,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
         <button type="button" className={botaoContornoPequeno} disabled={ocupado} onClick={() => { setLinhas(null); setNomeArquivo(""); }}>
           Começar de novo
         </button>
-        {conta.indisponivel > 0 && <span className="text-[13px] text-apagado">{conta.indisponivel} indisponíveis vão para o recado da lista.</span>}
+        {conta.indisponivel > 0 && <span className="text-[13px] lg:text-sm text-apagado">{conta.indisponivel} indisponíveis vão para o recado da lista.</span>}
       </div>
     </div>
   );

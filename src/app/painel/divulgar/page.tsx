@@ -35,16 +35,17 @@ export default async function Divulgar() {
     <>
       <div className="print:hidden">
         <h1 className="titulo text-2xl font-bold lg:text-[30px]">Divulgar</h1>
-        <p className="mt-1.5 max-w-[640px] text-[15px] text-apagado">
+        <p className="leitura mt-1.5 text-[15px] lg:text-base text-apagado">
           Mande o link da sua loja para os clientes ou deixe o QR code no balcão. Quem abrir escolhe a escola, a série e faz o pedido.
         </p>
 
-        <div className="mt-[18px] grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Duas colunas só a partir de 1280 px: em 1024 o link quebrava no meio da palavra. */}
+        <div className="mt-[18px] grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-5">
             <section className={`${cartao} flex flex-col gap-3 p-[18px] lg:p-[22px]`}>
               <h2 className="text-base font-bold">Link da sua loja</h2>
               <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-                <code className="min-w-0 flex-1 break-all rounded-campo border border-campo bg-[#fbfaf6] px-3 py-2.5 text-[15px]">{endereco}</code>
+                <code className="min-w-0 flex-1 break-all rounded-campo border border-campo bg-[#fbfaf6] px-3 py-2.5 text-[15px] lg:text-base">{endereco}</code>
                 <Copiar texto={endereco} />
               </div>
               <div className="flex flex-wrap gap-2.5">
@@ -60,12 +61,12 @@ export default async function Divulgar() {
             <section className={`${cartao} flex flex-col gap-3 p-[18px] lg:p-[22px]`}>
               <div>
                 <h2 className="text-base font-bold">Link de cada série</h2>
-                <p className="mt-0.5 text-[13px] text-apagado">
+                <p className="mt-0.5 text-[13px] lg:text-sm text-apagado">
                   Para o grupo de uma turma: o link já abre direto na lista daquela série.
                 </p>
               </div>
               {escolas.length === 0 ? (
-                <p className="text-sm text-apagado">
+                <p className="text-sm lg:text-[15px] text-apagado">
                   Nenhuma lista publicada ainda. Publique em <Link href="/painel/escolas" className={link}>Escolas e listas</Link> e os links aparecem aqui.
                 </p>
               ) : (
@@ -75,8 +76,8 @@ export default async function Divulgar() {
                     return (
                       <li key={url} className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                         <span className="min-w-0">
-                          <strong className="text-[15px]">{s.nome}</strong>
-                          <span className="text-[15px] text-apagado"> · {e.nome}</span>
+                          <strong className="text-[15px] lg:text-base">{s.nome}</strong>
+                          <span className="text-[15px] lg:text-base text-apagado"> · {e.nome}</span>
                         </span>
                         <Copiar texto={url} rotulo="Copiar link" />
                       </li>
@@ -91,7 +92,7 @@ export default async function Divulgar() {
             <h2 className="self-start text-base font-bold">QR code da loja</h2>
             <div className="w-full max-w-[240px]" role="img" aria-label={`QR code para ${endereco}`}
               dangerouslySetInnerHTML={{ __html: qrSvg }} />
-            <p className="text-[13px] text-apagado">Aponte a câmera do celular para abrir a sua loja.</p>
+            <p className="text-[13px] lg:text-sm text-apagado">Aponte a câmera do celular para abrir a sua loja.</p>
             <div className="flex w-full flex-col gap-2">
               <a href={qrPng} download={`qrcode-${papelaria.slug}.png`} className={botaoContornoPequeno}>
                 Baixar imagem

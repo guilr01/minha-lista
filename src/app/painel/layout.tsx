@@ -23,7 +23,7 @@ export default async function MolduraDoPainel({ children }: { children: React.Re
   );
   const sair = (
     <form action={sairAcao}>
-      <button type="submit" className="min-h-11 text-sm font-semibold text-[#c9d1db] hover:text-white">Sair</button>
+      <button type="submit" className="min-h-11 text-sm lg:text-[15px] font-semibold text-[#c9d1db] hover:text-white">Sair</button>
     </form>
   );
 
@@ -34,11 +34,11 @@ export default async function MolduraDoPainel({ children }: { children: React.Re
         <NavegacaoDoPainel />
         {papelaria && (
           <Link href={`/${papelaria.slug}`} target="_blank"
-            className="flex min-h-11 items-center gap-2.5 rounded-campo px-3 text-[15px] text-[#d6dce4] hover:bg-[#26364a] hover:text-white">
+            className="flex min-h-11 items-center gap-2.5 rounded-campo px-3 text-[15px] lg:text-base text-[#d6dce4] hover:bg-[#26364a] hover:text-white">
             <Icone nome="seta" tamanho={18} />Ver a página dos clientes
           </Link>
         )}
-        <div className="mt-auto flex flex-col gap-1 border-t border-[#2c3a4c] px-3 pt-3 text-[13px] leading-snug text-[#9aa6b4]">
+        <div className="mt-auto flex flex-col gap-1 border-t border-[#2c3a4c] px-3 pt-3 text-[13px] lg:text-sm leading-snug text-[#9aa6b4]">
           <span className="truncate" title={usuario.email}>{usuario.nome ?? usuario.email}</span>
           {sair}
         </div>
@@ -50,9 +50,13 @@ export default async function MolduraDoPainel({ children }: { children: React.Re
       </header>
 
       <main className="min-w-0 flex-1 px-4 pb-12 pt-[18px] lg:px-8 lg:pt-7 print:p-0">
-        {papelaria ? children : (
-          <p className="text-apagado">Esta conta não está ligada a nenhuma papelaria.</p>
-        )}
+        {/* Largura máxima: num monitor grande o conteúdo se espalhava por 2.300 px, e o nome do
+            item ficava a mais de mil pixels do preço na mesma linha. */}
+        <div className="mx-auto w-full max-w-[1280px] print:max-w-none">
+          {papelaria ? children : (
+            <p className="text-apagado">Esta conta não está ligada a nenhuma papelaria.</p>
+          )}
+        </div>
       </main>
     </div>
   );

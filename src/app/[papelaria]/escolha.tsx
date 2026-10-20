@@ -35,7 +35,7 @@ export function EscolhaDaEscola({ papelaria, escolas, inicial }: { papelaria: st
     <section className={`${cartao} flex flex-col gap-4 p-[18px] lg:p-6`} aria-label="Escolha a escola e a série">
       <form action={`/${papelaria}`} className="contents">
         <label className={rotuloCampo}>
-          <span className="text-[15px]">Escola</span>
+          <span className="text-[15px] lg:text-base">Escola</span>
           <select name="escola" className={`${campo} h-[52px] text-base`} value={escolhida}
             onChange={(ev) => trocarEscola(ev.target.value)}>
             <option value="" disabled>Selecione a escola</option>
@@ -56,7 +56,7 @@ export function EscolhaDaEscola({ papelaria, escolas, inicial }: { papelaria: st
         router.push(`/${papelaria}/${escola.slug}/${serie}`);
       }}>
         <label className={rotuloCampo}>
-          <span className={`text-[15px] ${escola ? "" : "text-apagado"}`}>Série</span>
+          <span className={`text-[15px] lg:text-base ${escola ? "" : "text-apagado"}`}>Série</span>
           <select className={`${campo} h-[52px] text-base disabled:cursor-not-allowed disabled:bg-[#f6f3ec] disabled:text-apagado`}
             value={serie} disabled={!escola} onChange={(ev) => setSerie(ev.target.value)}>
             <option value="" disabled>{escola ? "Selecione a série" : "Escolha a escola primeiro"}</option>

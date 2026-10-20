@@ -55,8 +55,8 @@ function LinhaDoTempo({ p }: { p: PedidoPublico }) {
               {i < passos.length - 1 && <span className={`min-h-6 w-0.5 flex-1 ${i < feito ? "bg-ok" : "bg-linha"}`} />}
             </div>
             <div className="flex flex-col pb-3.5">
-              <strong className={`text-[15px] ${ok ? "" : "font-semibold text-apagado"}`}>{s.titulo}</strong>
-              <span className="text-[13px] text-apagado">{em ? hora(em) : s.dica}</span>
+              <strong className={`text-[15px] lg:text-base ${ok ? "" : "font-semibold text-apagado"}`}>{s.titulo}</strong>
+              <span className="text-[13px] lg:text-sm text-apagado">{em ? hora(em) : s.dica}</span>
             </div>
           </li>
         );
@@ -83,7 +83,7 @@ async function BlocoDePagamento({ p, token }: { p: PedidoPublico; token: string 
       <div className={`${cartao} flex flex-col items-center gap-3.5 p-[22px] text-center`}>
         <span className="text-apagado">Valor a pagar</span>
         <span className="titulo text-[32px] font-bold">{reais(p.total_centavos)}</span>
-        <span className="text-sm text-apagado">
+        <span className="text-sm lg:text-[15px] text-apagado">
           {p.parcelas > 1 ? `${p.parcelas}x de ${reais(Math.ceil(p.total_centavos / p.parcelas))} sem juros` : "À vista no cartão"}
         </span>
         {pg.dados.urlCartao && (
@@ -91,7 +91,7 @@ async function BlocoDePagamento({ p, token }: { p: PedidoPublico; token: string 
             <Icone nome="cartao" tamanho={18} />Pagar com cartão
           </a>
         )}
-        <span className="text-[13px] text-apagado">Os dados do cartão são digitados na página segura do meio de pagamento.</span>
+        <span className="text-[13px] lg:text-sm text-apagado">Os dados do cartão são digitados na página segura do meio de pagamento.</span>
         <AtualizarSozinho />
       </div>
     );
@@ -106,11 +106,11 @@ async function BlocoDePagamento({ p, token }: { p: PedidoPublico; token: string 
       <div role="img" aria-label="QR Code do Pix" className="size-[196px] overflow-hidden rounded-xl border border-linha [&>svg]:size-full"
         dangerouslySetInnerHTML={{ __html: qr }} />
       <CopiarCodigo codigo={codigo} />
-      <div className="flex items-center gap-2.5 text-sm text-apagado">
+      <div className="flex items-center gap-2.5 text-sm lg:text-[15px] text-apagado">
         <span className="size-[18px] animate-spin rounded-full border-[3px] border-azul-claro border-t-azul" />
         Aguardando pagamento…
       </div>
-      {p.expira_em && <span className="text-[13px] text-apagado">O código vale até {hora(p.expira_em)}.</span>}
+      {p.expira_em && <span className="text-[13px] lg:text-sm text-apagado">O código vale até {hora(p.expira_em)}.</span>}
       {simular && (
         <>
           <Informacao>Ambiente de teste: nenhum pagamento real é feito. Use o botão abaixo para simular a confirmação do banco.</Informacao>
@@ -148,11 +148,11 @@ export default async function PaginaDoPedido({ params }: Props) {
           <h1 className="titulo text-[26px] font-bold lg:text-[34px]">
             {aguardando ? (p.metodo_pagamento === "pix" ? "Pague com Pix" : "Pagamento com cartão") : `Pedido #${p.numero}`}
           </h1>
-          <span className={`inline-flex h-[26px] items-center whitespace-nowrap rounded-full px-2.5 text-xs font-bold ${COR_STATUS[p.status]}`}>
+          <span className={`inline-flex h-[26px] items-center whitespace-nowrap rounded-full px-2.5 text-xs lg:text-[13px] font-bold ${COR_STATUS[p.status]}`}>
             {ROTULO_STATUS[p.status]}
           </span>
         </div>
-        <p className="-mt-1 text-[15px] text-apagado">
+        <p className="leitura -mt-1 text-[15px] lg:text-base text-apagado">
           {aguardando && `Pedido #${p.numero} · `}{p.aluno_nome} · {p.serie_nome} · {p.escola_nome}
         </p>
 
@@ -177,28 +177,28 @@ export default async function PaginaDoPedido({ params }: Props) {
         {!aguardando && p.status !== "expirado" && p.status !== "cancelado" && <LinhaDoTempo p={p} />}
 
         <section className={cartao} aria-labelledby="itens">
-          <h2 id="itens" className="px-4 pt-3.5 text-xs font-bold uppercase tracking-[0.05em] text-apagado">Itens</h2>
+          <h2 id="itens" className="px-4 pt-3.5 text-xs lg:text-[13px] font-bold uppercase tracking-[0.05em] text-apagado">Itens</h2>
           <ul className="px-4 py-1">
             {p.itens.map((i, n) => (
-              <li key={n} className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm">
+              <li key={n} className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm lg:text-[15px]">
                 <span className="flex min-w-0 flex-col gap-1">
                   <span>{i.quantidade}× {i.nome} <span className="text-apagado">· {i.marca}</span></span>
                   <span className="flex flex-wrap items-center gap-1.5">
                     <ChipFaixa faixa={i.faixa} />
-                    {i.faixa !== i.faixa_pedida && <span className="text-xs text-aviso">pedida: {ROTULO_FAIXA[i.faixa_pedida]}</span>}
-                    {i.origem === "adicionado" && <span className="text-xs text-apagado">fora da lista</span>}
+                    {i.faixa !== i.faixa_pedida && <span className="text-xs lg:text-[13px] text-aviso">pedida: {ROTULO_FAIXA[i.faixa_pedida]}</span>}
+                    {i.origem === "adicionado" && <span className="text-xs lg:text-[13px] text-apagado">fora da lista</span>}
                   </span>
                 </span>
                 <span className="whitespace-nowrap">{reais(i.preco_unitario_centavos * i.quantidade)}</span>
               </li>
             ))}
             {p.desconto_centavos > 0 && (
-              <li className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm text-ok">
+              <li className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm lg:text-[15px] text-ok">
                 <span>Desconto ({resumoDosDescontos(p.descontos)})</span>
                 <span className="whitespace-nowrap">− {reais(p.desconto_centavos)}</span>
               </li>
             )}
-            <li className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm">
+            <li className="flex justify-between gap-3 border-b border-linha-2 py-2.5 text-sm lg:text-[15px]">
               <span className="text-apagado">Entrega</span>
               <span>{p.modalidade === "entrega" ? (p.taxa_entrega_centavos ? reais(p.taxa_entrega_centavos) : "Grátis") : "Retirada · grátis"}</span>
             </li>
@@ -209,8 +209,8 @@ export default async function PaginaDoPedido({ params }: Props) {
           </ul>
         </section>
 
-        <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm leading-snug`}>
-          <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">{p.modalidade === "entrega" ? "Entrega" : "Retirada"}</h2>
+        <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm lg:text-[15px] leading-snug`}>
+          <h2 className="text-xs lg:text-[13px] font-bold uppercase tracking-[0.05em] text-apagado">{p.modalidade === "entrega" ? "Entrega" : "Retirada"}</h2>
           {e ? (
             <span>
               {e.logradouro}, {e.numero}{e.complemento ? ` · ${e.complemento}` : ""}
@@ -225,7 +225,7 @@ export default async function PaginaDoPedido({ params }: Props) {
         </section>
 
         {whats && (
-          <p className="mt-2 text-center text-sm text-apagado">
+          <p className="mt-2 text-center text-sm lg:text-[15px] text-apagado">
             Dúvidas sobre o pedido?{" "}
             <a href={whats} target="_blank" rel="noopener noreferrer" className="font-semibold text-azul hover:underline">
               Falar com a papelaria no WhatsApp

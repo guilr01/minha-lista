@@ -26,14 +26,14 @@ export default async function MolduraDaPapelaria({
             <span className="titulo truncate text-[19px] font-bold">{v.papelaria.nome}</span>
           </Link>
           <Link href={`/${slug}/pedidos`}
-            className="flex min-h-11 flex-none items-center gap-2 rounded-xl border border-linha bg-white px-3 text-[15px] font-semibold hover:bg-fundo">
+            className="flex min-h-11 flex-none items-center gap-2 rounded-xl border border-linha bg-white px-3 text-[15px] lg:text-base font-semibold hover:bg-fundo">
             <Icone nome="caixa" tamanho={18} />
             <span>Meus pedidos</span>
           </Link>
         </div>
       </header>
       <div className="flex flex-1 flex-col">{children}</div>
-      <footer className="px-4 py-6 text-center text-xs text-apagado">Pedidos online com Lista Pronta</footer>
+      <footer className="px-4 py-6 text-center text-xs lg:text-[13px] text-apagado">Pedidos online com Lista Pronta</footer>
     </div>
   );
 }

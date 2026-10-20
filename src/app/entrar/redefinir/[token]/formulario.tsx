@@ -25,14 +25,14 @@ export function FormularioDeRedefinicao({ token, minimo }: { token: string; mini
       <label className={rotuloCampo}>
         Senha nova
         <input name="senha" type="password" required minLength={minimo} autoComplete="new-password" className={campo} />
-        <span className="text-xs font-normal text-apagado">Pelo menos {minimo} caracteres.</span>
+        <span className="text-xs lg:text-[13px] font-normal text-apagado">Pelo menos {minimo} caracteres.</span>
       </label>
       <label className={rotuloCampo}>
         Repita a senha nova
         <input name="confirmacao" type="password" required minLength={minimo} autoComplete="new-password" className={campo} />
       </label>
       <button type="submit" className={botao} disabled={enviando}>{enviando ? "Salvando…" : "Salvar e entrar"}</button>
-      <p className="text-center text-sm text-apagado">
+      <p className="text-center text-sm lg:text-[15px] text-apagado">
         As outras sessões abertas desta conta serão encerradas. <Link href="/entrar" className={link}>Voltar</Link>
       </p>
     </form>

@@ -261,6 +261,22 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
   papelaria não vende vai para o RECADO da lista num bloco "Itens da lista da escola que não
   vendemos:", que o cliente vê. Importar de novo troca o bloco em vez de repetir.
 
+## Legibilidade no computador (20/10/2026)
+
+Medido em 16 telas × 7 larguras (1024 a 2560), antes de mexer. O celular estava certo e não mudou.
+
+- **Letra: o tamanho do celular continua, e o computador ganha 1 px** (`lg:`): 12→13, 13→14,
+  14→15, 15→16. Tela nova com texto pequeno leva o par: `text-[13px] lg:text-sm`. A menor letra
+  no computador é 13 px.
+- **O painel tem largura máxima de 1280 px** (`painel/layout.tsx`). Sem ela, em 2560 o conteúdo
+  ia a 2.300 px e o nome do item ficava a mais de mil pixels do preço na mesma linha.
+- **Duas colunas e tabela larga só a partir de 1280 px (`xl:`)**, não de 1024: em notebook de 1024
+  a tabela de pedidos cortava o status e o botão, e a coluna estreita do pedido aberto e do
+  Divulgar quebrava nome a cada palavra. Entre 1024 e 1279 os blocos ficam um embaixo do outro, e
+  os pedidos em cartões em duas colunas.
+- **Parágrafo de explicação leva `leitura`** (`globals.css`, até ~72 caracteres por linha). Em
+  `em`, não em `ch`: nesta fonte o "0" é largo e 68ch dava 95 caracteres.
+
 ## Do protótipo, o que NÃO entra agora
 
 O protótipo tem leitura de lista por foto e a fila "Itens não encontrados" que nasce dela.

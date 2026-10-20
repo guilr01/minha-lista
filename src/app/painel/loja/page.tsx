@@ -28,12 +28,12 @@ export default async function Loja() {
   const papelaria = (await papelariaAtual(u.id))!;
   const loja = (await buscarLoja(u.id, papelaria.id))!;
   const host = (await headers()).get("host") ?? "";
-  const marcar = "flex min-h-11 cursor-pointer items-center gap-2.5 text-[15px] font-semibold";
+  const marcar = "flex min-h-11 cursor-pointer items-center gap-2.5 text-[15px] lg:text-base font-semibold";
 
   return (
     <>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Loja</h1>
-      <p className="mt-1 text-[15px] text-apagado">
+      <p className="leitura mt-1 text-[15px] lg:text-base text-apagado">
         Link dos clientes:{" "}
         <Link href={`/${loja.slug}`} target="_blank" className="break-all font-semibold text-azul hover:underline">{host}/{loja.slug}</Link>
       </p>
@@ -45,7 +45,7 @@ export default async function Loja() {
           <label className={rotuloCampo}>
             WhatsApp de atendimento
             <input name="whatsapp" inputMode="tel" defaultValue={loja.whatsapp ? formatarTelefone(loja.whatsapp) : ""} className={campo} placeholder="(00) 00000-0000" />
-            <span className="text-[13px] font-normal text-apagado">Aparece para os clientes como “Atendimento no WhatsApp”.</span>
+            <span className="text-[13px] lg:text-sm font-normal text-apagado">Aparece para os clientes como “Atendimento no WhatsApp”.</span>
           </label>
         </section>
 
@@ -75,7 +75,7 @@ export default async function Loja() {
 
         <section className={`${cartao} flex flex-col gap-1 p-4 lg:p-[22px]`} aria-labelledby="descontos">
           <h2 id="descontos" className="text-base font-bold">Descontos</h2>
-          <p className="text-[13px] text-apagado">
+          <p className="leitura text-[13px] lg:text-sm text-apagado">
             Ligue as regras que fazem sentido para a sua loja e escolha a porcentagem de cada uma. Quando o pedido cumpre mais de
             uma, os descontos se somam, até 50%, e valem sobre os produtos (a taxa de entrega não entra). Os clientes veem as regras
             na lista e o desconto no resumo antes de pagar.
@@ -92,19 +92,19 @@ export default async function Loja() {
                       <span className="size-5 rounded-full bg-white shadow transition-transform" />
                     </span>
                     <span className="flex flex-col">
-                      <span className="text-[15px] font-semibold">{TITULO_REGRA[r]}</span>
-                      <span className="text-[13px] text-apagado">{EXPLICACAO[r]}</span>
+                      <span className="text-[15px] lg:text-base font-semibold">{TITULO_REGRA[r]}</span>
+                      <span className="text-[13px] lg:text-sm text-apagado">{EXPLICACAO[r]}</span>
                     </span>
                   </label>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-14">
-                    <label className="flex items-center gap-1.5 text-[13px] font-semibold">
+                    <label className="flex items-center gap-1.5 text-[13px] lg:text-sm font-semibold">
                       Desconto
                       <input name={`desc_${r}_pct`} inputMode="numeric" placeholder="0" maxLength={3}
                         defaultValue={atual?.percentual ?? ""} className={`${campoCurto} w-[64px] text-right`} />
                       %
                     </label>
                     {r === "valor_minimo" && (
-                      <label className="flex items-center gap-1.5 text-[13px] font-semibold">
+                      <label className="flex items-center gap-1.5 text-[13px] lg:text-sm font-semibold">
                         em compras a partir de R$
                         <input name="desc_valor_minimo_min" inputMode="decimal" placeholder="300,00"
                           defaultValue={loja.descontos?.valor_minimo ? paraCampo(loja.descontos.valor_minimo.minimo_centavos) : ""}
@@ -112,7 +112,7 @@ export default async function Loja() {
                       </label>
                     )}
                     {r === "faixa" && (
-                      <label className="flex items-center gap-1.5 text-[13px] font-semibold">
+                      <label className="flex items-center gap-1.5 text-[13px] lg:text-sm font-semibold">
                         na faixa
                         <select name="desc_faixa_faixa" defaultValue={loja.descontos?.faixa?.faixa ?? "premium"} className={`${campoCurto} w-[150px]`}>
                           {FAIXAS.map((f) => <option key={f} value={f}>{ROTULO_FAIXA[f]}</option>)}

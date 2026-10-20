@@ -19,7 +19,7 @@ export default async function SeriesDaEscola({ params }: Props) {
         <Icone nome="voltar" />Escolas
       </Link>
       <h1 className="titulo mt-1 text-[26px] font-bold leading-tight lg:text-[34px]">{escola.nome}</h1>
-      <p className="mt-1.5 text-[15px] text-apagado">Escolha a série do aluno.</p>
+      <p className="mt-1.5 text-[15px] lg:text-base text-apagado">Escolha a série do aluno.</p>
       <ul className={`${cartao} mt-5 divide-y divide-linha-2`}>
         {escola.series.map((s) => (
           <li key={s.slug}>

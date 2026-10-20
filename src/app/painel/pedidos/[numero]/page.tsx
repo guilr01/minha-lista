@@ -65,8 +65,8 @@ export default async function PedidoNoPainel({ params }: Props) {
           <div className="flex flex-col gap-1.5">
             <h1 className="titulo text-2xl font-bold lg:text-[30px]">Pedido #{p.numero} · lista de separação</h1>
             <span className="flex flex-wrap items-center gap-2">
-              <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs font-bold ${COR_STATUS[p.status]}`}>{ROTULO_STATUS[p.status]}</span>
-              <span className="text-[13px] text-apagado">pago {haQuanto(p.pago_em ?? p.criado_em)}</span>
+              <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs lg:text-[13px] font-bold ${COR_STATUS[p.status]}`}>{ROTULO_STATUS[p.status]}</span>
+              <span className="text-[13px] lg:text-sm text-apagado">pago {haQuanto(p.pago_em ?? p.criado_em)}</span>
             </span>
           </div>
           <div className="flex flex-wrap gap-2.5">
@@ -80,12 +80,14 @@ export default async function PedidoNoPainel({ params }: Props) {
           </div>
         </div>
 
-        <div className="mt-[18px] grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_330px]">
+        {/* Duas colunas só a partir de 1280 px: em 1024 a lista de separação ficava com 330 px e os
+            nomes quebravam a cada palavra. Abaixo disso, um bloco embaixo do outro, como no celular. */}
+        <div className="mt-[18px] grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
           <Checklist itens={p.itens} habilitado={podeMarcar} />
 
           <div className="flex flex-col gap-3">
-            <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm leading-snug`}>
-              <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">Aluno e entrega</h2>
+            <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm lg:text-[15px] leading-snug`}>
+              <h2 className="text-xs lg:text-[13px] font-bold uppercase tracking-[0.05em] text-apagado">Aluno e entrega</h2>
               <strong className="text-base">{p.aluno_nome}</strong>
               <span className="text-apagado">{p.serie_nome} · {p.escola_nome} · {p.ano_letivo}</span>
               <span>Responsável: {p.responsavel_nome}</span>
@@ -97,8 +99,8 @@ export default async function PedidoNoPainel({ params }: Props) {
               <span className="flex items-start gap-1.5">{p.modalidade === "retirada" && <Icone nome="loja" tamanho={16} className="mt-0.5 flex-none" />}{enderecoTexto}</span>
             </section>
 
-            <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm`}>
-              <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">Pagamento</h2>
+            <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm lg:text-[15px]`}>
+              <h2 className="text-xs lg:text-[13px] font-bold uppercase tracking-[0.05em] text-apagado">Pagamento</h2>
               <span className="font-bold text-ok">{p.metodo_pagamento === "pix" ? "Pix" : `Cartão ${p.parcelas}x`} · pago</span>
               <span className="flex justify-between"><span className="text-apagado">Produtos</span><span>{reais(p.subtotal_centavos)}</span></span>
               {p.desconto_centavos > 0 && (
@@ -112,15 +114,15 @@ export default async function PedidoNoPainel({ params }: Props) {
             </section>
 
             {atencao.length > 0 && (
-              <section className="flex flex-col gap-1.5 rounded-botao bg-aviso-fundo px-4 py-3.5 text-sm leading-snug text-aviso">
+              <section className="flex flex-col gap-1.5 rounded-botao bg-aviso-fundo px-4 py-3.5 text-sm lg:text-[15px] leading-snug text-aviso">
                 <h2 className="font-bold text-tinta">Atenção neste pedido</h2>
                 {atencao.map((a) => <span key={a}>{a}</span>)}
               </section>
             )}
 
             {aviso && (
-              <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm leading-snug`}>
-                <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">Aviso ao cliente</h2>
+              <section className={`${cartao} flex flex-col gap-1.5 p-4 text-sm lg:text-[15px] leading-snug`}>
+                <h2 className="text-xs lg:text-[13px] font-bold uppercase tracking-[0.05em] text-apagado">Aviso ao cliente</h2>
                 <span>
                   O cliente não recebe mensagem automática. A cada mudança de status, toque em{" "}
                   <strong>Avisar o cliente no WhatsApp</strong>: abre o seu WhatsApp com a mensagem pronta
@@ -129,8 +131,8 @@ export default async function PedidoNoPainel({ params }: Props) {
               </section>
             )}
 
-            <section className={`${cartao} flex flex-col gap-1 p-4 text-sm`}>
-              <h2 className="text-xs font-bold uppercase tracking-[0.05em] text-apagado">Histórico</h2>
+            <section className={`${cartao} flex flex-col gap-1 p-4 text-sm lg:text-[15px]`}>
+              <h2 className="text-xs lg:text-[13px] font-bold uppercase tracking-[0.05em] text-apagado">Histórico</h2>
               {p.eventos.map((ev, i) => (
                 <span key={i} className="flex justify-between gap-3">
                   <span>{ROTULO_STATUS[ev.status_para]}</span>

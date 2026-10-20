@@ -19,10 +19,10 @@ export function FormularioDeEntrada() {
           Senha
           <input name="senha" type="password" required autoComplete="current-password" className={campo} />
         </label>
-        <Link href="/entrar/esqueci" className={`${link} self-end text-[13px]`}>Esqueci a senha</Link>
+        <Link href="/entrar/esqueci" className={`${link} self-end text-[13px] lg:text-sm`}>Esqueci a senha</Link>
       </div>
       <button type="submit" className={botao} disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</button>
-      <p className="text-center text-sm text-apagado">
+      <p className="text-center text-sm lg:text-[15px] text-apagado">
         Ainda não tem conta? <Link href="/#cadastro" className={link}>Cadastrar a papelaria</Link>
       </p>
     </form>

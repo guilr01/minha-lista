@@ -37,14 +37,14 @@ export function CartaoFalso(p: { token: string; total: number; parcelas: number;
       <input className={`${campo} ${erros[k] ? "border-erro bg-[#fff7f5]" : ""}`} value={c[k]} placeholder={dica}
         inputMode={k === "nome" ? undefined : "numeric"} autoComplete="off" aria-invalid={erros[k] ? true : undefined}
         onChange={(e) => setC((a) => ({ ...a, [k]: mascara(e.target.value) }))} />
-      {erros[k] && <span className="text-xs font-semibold text-erro">{erros[k]}</span>}
+      {erros[k] && <span className="text-xs lg:text-[13px] font-semibold text-erro">{erros[k]}</span>}
     </label>
   );
 
   return (
     <main className="mx-auto flex w-full max-w-[520px] flex-col gap-4 px-5 py-8">
       <h1 className="titulo text-[26px] font-bold">Pagamento com cartão</h1>
-      <p className="-mt-2 text-[15px] text-apagado">
+      <p className="-mt-2 text-[15px] lg:text-base text-apagado">
         {p.papelaria} · pedido #{p.numero} · {p.parcelas}x de {reais(Math.ceil(p.total / p.parcelas))} sem juros
       </p>
       <section className={`${cartao} flex flex-col gap-3 p-[22px]`}>
@@ -60,7 +60,7 @@ export function CartaoFalso(p: { token: string; total: number; parcelas: number;
         <button type="button" className={botao} disabled={ocupado} onClick={() => pagar(true)}>
           {ocupado ? "Processando…" : `Pagar ${reais(p.total)}`}
         </button>
-        <button type="button" className="min-h-11 text-sm font-semibold text-erro hover:underline" disabled={ocupado} onClick={() => pagar(false)}>
+        <button type="button" className="min-h-11 text-sm lg:text-[15px] font-semibold text-erro hover:underline" disabled={ocupado} onClick={() => pagar(false)}>
           Simular cartão recusado
         </button>
       </section>

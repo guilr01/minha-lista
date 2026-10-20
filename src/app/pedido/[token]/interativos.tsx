@@ -24,7 +24,7 @@ export function CopiarCodigo({ codigo }: { codigo: string }) {
     <div className="flex w-full max-w-[420px] gap-2">
       <label className="min-w-0 flex-1">
         <span className="sr-only">Código Pix copia e cola</span>
-        <input readOnly value={codigo} className={`${campo} h-11 font-mono text-xs`} onFocus={(e) => e.target.select()} />
+        <input readOnly value={codigo} className={`${campo} h-11 font-mono text-xs lg:text-[13px]`} onFocus={(e) => e.target.select()} />
       </label>
       <button type="button" className={botaoContornoPequeno}
         onClick={async () => {
@@ -71,7 +71,7 @@ export function GerarDeNovo({ token }: { token: string }) {
         })}>
         {ocupado ? "Gerando…" : "Gerar o pagamento de novo"}
       </button>
-      {erro && <p className="text-sm font-semibold text-erro">{erro}</p>}
+      {erro && <p className="text-sm lg:text-[15px] font-semibold text-erro">{erro}</p>}
     </>
   );
 }

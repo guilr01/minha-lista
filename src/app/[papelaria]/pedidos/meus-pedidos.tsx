@@ -29,7 +29,7 @@ export function MeusPedidos({ slug }: { slug: string }) {
         <Icone nome="voltar" />Voltar
       </Link>
       <h1 className="titulo mt-1 text-[26px] font-bold lg:text-[34px]">Meus pedidos</h1>
-      <p className="mt-1.5 text-[15px] text-apagado">
+      <p className="leitura mt-1.5 text-[15px] lg:text-base text-apagado">
         Os pedidos feitos neste aparelho. O link que você recebeu também abre o acompanhamento de qualquer lugar.
       </p>
       {pedidos.length === 0 ? (
@@ -46,10 +46,10 @@ export function MeusPedidos({ slug }: { slug: string }) {
                   <strong className="text-base">Pedido #{p.numero}</strong>
                   <strong>{reais(p.total_centavos)}</strong>
                 </span>
-                <span className="text-[13px] text-apagado">
+                <span className="text-[13px] lg:text-sm text-apagado">
                   {p.aluno} · {p.lista} · {new Date(p.criado_em).toLocaleDateString("pt-BR")}
                 </span>
-                <span className="text-sm font-semibold text-azul">Acompanhar</span>
+                <span className="text-sm lg:text-[15px] font-semibold text-azul">Acompanhar</span>
               </Link>
             </li>
           ))}

@@ -24,7 +24,7 @@ function faixaDoPedido(faixas: Faixa[]): Faixa | "mista" {
 }
 
 function Status({ s }: { s: StatusPedido }) {
-  return <span className={`inline-flex h-[26px] items-center whitespace-nowrap rounded-full px-2.5 text-xs font-bold ${COR_STATUS[s]}`}>{ROTULO_STATUS[s]}</span>;
+  return <span className={`inline-flex h-[26px] items-center whitespace-nowrap rounded-full px-2.5 text-xs lg:text-[13px] font-bold ${COR_STATUS[s]}`}>{ROTULO_STATUS[s]}</span>;
 }
 
 export default async function Pedidos({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
@@ -39,7 +39,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="titulo text-2xl font-bold lg:text-[30px]">Pedidos</h1>
-        <span className="text-[13px] text-apagado">{todos.length} {todos.length === 1 ? "pedido pago" : "pedidos pagos"} no total</span>
+        <span className="text-[13px] lg:text-sm text-apagado">{todos.length} {todos.length === 1 ? "pedido pago" : "pedidos pagos"} no total</span>
       </div>
 
       <nav aria-label="Filtrar pedidos" className="my-[18px] grid grid-cols-2 gap-2.5 lg:grid-cols-5 lg:gap-3">
@@ -49,7 +49,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
           return (
             <Link key={f.chave || "todos"} href={f.chave ? `/painel?status=${f.chave}` : "/painel"} aria-current={ativo ? "true" : undefined}
               className={`flex flex-col gap-0.5 rounded-botao bg-white text-left hover:border-[#9fb4cf] ${ativo ? "border-2 border-azul px-[15px] py-[13px]" : "border border-linha px-4 py-3.5"}`}>
-              <span className="text-[13px] font-bold text-apagado">{f.rotulo}</span>
+              <span className="text-[13px] lg:text-sm font-bold text-apagado">{f.rotulo}</span>
               <span className="titulo text-[26px] font-bold">{n}</span>
             </Link>
           );
@@ -61,7 +61,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
           {todos.length === 0 ? (
             <>
               <span>Nenhum pedido pago ainda.</span>
-              <span className="text-sm">Os pedidos aparecem aqui assim que o pagamento é confirmado.{" "}
+              <span className="text-sm lg:text-[15px]">Os pedidos aparecem aqui assim que o pagamento é confirmado.{" "}
                 <Link href="/painel/divulgar" className="font-semibold text-azul hover:underline">Divulgue o link e o QR code da sua loja</Link>.
               </span>
             </>
@@ -69,30 +69,34 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
         </div>
       ) : (
         <>
-          <div className={`${cartao} hidden overflow-hidden lg:block`}>
-            <table className="w-full border-collapse text-sm">
+          {/* A tabela só cabe a partir de 1280 px: em notebook de 1024 o status e o botão ficavam
+              cortados. Abaixo disso vale a lista em cartões, em duas colunas no computador. */}
+          <div className={`${cartao} hidden overflow-hidden xl:block`}>
+            <table className="w-full border-collapse text-sm lg:text-[15px]">
               <thead>
-                <tr className="bg-[#fbfaf6] text-left text-xs font-bold uppercase tracking-[0.04em] text-apagado">
-                  {["Pedido", "Aluno", "Responsável", "Escola · série", "Faixa", "Separação", "Total", "Status", ""].map((t, i) => (
-                    <th key={i} className="border-b border-linha px-4 py-3">{t}</th>
+                <tr className="bg-[#fbfaf6] text-left text-xs lg:text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">
+                  {["Pedido", "Aluno", "Responsável", "Faixa", "Separação", "Total", "Status", ""].map((t, i) => (
+                    <th key={i} className="whitespace-nowrap border-b border-linha px-3.5 py-3">{t}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {lista.map((p) => (
                   <tr key={p.id} className="border-b border-linha-2 last:border-b-0 hover:bg-azul-fundo">
-                    <td className="px-4 py-3">
+                    <td className="whitespace-nowrap px-3.5 py-3">
                       <span className="font-bold">#{p.numero}</span>
-                      <span className="block text-[13px] text-apagado">{haQuanto(p.pago_em ?? p.criado_em)}</span>
+                      <span className="block text-[13px] lg:text-sm text-apagado">{haQuanto(p.pago_em ?? p.criado_em)}</span>
                     </td>
-                    <td className="px-4 py-3 font-semibold">{p.aluno_nome}</td>
-                    <td className="px-4 py-3">{p.responsavel_nome}</td>
-                    <td className="px-4 py-3 text-apagado">{p.serie_nome} · {p.escola_nome}</td>
-                    <td className="px-4 py-3"><ChipFaixa faixa={faixaDoPedido(p.faixas)} /></td>
-                    <td className="px-4 py-3">{p.separados}/{p.itens}</td>
-                    <td className="px-4 py-3 font-bold">{reais(p.total_centavos)}</td>
-                    <td className="px-4 py-3"><Status s={p.status} /></td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3.5 py-3">
+                      <span className="font-semibold">{p.aluno_nome}</span>
+                      <span className="block text-[13px] lg:text-sm text-apagado">{p.serie_nome} · {p.escola_nome}</span>
+                    </td>
+                    <td className="px-3.5 py-3">{p.responsavel_nome}</td>
+                    <td className="px-3.5 py-3"><ChipFaixa faixa={faixaDoPedido(p.faixas)} /></td>
+                    <td className="px-3.5 py-3">{p.separados}/{p.itens}</td>
+                    <td className="whitespace-nowrap px-3.5 py-3 font-bold">{reais(p.total_centavos)}</td>
+                    <td className="whitespace-nowrap px-3.5 py-3"><Status s={p.status} /></td>
+                    <td className="px-3.5 py-3 text-right">
                       <Link href={`/painel/pedidos/${p.numero}`} className={`${botaoPequeno} whitespace-nowrap`}>
                         Abrir pedido
                       </Link>
@@ -103,18 +107,18 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
             </table>
           </div>
 
-          <ul className="flex flex-col gap-3 lg:hidden">
+          <ul className="grid gap-3 lg:grid-cols-2 xl:hidden">
             {lista.map((p) => (
               <li key={p.id}>
-                <Link href={`/painel/pedidos/${p.numero}`} className={`${cartao} flex flex-col gap-1.5 p-4 hover:border-[#9fb4cf]`}>
+                <Link href={`/painel/pedidos/${p.numero}`} className={`${cartao} flex h-full flex-col gap-1.5 p-4 hover:border-[#9fb4cf]`}>
                   <span className="flex items-center justify-between gap-3">
                     <strong>#{p.numero} · {p.aluno_nome}</strong>
                     <Status s={p.status} />
                   </span>
-                  <span className="text-[13px] text-apagado">{p.serie_nome} · {p.escola_nome} · {haQuanto(p.pago_em ?? p.criado_em)}</span>
-                  <span className="flex items-center justify-between gap-3 text-[13px]">
+                  <span className="text-[13px] lg:text-sm text-apagado">{p.serie_nome} · {p.escola_nome} · {haQuanto(p.pago_em ?? p.criado_em)}</span>
+                  <span className="flex items-center justify-between gap-3 text-[13px] lg:text-sm">
                     <span>{p.separados}/{p.itens} separados · {p.modalidade === "entrega" ? "entrega" : "retirada"}</span>
-                    <strong className="text-[15px]">{reais(p.total_centavos)}</strong>
+                    <strong className="text-[15px] lg:text-base">{reais(p.total_centavos)}</strong>
                   </span>
                   <span className={`${botaoPequeno} mt-1.5 w-full`}>Abrir pedido</span>
                 </Link>

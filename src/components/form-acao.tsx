@@ -47,8 +47,8 @@ export function FormAcao({
         startTransition(() => enviar(dados));
       }}>
       <fieldset disabled={pendente} className="contents">{children}</fieldset>
-      {estado.erro && <p role="alert" className="basis-full text-sm font-semibold text-erro">{estado.erro}</p>}
-      {estado.ok && <p role="status" className="basis-full text-sm font-semibold text-ok">{estado.ok}</p>}
+      {estado.erro && <p role="alert" className="basis-full text-sm lg:text-[15px] font-semibold text-erro">{estado.erro}</p>}
+      {estado.ok && <p role="status" className="basis-full text-sm lg:text-[15px] font-semibold text-ok">{estado.ok}</p>}
     </form>
   );
 }

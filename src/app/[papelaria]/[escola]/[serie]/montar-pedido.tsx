@@ -242,7 +242,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
                 <span className="titulo text-[17px] font-bold leading-tight lg:text-[26px]">
                   {reais(totalNaFaixa(m.linhas, produtos, f))}
                 </span>
-                <span className="hidden text-[13px] leading-snug text-apagado lg:block">{DESCRICAO_FAIXA[f]}</span>
+                <span className="hidden text-[13px] lg:text-sm leading-snug text-apagado lg:block">{DESCRICAO_FAIXA[f]}</span>
               </button>
             );
           })}
@@ -256,30 +256,30 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
             return (
               <li key={l.produto_id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-0.5 border-b border-linha-2 py-3 last:border-b-0">
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <strong className="text-[15px] font-semibold">{p.nome}</strong>
+                  <strong className="text-[15px] lg:text-base font-semibold">{p.nome}</strong>
                   {o ? (
-                    <span className="text-[13px] text-apagado">
+                    <span className="text-[13px] lg:text-sm text-apagado">
                       {o.marca}{l.quantidade > 1 ? ` · ${l.quantidade} × ${reais(o.preco_centavos)}` : ""}
                     </span>
                   ) : (
-                    <span className="text-[13px] font-semibold text-aviso">Indisponível no momento: não entra no valor</span>
+                    <span className="text-[13px] lg:text-sm font-semibold text-aviso">Indisponível no momento: não entra no valor</span>
                   )}
                   {o && o.faixa !== l.faixa && (
-                    <span className="text-[13px] text-aviso">Sem a faixa {ROTULO_FAIXA[l.faixa]}: vai a {ROTULO_FAIXA[o.faixa]}.</span>
+                    <span className="text-[13px] lg:text-sm text-aviso">Sem a faixa {ROTULO_FAIXA[l.faixa]}: vai a {ROTULO_FAIXA[o.faixa]}.</span>
                   )}
-                  {p.observacao && <span className="text-[13px] text-apagado">{p.observacao}</span>}
+                  {p.observacao && <span className="text-[13px] lg:text-sm text-apagado">{p.observacao}</span>}
                 </div>
-                <strong className="whitespace-nowrap text-[15px]">{o ? reais(o.preco_centavos * l.quantidade) : "–"}</strong>
+                <strong className="whitespace-nowrap text-[15px] lg:text-base">{o ? reais(o.preco_centavos * l.quantidade) : "–"}</strong>
               </li>
             );
           })}
         </ul>
         {removidas > 0 && (
-          <p className="text-[13px] text-apagado">
+          <p className="text-[13px] lg:text-sm text-apagado">
             {removidas} {removidas === 1 ? "item foi retirado" : "itens foram retirados"} na revisão e não {removidas === 1 ? "aparece" : "aparecem"} aqui.
           </p>
         )}
-        <p className="text-[13px] text-apagado">Na próxima tela você pode retirar o que já tem, mudar quantidades, trocar a faixa de um item ou incluir outro.</p>
+        <p className="leitura text-[13px] lg:text-sm text-apagado">Na próxima tela você pode retirar o que já tem, mudar quantidades, trocar a faixa de um item ou incluir outro.</p>
         {/* O recado vai no fim: quem chega quer ver a faixa e a lista primeiro; o que a loja não vende é o último aviso. */}
         {lista.observacoes && <RecadoDaLista recado={lista.observacoes} />}
       </div>
@@ -297,7 +297,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
       <div className="flex flex-col gap-3">
         {pctLista > 0 && (
           completa ? (
-            <div className="rounded-xl bg-ok-fundo px-3.5 py-3 text-[13px] font-semibold leading-snug text-ok">
+            <div className="rounded-xl bg-ok-fundo px-3.5 py-3 text-[13px] lg:text-sm font-semibold leading-snug text-ok">
               Lista completa: você ganha {pctLista}% de desconto. Tirar um item ou diminuir uma quantidade da lista faz perder o desconto.
             </div>
           ) : (
@@ -316,7 +316,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
           if (l.removida) {
             return (
               <div key={l.produto_id} className="flex min-h-[50px] items-center justify-between rounded-cartao border border-dashed border-campo px-3.5">
-                <span className="text-sm text-apagado line-through">{p.nome}</span>
+                <span className="text-sm lg:text-[15px] text-apagado line-through">{p.nome}</span>
                 <button type="button" className={`${link} min-h-11`} onClick={() => mudarLinha(l.produto_id, (x) => ({ ...x, removida: false }))}>
                   Desfazer
                 </button>
@@ -328,15 +328,15 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
             <div key={l.produto_id}
               className={`${cartao} grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2.5 p-3.5 [grid-template-areas:'info_preco''faixa_qtd'] lg:grid-cols-[minmax(0,1fr)_250px_136px_118px] lg:px-[18px] lg:[grid-template-areas:'info_faixa_qtd_preco']`}>
               <div className="flex min-w-0 flex-col gap-0.5 [grid-area:info]">
-                <strong className="text-[15px] font-semibold">{p.nome}</strong>
-                <span className="text-[13px] text-apagado">{o.marca} · {reais(o.preco_centavos)} cada{nota}</span>
+                <strong className="text-[15px] lg:text-base font-semibold">{p.nome}</strong>
+                <span className="text-[13px] lg:text-sm text-apagado">{o.marca} · {reais(o.preco_centavos)} cada{nota}</span>
                 {o.faixa !== l.faixa && (
-                  <span className="text-[13px] text-aviso">Sem a faixa {ROTULO_FAIXA[l.faixa]}: vai a {ROTULO_FAIXA[o.faixa]}.</span>
+                  <span className="text-[13px] lg:text-sm text-aviso">Sem a faixa {ROTULO_FAIXA[l.faixa]}: vai a {ROTULO_FAIXA[o.faixa]}.</span>
                 )}
               </div>
               <label className="min-w-0 [grid-area:faixa]">
                 <span className="sr-only">Faixa de {p.nome}</span>
-                <select className={`${campo} h-11 text-sm`} value={o.faixa}
+                <select className={`${campo} h-11 text-sm lg:text-[15px]`} value={o.faixa}
                   onChange={(ev) => mudarLinha(l.produto_id, (x) => ({ ...x, faixa: ev.target.value as Faixa }))}>
                   {p.opcoes.map((op) => (
                     <option key={op.faixa} value={op.faixa}>{ROTULO_FAIXA[op.faixa]} · {reais(op.preco_centavos)} · {op.marca}</option>
@@ -353,8 +353,8 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
                   className="flex size-11 items-center justify-center rounded-campo border border-campo bg-white text-xl font-semibold hover:bg-[#f1ede4] disabled:cursor-not-allowed disabled:opacity-40">+</button>
               </div>
               <div className="flex flex-col items-end [grid-area:preco]">
-                <strong className="whitespace-nowrap text-[15px]">{reais(o.preco_centavos * l.quantidade)}</strong>
-                <button type="button" className="min-h-8 text-sm font-semibold text-erro hover:underline"
+                <strong className="whitespace-nowrap text-[15px] lg:text-base">{reais(o.preco_centavos * l.quantidade)}</strong>
+                <button type="button" className="min-h-8 text-sm lg:text-[15px] font-semibold text-erro hover:underline"
                   onClick={() => mudarLinha(l.produto_id, (x) => ({ ...x, removida: true }))}>Remover</button>
               </div>
             </div>
@@ -364,7 +364,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
           <div className="mt-1 flex items-center gap-2.5">
             <label className="min-w-0 flex-1">
               <span className="sr-only">Adicionar item</span>
-              <select className={`${campo} h-11 text-sm`} value={adicionar} onChange={(e) => setAdicionar(e.target.value)}>
+              <select className={`${campo} h-11 text-sm lg:text-[15px]`} value={adicionar} onChange={(e) => setAdicionar(e.target.value)}>
                 <option value="">Adicionar um item que faltou…</option>
                 {paraAdicionar.map((c) => <option key={c.produto_id} value={c.produto_id}>{c.nome}</option>)}
               </select>
@@ -391,14 +391,14 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
           placeholder={o.dica} inputMode={o.modo} autoComplete={o.auto ?? "off"} aria-required={o.obrigatorio}
           aria-invalid={erros[k] ? true : undefined}
           onChange={(e) => mudarDado(k, o.mascara ? o.mascara(e.target.value) : e.target.value)} />
-        {erros[k] && <span className="text-xs font-semibold text-erro">{erros[k]}</span>}
+        {erros[k] && <span className="text-xs lg:text-[13px] font-semibold text-erro">{erros[k]}</span>}
       </label>
     );
     const opcao = (nome: string, marcado: boolean, aoMarcar: () => void, icone: "caminhao" | "loja" | "pix" | "cartao", t: string, s: string) => (
       <label className={`flex min-h-[60px] cursor-pointer items-center gap-2.5 rounded-xl bg-white ${marcado ? "border-2 border-azul bg-azul-fundo px-[11px] py-[9px]" : "border border-campo px-3 py-2.5"}`}>
         <input type="radio" name={nome} checked={marcado} onChange={aoMarcar} className="size-[18px] flex-none accent-azul" />
         <Icone nome={icone} />
-        <span className="flex flex-col text-[15px] font-semibold leading-tight">{t}<span className="text-[13px] font-medium text-apagado">{s}</span></span>
+        <span className="flex flex-col text-[15px] lg:text-base font-semibold leading-tight">{t}<span className="text-[13px] lg:text-sm font-medium text-apagado">{s}</span></span>
       </label>
     );
     const secao = "flex flex-col gap-3 p-4 lg:p-[22px]";
@@ -407,7 +407,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
         <section className={`${cartao} ${secao}`}>
           <h2 className="text-base font-bold">Aluno</h2>
           {campoTexto("aluno", "Nome do aluno (vai na etiqueta)", { obrigatorio: true, dica: "Ex.: Pedro Souza" })}
-          <span className="text-[13px] text-apagado">Lista: {nomeDaLista}</span>
+          <span className="text-[13px] lg:text-sm text-apagado">Lista: {nomeDaLista}</span>
         </section>
         <section className={`${cartao} ${secao}`}>
           <h2 className="text-base font-bold">Responsável</h2>
@@ -439,7 +439,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
               </div>
             </>
           ) : (
-            <span className="text-[13px] text-apagado">
+            <span className="text-[13px] lg:text-sm text-apagado">
               Retirada em {papelaria.endereco_retirada ?? "endereço da loja"}. Avisamos pelo WhatsApp quando estiver pronto.
             </span>
           )}
@@ -465,9 +465,9 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
         </section>
         <section className={`${cartao} ${secao} lg:hidden`}>
           <h2 className="text-base font-bold">Resumo</h2>
-          <div className="flex justify-between gap-3 text-[15px]"><span className="text-apagado">{noPedido.length} itens · {faixaAtual === "mista" ? "Mista" : faixaAtual ? ROTULO_FAIXA[faixaAtual] : ""}</span><span>{reais(sub)}</span></div>
+          <div className="flex justify-between gap-3 text-[15px] lg:text-base"><span className="text-apagado">{noPedido.length} itens · {faixaAtual === "mista" ? "Mista" : faixaAtual ? ROTULO_FAIXA[faixaAtual] : ""}</span><span>{reais(sub)}</span></div>
           <LinhasDeDesconto desc={desc} />
-          <div className="flex justify-between gap-3 text-[15px]"><span className="text-apagado">Entrega</span><span>{taxa ? reais(taxa) : "Grátis"}</span></div>
+          <div className="flex justify-between gap-3 text-[15px] lg:text-base"><span className="text-apagado">Entrega</span><span>{taxa ? reais(taxa) : "Grátis"}</span></div>
         </section>
       </div>
     );
@@ -483,7 +483,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
       <div className="mx-auto w-full max-w-[1200px] flex-1 px-5 pb-8 lg:px-10">
         <div className="flex min-h-[60px] items-center justify-between lg:hidden">
           <BotaoVoltar etapa={etapa} base={base} raiz={`/${papelaria.slug}`} />
-          <span className="text-[13px] font-bold text-apagado">Passo {etapa} de 3</span>
+          <span className="text-[13px] lg:text-sm font-bold text-apagado">Passo {etapa} de 3</span>
         </div>
         <div className="hidden pt-[22px] lg:block"><Etapas atual={etapa} /></div>
 
@@ -491,7 +491,7 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
           <main>
             <div className="mb-1.5 hidden lg:block"><BotaoVoltar etapa={etapa} base={base} raiz={`/${papelaria.slug}`} /></div>
             <h1 className="titulo text-[26px] font-bold leading-[1.15] lg:text-[34px] lg:leading-[1.1]">{titulo}</h1>
-            {subtitulo && <p className="mt-1.5 text-[15px] leading-relaxed text-apagado lg:mt-2 lg:text-base">{subtitulo}</p>}
+            {subtitulo && <p className="leitura mt-1.5 text-[15px] leading-relaxed text-apagado lg:mt-2 lg:text-base">{subtitulo}</p>}
             {erroGeral && <div className="mt-4" role="alert"><Aviso>{erroGeral}</Aviso></div>}
             <div className="mt-[18px] lg:mt-[22px]">{corpo}</div>
           </main>
@@ -532,8 +532,8 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
 
 function AvisoDeDescontos({ frases }: { frases: string[] }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border border-[#cfe5d6] bg-ok-fundo px-3.5 py-3 text-[13px] leading-snug text-ok">
-      <strong className="text-[14px]">Descontos desta papelaria</strong>
+    <div className="flex flex-col gap-1 rounded-xl border border-[#cfe5d6] bg-ok-fundo px-3.5 py-3 text-[13px] lg:text-sm leading-snug text-ok">
+      <strong className="text-[14px] lg:text-[15px]">Descontos desta papelaria</strong>
       {frases.map((f) => <span key={f}>• {f}</span>)}
       {frases.length > 1 && <span className="text-tinta/70">Os descontos se somam, até 50%, e valem sobre os produtos.</span>}
     </div>
@@ -545,10 +545,10 @@ function LinhasDeDesconto({ desc }: { desc: ReturnType<typeof descontoDoPedido> 
   if (!desc.centavos) return null;
   const soma = desc.aplicadas.reduce((t, a) => t + a.percentual, 0);
   return (
-    <div className="flex justify-between gap-3 text-[15px] font-semibold text-ok">
+    <div className="flex justify-between gap-3 text-[15px] lg:text-base font-semibold text-ok">
       <span className="flex flex-col">
         Desconto de {desc.percentual}%
-        <span className="text-[13px] font-normal">
+        <span className="text-[13px] lg:text-sm font-normal">
           {resumoDosDescontos(desc.aplicadas)}
           {desc.percentual < soma ? " (teto de 50%)" : ""}
         </span>
@@ -560,7 +560,7 @@ function LinhasDeDesconto({ desc }: { desc: ReturnType<typeof descontoDoPedido> 
 
 function Linha2({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
   return (
-    <div className="flex justify-between gap-3 text-[15px]">
+    <div className="flex justify-between gap-3 text-[15px] lg:text-base">
       <span className="text-apagado">{rotulo}</span>
       <span className="text-right">{children}</span>
     </div>
@@ -570,7 +570,7 @@ function Linha2({ rotulo, children }: { rotulo: string; children: React.ReactNod
 function BotaoVoltar({ etapa, base, raiz }: { etapa: number; base: string; raiz: string }) {
   const destino = etapa === 1 ? raiz : etapa === 2 ? base : `${base}?etapa=${etapa - 1}`;
   return (
-    <Link href={destino} className="inline-flex min-h-11 items-center gap-1 pr-1 text-[15px] font-semibold text-azul">
+    <Link href={destino} className="inline-flex min-h-11 items-center gap-1 pr-1 text-[15px] lg:text-base font-semibold text-azul">
       <Icone nome="voltar" />Voltar
     </Link>
   );

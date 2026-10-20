@@ -8,7 +8,7 @@ export function MolduraDeAcesso({ titulo, subtitulo, children }: { titulo: strin
       <Link href="/" className="self-start"><Logo /></Link>
       <div>
         <h1 className="titulo text-[28px] font-bold leading-tight">{titulo}</h1>
-        <p className="mt-1.5 text-[15px] text-apagado">{subtitulo}</p>
+        <p className="mt-1.5 text-[15px] lg:text-base text-apagado">{subtitulo}</p>
       </div>
       {children}
     </main>

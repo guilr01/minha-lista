@@ -14,7 +14,7 @@ export function FormularioDeCadastro({ host }: { host: string }) {
   const e = estado.erros ?? {};
 
   const erroDe = (k: keyof NonNullable<EstadoDeCadastro["erros"]>) =>
-    e[k] ? <span className="text-xs font-semibold text-erro">{e[k]}</span> : null;
+    e[k] ? <span className="text-xs lg:text-[13px] font-semibold text-erro">{e[k]}</span> : null;
   const classe = (k: keyof NonNullable<EstadoDeCadastro["erros"]>) => `${campo} ${e[k] ? "border-erro bg-[#fff7f5]" : ""}`;
 
   return (
@@ -31,7 +31,7 @@ export function FormularioDeCadastro({ host }: { host: string }) {
         <input name="slug" required value={slug} className={classe("slug")} aria-invalid={e.slug ? true : undefined}
           pattern="[a-z0-9]+(-[a-z0-9]+)*" minLength={3} maxLength={60} autoCapitalize="none" spellCheck={false}
           onChange={(ev) => { setSlugTocado(true); setSlug(ev.target.value.toLowerCase()); }} />
-        <span className="break-all text-[13px] font-normal text-apagado">{host}/<strong className="text-tinta">{slug || "sua-papelaria"}</strong></span>
+        <span className="break-all text-[13px] lg:text-sm font-normal text-apagado">{host}/<strong className="text-tinta">{slug || "sua-papelaria"}</strong></span>
         {erroDe("slug")}
       </label>
       <label className={rotuloCampo}>
@@ -47,11 +47,11 @@ export function FormularioDeCadastro({ host }: { host: string }) {
       <label className={rotuloCampo}>
         Senha
         <input name="senha" type="password" required minLength={8} autoComplete="new-password" className={classe("senha")} aria-invalid={e.senha ? true : undefined} />
-        <span className="text-[13px] font-normal text-apagado">Pelo menos 8 caracteres.</span>
+        <span className="text-[13px] lg:text-sm font-normal text-apagado">Pelo menos 8 caracteres.</span>
         {erroDe("senha")}
       </label>
       <button type="submit" className={botao} disabled={enviando}>{enviando ? "Criando a conta…" : "Criar conta"}</button>
-      <p className="text-center text-sm text-apagado">
+      <p className="text-center text-sm lg:text-[15px] text-apagado">
         Já tem conta? <Link href="/entrar" className={link}>Entrar</Link>
       </p>
     </form>

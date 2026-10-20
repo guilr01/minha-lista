@@ -13,7 +13,7 @@ export default async function ImportarPlanilha() {
     <>
       <Link href="/painel/catalogo" className="inline-flex min-h-11 items-center gap-1 font-semibold text-azul"><Icone nome="voltar" />Catálogo</Link>
       <h1 className="titulo text-2xl font-bold lg:text-[30px]">Importar catálogo pelo Excel</h1>
-      <p className="mt-1.5 max-w-[680px] text-[15px] text-apagado">
+      <p className="leitura mt-1.5 text-[15px] lg:text-base text-apagado">
         Cadastre todos os produtos de uma vez: baixe o modelo, preencha uma linha por produto com a marca e o preço
         de cada faixa, e suba o arquivo aqui.
       </p>
@@ -27,7 +27,7 @@ export default async function ImportarPlanilha() {
           <a download href="/api/catalogo/planilha?catalogo=1" className={botaoContornoPequeno}>
             <Icone nome="etiqueta" tamanho={18} />Meu catálogo atual
           </a>
-          <ul className="flex flex-col gap-1.5 text-[13px] leading-snug text-apagado">
+          <ul className="flex flex-col gap-1.5 text-[13px] lg:text-sm leading-snug text-apagado">
             <li>• Uma linha por produto. Não mude os títulos da primeira linha.</li>
             <li>• Preencha marca e preço só das faixas que você vende.</li>
             <li>• Produto com o mesmo nome de um já cadastrado é atualizado; o resto é criado.</li>

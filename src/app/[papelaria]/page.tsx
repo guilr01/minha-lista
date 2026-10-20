@@ -43,7 +43,7 @@ export default async function VitrineDaPapelaria({ params, searchParams }: Props
       </div>
 
       {whats && (
-        <p className="mt-5 max-w-[720px] text-sm text-apagado">
+        <p className="mt-5 max-w-[720px] text-sm lg:text-[15px] text-apagado">
           Não achou a sua escola ou prefere falar com alguém?{" "}
           <a href={whats} className={link} target="_blank" rel="noopener noreferrer">Atendimento no WhatsApp</a>
         </p>
