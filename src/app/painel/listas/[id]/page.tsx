@@ -11,6 +11,7 @@ import { FAIXAS } from "@/lib/faixa";
 import { exigirUsuario, papelariaAtual } from "@/lib/sessao";
 import type { ItemDaLista } from "@/lib/vitrine";
 import {
+  adicionarAlternativaAcao,
   adicionarItemAcao,
   alterarItemAcao,
   encerrarListaAcao,
@@ -40,17 +41,19 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
   // O que os pais vão ver: a mesma conta da vitrine (src/lib/carrinho.ts),
   // com as opções que estão à venda (ativas e com estoque).
   const porId = new Map(produtos.map((p) => [p.id, p]));
-  const comoVitrine: ItemDaLista[] = lista.itens.map((i) => {
+  const comoVitrine: ItemDaLista[] = lista.itens.map((i) => ({ ...comoNaVitrine(i), alternativas: i.alternativas.map(comoNaVitrine) }));
+  function comoNaVitrine(i: (typeof lista.itens)[number]["alternativas"][number]) {
     const p = porId.get(i.produto_id);
     return {
       produto_id: i.produto_id, nome: i.nome, categoria: p?.categoria ?? null, unidade: p?.unidade ?? "un",
       quantidade: i.quantidade, observacao: i.observacao,
       opcoes: p && p.ativo ? p.opcoes.filter((o) => o.disponivel).map((o) => ({ id: o.faixa, faixa: o.faixa, marca: o.marca, descricao: null, preco_centavos: o.preco_centavos })) : [],
     };
-  });
+  }
   const prod = produtosConhecidos(comoVitrine.filter((i) => i.opcoes.length), []);
   const foraDoAr = comoVitrine.filter((i) => i.opcoes.length === 0);
-  const naLista = new Set(lista.itens.map((i) => i.produto_id));
+  // Na lista está o item e as alternativas dele: nenhum dos dois pode entrar de novo.
+  const naLista = new Set(lista.itens.flatMap((i) => [i.produto_id, ...i.alternativas.map((a) => a.produto_id)]));
   const paraAdicionar = produtos.filter((p) => p.ativo && !naLista.has(p.id) && p.opcoes.length > 0);
   const st = STATUS[lista.status];
   const linkPublico = `/${papelaria.slug}/${lista.escola.slug}/${lista.serie.slug}`;
@@ -132,6 +135,31 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
                 <label className={`${rotuloCampo} min-w-[160px] flex-[2]`}>Observação da escola<input name="observacao" defaultValue={i.observacao ?? ""} className={campo} placeholder="Ex.: capa dura" /></label>
                 <button type="submit" className={botaoContornoPequeno}>Salvar</button>
               </FormAcao>
+              {/* "lápis ou lapiseira": o cliente escolhe entre o item e estas na hora do pedido. */}
+              {i.alternativas.length > 0 ? (
+                <div className="mt-2 flex flex-col gap-1.5 rounded-xl bg-azul-fundo px-3 py-2.5">
+                  <span className="text-[13px] lg:text-sm font-semibold text-azul">O cliente escolhe entre {i.nome} e:</span>
+                  {i.alternativas.map((a) => (
+                    <FormAcao key={a.id} acao={removerItemAcao} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <input type="hidden" name="item" value={a.id} />
+                      <span className="min-w-0 flex-[1_1_14rem] text-sm lg:text-[15px] font-semibold">
+                        {a.nome}{!a.ativo && <span className="ml-1.5 text-[13px] lg:text-sm font-normal text-aviso">inativo</span>}
+                      </span>
+                      <button type="submit" className="min-h-9 text-[13px] lg:text-sm font-semibold text-erro hover:underline">Tirar</button>
+                    </FormAcao>
+                  ))}
+                  <Alternativa item={i.id} nome={i.nome} paraAdicionar={paraAdicionar} rotulo="Outra alternativa…" />
+                </div>
+              ) : paraAdicionar.length > 0 && (
+                <details className="group mt-1">
+                  <summary className="inline-flex min-h-9 cursor-pointer list-none items-center text-[13px] lg:text-sm font-semibold text-azul [&::-webkit-details-marker]:hidden">
+                    A escola aceita outro produto no lugar?
+                  </summary>
+                  <div className="mt-1 rounded-xl bg-azul-fundo px-3 py-2.5">
+                    <Alternativa item={i.id} nome={i.nome} paraAdicionar={paraAdicionar} rotulo="Escolha o outro produto…" />
+                  </div>
+                </details>
+              )}
               <FormAcao acao={removerItemAcao} className="mt-1 flex justify-end">
                 <input type="hidden" name="item" value={i.id} />
                 <button type="submit" className="min-h-9 text-sm lg:text-[15px] font-semibold text-erro hover:underline">Remover da lista</button>
@@ -180,5 +208,22 @@ export default async function EditorDeLista({ params, searchParams }: { params: 
         </div>
       )}
     </>
+  );
+}
+
+/** Acrescenta ao item um produto que o cliente pode escolher no lugar dele. */
+function Alternativa({ item, nome, paraAdicionar, rotulo }: { item: string; nome: string; paraAdicionar: { id: string; nome: string }[]; rotulo: string }) {
+  return (
+    <FormAcao acao={adicionarAlternativaAcao} limparAoSalvar className="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="item" value={item} />
+      <label className="min-w-0 flex-[1_1_14rem]">
+        <span className="sr-only">Alternativa para {nome}</span>
+        <select name="produto" className={`${campo} h-10 text-sm lg:text-[15px]`} defaultValue="">
+          <option value="" disabled>{rotulo}</option>
+          {paraAdicionar.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+        </select>
+      </label>
+      <button type="submit" className={botaoContornoPequeno}>Pôr como alternativa</button>
+    </FormAcao>
   );
 }

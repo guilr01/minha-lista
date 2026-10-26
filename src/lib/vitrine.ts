@@ -30,7 +30,8 @@ export type VitrinePapelaria = {
   escolas: { nome: string; slug: string; cidade: string | null; series: { nome: string; slug: string }[] }[];
 };
 
-export type ItemDaLista = {
+/** Outro produto que a escola aceita para o mesmo item ("lápis ou lapiseira"). */
+export type AlternativaDaLista = {
   produto_id: string;
   nome: string;
   categoria: string | null;
@@ -38,6 +39,11 @@ export type ItemDaLista = {
   quantidade: number;
   observacao: string | null;
   opcoes: Opcao[];
+};
+
+export type ItemDaLista = AlternativaDaLista & {
+  /** O cliente escolhe entre o item e estas, na revisão (migração 0009). */
+  alternativas: AlternativaDaLista[];
 };
 
 export type VitrineLista = {

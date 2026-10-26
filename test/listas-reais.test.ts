@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { textoDoArquivo } from "@/lib/arquivo-de-lista";
-import { lerLinhas } from "@/lib/lista-da-escola";
+import { atendeExigencia, lerLinhas, sugerir } from "@/lib/lista-da-escola";
 
 // Listas reais de quatro escolas (20/10/2026), uma por padrão. O texto dos
 // PDFs está como a extração o entrega, com nome, endereço, telefone e site
@@ -262,5 +262,50 @@ describe("padrões previstos", () => {
     const csv = new TextEncoder().encode("Qtd;Material;Valor\n2;Caderno brochura;13,90\n1;Borracha branca;2,50");
     const t = await textoDoArquivo("lista.csv", csv.buffer as ArrayBuffer);
     expect(itens(t)).toEqual([[2, "Caderno brochura"], [1, "Borracha branca"]]);
+  });
+});
+
+// Apontamentos de um usuário de verdade (23/10/2026), com o texto exato que ele colou.
+describe("apontamentos de um usuário", () => {
+  const linha = (t: string) => lerLinhas(t).filter((l) => l.item);
+
+  it("item dentro de item: o estojo não some", () => {
+    expect(itens("01 estojo com 02 lápis grafite Jumbo")).toEqual([[1, "estojo"], [2, "lápis grafite Jumbo"]]);
+    expect(itens("01 estojo leve e prático, com 01 caixa de lápis de cor (12 cores)")).toEqual([
+      [1, "estojo leve e prático"], [1, "caixa de lápis de cor"],
+    ]);
+  });
+
+  it("mas o que é parte do item continua junto", () => {
+    expect(itens("1 pasta com 20 plásticos\n1 estojo com 3 divisórias\n01 estojo com zíper\nCaneta azul - 2 unidades")).toEqual([
+      [1, "pasta com 20 plásticos"], [1, "estojo com 3 divisórias"], [1, "estojo com zíper"], [2, "Caneta azul"],
+    ]);
+  });
+
+  it("lista colada numa linha só: a garrafa não some", () => {
+    const t = "- 01 garrafa para água, devidamente identificada com o nome completo do estudante e turma. - 01 pasta fichário ou catálogo com 50/100 saquinhos plásticos.";
+    const [garrafa, pasta] = linha(t);
+    expect([garrafa.quantidade, garrafa.descricao, garrafa.observacao]).toEqual([1, "garrafa para água", "devidamente identificada com o nome completo do estudante e turma"]);
+    expect(pasta.alternativas).toEqual(["pasta fichário", "pasta catálogo com 50/100 saquinhos plásticos"]);
+  });
+
+  it("alternativa: cada opção inteira, para o cliente escolher", () => {
+    expect(linha("01 lápis ou lapiseira")[0].alternativas).toEqual(["lápis", "lapiseira"]);
+    expect(linha("1 caneta azul ou preta")[0].alternativas).toEqual(["caneta azul", "caneta preta"]);
+    expect(linha("02 folhas de raio X ou 02 folhas acetato A4")[0].alternativas).toEqual(["folhas de raio X", "folhas acetato A4"]);
+    // "ou similar" e "ou outra marca" não são escolha.
+    expect(linha("3 blocos autoadesivos tipo post-it ou similar")[0].alternativas).toEqual([]);
+  });
+
+  it("exigência: \"PARA LÁPIS JUMBO\" sai da descrição e é cobrada do produto", () => {
+    const [ap] = linha("01 apontador com depósito PARA LÁPIS JUMBO");
+    expect([ap.descricao, ap.exigencia]).toEqual(["apontador com depósito", "para lápis jumbo"]);
+    expect(atendeExigencia(ap.exigencia, "Apontador com depósito")).toBe(false);
+    expect(atendeExigencia(ap.exigencia, "Apontador com depósito para lápis jumbo")).toBe(true);
+    // Na comparação, o que a exigência cobra pesa: o apontador jumbo passa à frente do comum.
+    const catalogo = [{ id: "1", nome: "Apontador com depósito" }, { id: "2", nome: "Apontador com depósito jumbo" }, { id: "3", nome: "Lápis grafite jumbo" }];
+    expect(sugerir("apontador com depósito jumbo", catalogo)[0].nome).toBe("Apontador com depósito jumbo");
+    // "garrafa para água" não é exigência: água não é um objeto de papelaria.
+    expect(linha("01 garrafa para água")[0].exigencia).toBe("");
   });
 });

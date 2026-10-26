@@ -123,6 +123,11 @@ export async function alterarItemAcao(_: EstadoDaAcao, f: FormData): Promise<Est
   });
 }
 
+export async function adicionarAlternativaAcao(_: EstadoDaAcao, f: FormData): Promise<EstadoDaAcao> {
+  if (!texto(f, "produto")) return { erro: "Escolha um produto." };
+  return executar((c) => cad.adicionarAlternativa(c.usuarioId, c.fornecedorId, texto(f, "item"), texto(f, "produto")));
+}
+
 export async function removerItemAcao(_: EstadoDaAcao, f: FormData): Promise<EstadoDaAcao> {
   return executar((c) => cad.removerItem(c.usuarioId, texto(f, "item")));
 }

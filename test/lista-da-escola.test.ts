@@ -223,6 +223,15 @@ describe("comparação com o catálogo", () => {
     expect(emDuvida(s)).toBe(true);
     expect(emDuvida(sugerir("cola bastão", catalogo))).toBe(false);
   });
+
+  it("dez pontos de distância bastam, contados em centésimos e não em ponto flutuante", () => {
+    const par = (a: number, b: number) => emDuvida([
+      { produto_id: "a", nome: "A", pontos: a }, { produto_id: "b", nome: "B", pontos: b }]);
+    // 1 - 0.9 é 0.0999… em ponto flutuante; 0.8 - 0.7 também.
+    expect(par(1, 0.9)).toBe(false);
+    expect(par(0.8, 0.7)).toBe(false);
+    expect(par(1, 0.91)).toBe(true);
+  });
 });
 
 describe("recado com o que falta", () => {

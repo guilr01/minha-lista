@@ -52,6 +52,7 @@ const PAINEL = ["/painel", ...(ids.numero ? [`/painel/pedidos/${ids.numero}`] : 
   `/painel/listas/${ids.lista}/importar`, `/painel/listas/${ids.lista}/importar#conferencia`, "/painel/loja", "/painel/divulgar"];
 const SO = process.env.SO ? process.env.SO.split(",") : null;
 const LISTA_DA_ESCOLA = "02 cadernos brochura 96 folhas\n1 caixa de lápis de cor 24 cores (com nome)\n3 colas bastão\n" +
+  "1 lápis ou lapiseira\n1 apontador com depósito PARA LÁPIS JUMBO\n" +
   "Livro: Extraordinário\n1 dicionário ilustrado\nTodo material deverá ser identificado com o nome do aluno.";
 
 /**

@@ -4,9 +4,9 @@ import type { ItemDaLista } from "@/lib/vitrine";
 
 const op = (faixa: "economica" | "intermediaria" | "premium", preco: number) => ({ id: faixa, faixa, marca: "M", descricao: null, preco_centavos: preco });
 const itens: ItemDaLista[] = [
-  { produto_id: "a", nome: "Caderno", categoria: null, unidade: "un", quantidade: 2, observacao: null, opcoes: [op("economica", 100), op("premium", 300)] },
-  { produto_id: "b", nome: "Pincel", categoria: null, unidade: "un", quantidade: 1, observacao: null, opcoes: [op("economica", 50)] },
-  { produto_id: "c", nome: "Esgotado", categoria: null, unidade: "un", quantidade: 1, observacao: null, opcoes: [] },
+  { produto_id: "a", nome: "Caderno", categoria: null, unidade: "un", quantidade: 2, observacao: null, opcoes: [op("economica", 100), op("premium", 300)], alternativas: [] },
+  { produto_id: "b", nome: "Pincel", categoria: null, unidade: "un", quantidade: 1, observacao: null, opcoes: [op("economica", 50)], alternativas: [] },
+  { produto_id: "c", nome: "Esgotado", categoria: null, unidade: "un", quantidade: 1, observacao: null, opcoes: [], alternativas: [] },
 ];
 const produtos = produtosConhecidos(itens, []);
 

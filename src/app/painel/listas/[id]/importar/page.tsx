@@ -32,7 +32,7 @@ export default async function ImportarListaDaEscola({ params }: { params: Promis
         gravar. O que você não vende fica descrito como indisponível no recado da lista, para o cliente saber que precisa comprar em
         outro lugar. Livros não entram.
       </p>
-      <Importador listaId={id} catalogo={catalogo} tipos={TIPOS_ACEITOS} jaNaLista={lista.itens.map((i) => i.produto_id)} />
+      <Importador listaId={id} catalogo={catalogo} tipos={TIPOS_ACEITOS} jaNaLista={lista.itens.flatMap((i) => [i.produto_id, ...i.alternativas.map((a) => a.produto_id)])} />
     </>
   );
 }

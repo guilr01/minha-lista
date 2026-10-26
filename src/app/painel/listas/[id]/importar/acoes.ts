@@ -4,19 +4,19 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ArquivoIlegivel, textoDoArquivo } from "@/lib/arquivo-de-lista";
 import { ErroDeCadastro, importarItensDaLista, listarProdutos } from "@/lib/cadastro";
-import { lerLinhas, sugeridor, vocabularioDoCatalogo, type LinhaDaEscola, type Sugestao } from "@/lib/lista-da-escola";
+import { lerLinhas, vocabularioDoCatalogo, type LinhaDaEscola } from "@/lib/lista-da-escola";
 import { exigirUsuario, papelariaAtual } from "@/lib/sessao";
 
-// Conferir não grava nada: lê a lista da escola e devolve, por linha, os
-// produtos do catálogo mais parecidos. Gravar recebe o que a PAPELARIA
-// decidiu na conferência, e o banco (RLS e chaves compostas) recusa produto
-// ou lista de outra papelaria.
+// Conferir não grava nada: tira o texto do arquivo e o lê em trechos. A
+// comparação com o catálogo roda na TELA, com a mesma função, porque a
+// papelaria edita um trecho e precisa ver a sugestão nova na hora. Gravar
+// recebe o que a PAPELARIA decidiu, e o banco (RLS e chaves compostas)
+// recusa produto ou lista de outra papelaria.
 
 const TAMANHO_MAXIMO = 3 * 1024 * 1024;
 const LINHAS_MAXIMAS = 400;
 
-export type LinhaConferida = LinhaDaEscola & { sugestoes: Sugestao[] };
-export type Conferencia = { erro?: string; linhas?: LinhaConferida[] };
+export type Conferencia = { erro?: string; linhas?: LinhaDaEscola[] };
 
 async function contexto() {
   const u = await exigirUsuario();
@@ -44,20 +44,19 @@ export async function conferirListaDaEscolaAcao(f: FormData): Promise<Conferenci
   // e isso ajuda a separar item de recado.
   const linhas = lerLinhas(texto, { vocabulario: vocabularioDoCatalogo(produtos) }).slice(0, LINHAS_MAXIMAS);
   if (!linhas.length) return { erro: "Não encontrei texto nenhum neste arquivo. Confira se é a lista de material." };
-  const sugerir = sugeridor(produtos);
-  // A observação entra na comparação: "(24 cores)" é o que separa o lápis de 12 do de 24.
-  return { linhas: linhas.map((l) => ({ ...l, sugestoes: sugerir(`${l.descricao} ${l.observacao}`) })) };
+  return { linhas };
 }
 
 export type Decisao =
-  | { tipo: "produto"; produto_id: string; quantidade: number; observacao: string }
+  | { tipo: "produto"; produto_id: string; quantidade: number; observacao: string; alternativas: string[] }
   | { tipo: "indisponivel"; texto: string };
 
 export async function gravarListaDaEscolaAcao(listaId: string, decisoes: Decisao[]): Promise<{ erro?: string }> {
   const c = await contexto();
   if (!Array.isArray(decisoes) || decisoes.length > LINHAS_MAXIMAS) return { erro: "Conferência inválida. Recarregue a página." };
   const itens = decisoes.filter((d): d is Extract<Decisao, { tipo: "produto" }> => d?.tipo === "produto")
-    .map((d) => ({ produto_id: String(d.produto_id), quantidade: Number(d.quantidade), observacao: String(d.observacao ?? "") }));
+    .map((d) => ({ produto_id: String(d.produto_id), quantidade: Number(d.quantidade), observacao: String(d.observacao ?? ""),
+      alternativas: (Array.isArray(d.alternativas) ? d.alternativas : []).map(String).slice(0, 5) }));
   const indisponiveis = decisoes.filter((d): d is Extract<Decisao, { tipo: "indisponivel" }> => d?.tipo === "indisponivel")
     .map((d) => String(d.texto ?? ""));
   if (!itens.length && !indisponiveis.length) return { erro: "Nenhuma linha para gravar: todas estão como ignoradas." };

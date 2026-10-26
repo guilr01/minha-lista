@@ -20,12 +20,14 @@ import {
 import {
   QUANTIDADE_MAXIMA,
   faixaDoCarrinho,
+  itemDoProduto,
   itensParaPedido,
   linhasDaLista,
   linhasNoPedido,
   linhasValidas,
   opcaoDaLinha,
   produtosConhecidos,
+  produtosDoItem,
   subtotal,
   totalNaFaixa,
   type Linha,
@@ -143,6 +145,11 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
   const irPara = (n: number) => router.push(n === 1 ? base : `${base}?etapa=${n}`);
   const mudarLinha = (id: string, f: (l: Linha) => Linha) =>
     setM((a) => ({ ...a, linhas: a.linhas.map((l) => (l.produto_id === id ? f(l) : l)) }));
+  /** "lápis ou lapiseira": os produtos que a escola aceita para o item desta linha, quando há escolha. */
+  const opcoesDoItem = (id: string) => {
+    const item = itemDoProduto(itens, id);
+    return item ? produtosDoItem(item).filter((p) => produtos.has(p)) : [];
+  };
   const mudarDado = (k: keyof Dados, v: string) => {
     setM((a) => ({ ...a, dados: { ...a.dados, [k]: v } }));
     if (erros[k]) {
@@ -268,6 +275,11 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
                     <span className="text-[13px] lg:text-sm text-aviso">Sem a faixa {ROTULO_FAIXA[l.faixa]}: vai a {ROTULO_FAIXA[o.faixa]}.</span>
                   )}
                   {p.observacao && <span className="text-[13px] lg:text-sm text-apagado">{p.observacao}</span>}
+                  {opcoesDoItem(l.produto_id).length > 1 && (
+                    <span className="text-[13px] lg:text-sm font-semibold text-azul">
+                      A escola aceita também {opcoesDoItem(l.produto_id).filter((x) => x !== l.produto_id).map((x) => produtos.get(x)!.nome).join(" ou ")}: você escolhe na próxima tela.
+                    </span>
+                  )}
                 </div>
                 <strong className="whitespace-nowrap text-[15px] lg:text-base">{o ? reais(o.preco_centavos * l.quantidade) : "–"}</strong>
               </li>
@@ -335,6 +347,18 @@ export function MontarPedido({ vitrine, catalogo }: { vitrine: VitrineLista; cat
                 <span className="text-[13px] lg:text-sm text-apagado">{o.marca} · {reais(o.preco_centavos)} cada{nota}</span>
                 {o.faixa !== l.faixa && (
                   <span className="text-[13px] lg:text-sm text-aviso">Sem a faixa {ROTULO_FAIXA[l.faixa]}: vai a {ROTULO_FAIXA[o.faixa]}.</span>
+                )}
+                {opcoesDoItem(l.produto_id).length > 1 && (
+                  // A escola aceita mais de um produto: o cliente escolhe, como escolhe a faixa.
+                  <label className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] lg:text-sm font-semibold text-azul">
+                    A escola aceita:
+                    <select className={`${campo} h-9 w-auto min-w-0 max-w-full text-sm lg:text-[15px]`} value={l.produto_id}
+                      onChange={(ev) => mudarLinha(l.produto_id, (x) => ({ ...x, produto_id: ev.target.value }))}>
+                      {opcoesDoItem(l.produto_id).map((x) => (
+                        <option key={x} value={x} disabled={x !== l.produto_id && m.linhas.some((y) => y.produto_id === x)}>{produtos.get(x)!.nome}</option>
+                      ))}
+                    </select>
+                  </label>
                 )}
               </div>
               <label className="min-w-0 [grid-area:faixa]">

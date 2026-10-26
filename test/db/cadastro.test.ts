@@ -272,3 +272,75 @@ describe("importação da lista da escola", () => {
     expect(e.series.map((s) => s.nome)).toEqual(["1º ano", "9º ano", "2ª série do Ensino Médio", "Infantil 5"]);
   });
 });
+
+describe("item com alternativas (\"lápis ou lapiseira\")", () => {
+  async function cenario() {
+    const p = await papelariaNova();
+    const lapis = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Lápis grafite", ativo: true, opcoes: opcoes(150) });
+    const lapiseira = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Lapiseira 0,7", ativo: true, opcoes: opcoes(890) });
+    const cola = await cad.salvarProduto(p.usuario, p.fornecedor, null, { nome: "Cola", ativo: true, opcoes: opcoes(390) });
+    const escola = (await cad.criarEscola(p.usuario, p.fornecedor, "Colégio Alt", "")) as { id: string };
+    const serie = (await cad.criarSerie(p.usuario, p.fornecedor, escola.id, "3º ano")) as { id: string };
+    const listaId = await cad.criarLista(p.usuario, p.fornecedor, serie.id, 2027);
+    return { ...p, lapis, lapiseira, cola, escola, listaId };
+  }
+
+  it("a importação grava o item com a alternativa, e a alternativa acompanha a quantidade dele", async () => {
+    const c = await cenario();
+    await cad.importarItensDaLista(c.usuario, c.fornecedor, c.listaId, [
+      { produto_id: c.lapis, quantidade: 2, observacao: "", alternativas: [c.lapiseira] },
+      { produto_id: c.cola, quantidade: 1, observacao: "" },
+    ], []);
+    let l = (await cad.buscarListaDoEditor(c.usuario, c.listaId))!;
+    expect(l.itens.map((i) => [i.nome, i.quantidade, i.alternativas.map((a) => [a.nome, a.quantidade])])).toEqual([
+      ["Lápis grafite", 2, [["Lapiseira 0,7", 2]]], ["Cola", 1, []],
+    ]);
+    // A contagem de itens da lista é de itens, não de produtos: a alternativa não conta.
+    const e = (await cad.listarEscolas(c.usuario, c.fornecedor)).find((x) => x.id === c.escola.id)!;
+    expect(e.series[0].listas[0].itens).toBe(2);
+
+    await cad.alterarItem(c.usuario, l.itens[0].id, 3, "");
+    l = (await cad.buscarListaDoEditor(c.usuario, c.listaId))!;
+    expect(l.itens[0].alternativas[0].quantidade).toBe(3);
+  });
+
+  it("copiar a lista leva a alternativa junto, presa ao item da lista nova", async () => {
+    const c = await cenario();
+    await cad.importarItensDaLista(c.usuario, c.fornecedor, c.listaId, [{ produto_id: c.lapis, quantidade: 1, observacao: "", alternativas: [c.lapiseira] }], []);
+    const nova = await cad.copiarLista(c.usuario, c.fornecedor, c.listaId, 2028);
+    const l = (await cad.buscarListaDoEditor(c.usuario, nova))!;
+    expect(l.itens.map((i) => [i.nome, i.alternativas.map((a) => a.nome)])).toEqual([["Lápis grafite", ["Lapiseira 0,7"]]]);
+  });
+
+  it("tirar o item tira as alternativas; adicionar alternativa pela tela da lista funciona", async () => {
+    const c = await cenario();
+    await cad.adicionarItem(c.usuario, c.fornecedor, c.listaId, c.lapis, 2, "");
+    let l = (await cad.buscarListaDoEditor(c.usuario, c.listaId))!;
+    await cad.adicionarAlternativa(c.usuario, c.fornecedor, l.itens[0].id, c.lapiseira);
+    l = (await cad.buscarListaDoEditor(c.usuario, c.listaId))!;
+    expect(l.itens[0].alternativas.map((a) => [a.nome, a.quantidade])).toEqual([["Lapiseira 0,7", 2]]);
+    await cad.removerItem(c.usuario, l.itens[0].id);
+    expect((await cad.buscarListaDoEditor(c.usuario, c.listaId))!.itens).toEqual([]);
+  });
+
+  it("o banco recusa alternativa de alternativa e alternativa presa a item de outra lista", async () => {
+    const c = await cenario();
+    await cad.importarItensDaLista(c.usuario, c.fornecedor, c.listaId, [{ produto_id: c.lapis, quantidade: 1, observacao: "", alternativas: [c.lapiseira] }], []);
+    const l = (await cad.buscarListaDoEditor(c.usuario, c.listaId))!;
+    const alt = l.itens[0].alternativas[0].id;
+    await expect(cad.adicionarAlternativa(c.usuario, c.fornecedor, alt, c.cola)).rejects.toThrow(/Item não encontrado/);
+
+    const db = new pg.Client({ connectionString: urlDoBanco() });
+    await db.connect();
+    try {
+      const inserir = (alternativaDe: string, lista: string) => db.query(
+        `insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, alternativa_de) values ($1, $2, $3, 1, $4)`,
+        [c.fornecedor, lista, c.cola, alternativaDe]);
+      await expect(inserir(alt, c.listaId)).rejects.toThrow(/alternativa_de_alternativa/);
+      const outra = await cad.copiarLista(c.usuario, c.fornecedor, c.listaId, 2029);
+      await expect(inserir(l.itens[0].id, outra)).rejects.toThrow(/lista_item_alternativa_fk/);
+    } finally {
+      await db.end();
+    }
+  });
+});

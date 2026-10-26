@@ -25,6 +25,19 @@ export type LinhaDaEscola = {
   item: boolean;
   /** Só quando `item` é false. */
   motivo?: MotivoFora;
+  /**
+   * O que a escola exige do item além do nome: "para lápis jumbo" em
+   * "apontador com depósito PARA LÁPIS JUMBO". Fica fora da descrição (senão
+   * a comparação acharia o lápis jumbo em vez do apontador) e é cobrada na
+   * conferência: produto que não a cumpre fica em "Confira".
+   */
+  exigencia: string;
+  /**
+   * "lápis ou lapiseira": as opções que a escola aceita, cada uma inteira
+   * ("pasta fichário ou catálogo" → "pasta fichário", "pasta catálogo"). Vazio
+   * quando não há escolha. Quem escolhe entre elas é o cliente, na revisão.
+   */
+  alternativas: string[];
 };
 
 const NUMEROS_ESCRITOS: Record<string, number> = {
@@ -195,6 +208,10 @@ function dividirLista(frase: string, extra: Vocabulario): { sep: string; texto: 
       else if (ch === ":" && !/\d/.test(frase[i + 1] ?? "")) corte = ch;
       else if (/^ e /i.test(resto)) corte = " e ";
       else if (/^ contendo /i.test(resto)) corte = " contendo ";
+      // "estojo com 02 lápis": com + quantidade pequena. "pasta com 20 plásticos" é um item só.
+      else if (/^ com 0?[1-5] /i.test(resto)) corte = " com ";
+      // Lista colada numa linha só: "… e turma. - 01 pasta fichário".
+      else if (/^ [-–—] \d{1,2} /.test(resto)) corte = " - ";
     }
     if (!corte) { atual += ch; continue; }
     pedacos.push({ sep, texto: atual });
@@ -206,15 +223,32 @@ function dividirLista(frase: string, extra: Vocabulario): { sep: string; texto: 
 
   const out: { sep: string; texto: string }[] = [];
   for (const p of pedacos) {
-    const texto = p.texto.trim();
+    let texto = p.texto.trim();
+    let sep = p.sep;
     if (!texto) continue;
-    if (out.length && !iniciaItem(texto, extra)) out[out.length - 1].texto += p.sep + texto;
-    else out.push({ sep: p.sep, texto });
+    // ", com 01 caixa de lápis de cor": depois da vírgula, o "com" + quantidade abre o item.
+    const com = /^com\s+(?=0?[1-5]\s)/i.exec(texto);
+    if (com) {
+      texto = texto.slice(com[0].length);
+      sep = `${sep.trimEnd()} com `;
+    }
+    const anterior = out[out.length - 1];
+    const novo = !anterior ? true
+      : sep.endsWith(" com ")
+        // Item dentro de item só quando os DOIS lados são objetos: "estojo com 02 lápis", não "estojo com 3 divisórias".
+        ? comecaPorObjeto(chave(semQuantidade(texto)), extra) && comecaPorObjeto(chave(semQuantidade(anterior.texto)), extra)
+        : iniciaItem(texto, extra) && !/^\d{1,3}\s*(?:un\w*|und|p[çc]s?)\.?$/i.test(texto)
+          // "caixa de guache - 12 potes com 15 ml": depois de embalagem, o travessão diz o que vem dentro.
+          && !(sep === " - " && /^(?:caixa|cx|pacote|pct|kit|jogo|conjunto|estojo)\b/.test(chave(semQuantidade(anterior.texto))));
+    if (novo) out.push({ sep, texto });
+    else anterior.texto += sep + texto;
   }
   return out;
 }
 
-type Trecho = { quantidade: number | null; escrita: boolean; descricao: string; observacao: string };
+const semQuantidade = (t: string) => t.replace(MARCADOR, "").replace(/^\s*\d{1,3}\s*[-–—.)]?\s+/, "");
+
+type Trecho = { quantidade: number | null; escrita: boolean; descricao: string; observacao: string; exigencia: string; alternativas: string[] };
 
 /** Quantidade, descrição e observação de um trecho que pode ser item. */
 function lerTrecho(trecho: string): Trecho {
@@ -282,10 +316,34 @@ function lerTrecho(trecho: string): Trecho {
     obs.push(fica.slice(rabo).trim());
     fica = fica.slice(0, rabo);
   }
+  // "apontador com depósito PARA LÁPIS JUMBO": "para" seguido de um objeto é
+  // exigência, não descrição. "garrafa para água" continua sendo a descrição.
+  let exigencia = "";
+  const para = /\s+para\s+(?:(?:o|a|os|as)\s+)?/.exec(chave(fica));
+  if (para && comecaPorObjeto(chave(fica.slice(para.index + para[0].length)), NENHUM)) {
+    exigencia = fica.slice(para.index).trim().replace(/[\s.,;:–—-]+$/, "");
+    if (exigencia === exigencia.toUpperCase()) exigencia = exigencia.toLowerCase();
+    fica = fica.slice(0, para.index);
+  }
   descricao = fica.replace(/(?:\s+(?:com|de|e|ou|contendo|para))+\s*$/i, "")
-    .replace(/[\s.,;:–—-]+$/, "").replace(/^[\s.,;:–—-]+/, "").replace(/\s+/g, " ").trim();
+    .replace(/[\s.,;:–—-]+$/, "").replace(/^[\s.,;:–—-]+/, "").replace(/\s+/g, " ").trim().replace(/\s*\.{2,}\s*$/, "");
   const observacao = obs.map((o) => o.replace(/^[\s.,;:–—-]+|[\s.,;:–—-]+$/g, "")).filter(Boolean).join("; ").replace(/\s+/g, " ");
-  return { quantidade, escrita, descricao: descricao.replace(/\s*\.{2,}\s*$/, ""), observacao: observacao.slice(0, 120) };
+  return { quantidade, escrita, descricao, observacao: observacao.slice(0, 120), exigencia, alternativas: opcoesDe(descricao) };
+}
+
+const NENHUM: Vocabulario = { tem: () => false };
+
+/**
+ * "lápis ou lapiseira" → ["lápis", "lapiseira"]. Opção que não diz o que é
+ * herda o nome da primeira: "pasta fichário ou catálogo" → "pasta fichário",
+ * "pasta catálogo"; "caneta azul ou preta" → "caneta azul", "caneta preta".
+ * "ou similar" e "ou outra marca" já saíram como instrução.
+ */
+function opcoesDe(descricao: string): string[] {
+  const partes = descricao.split(/\s+(?:e\/)?ou\s+/i).map((p) => semQuantidade(p).trim()).filter((p) => letras(p) >= 3);
+  if (partes.length < 2) return [];
+  const nome = partes[0].split(/\s+/)[0];
+  return partes.map((p, i) => (i === 0 || comecaPorObjeto(chave(p), NENHUM) ? p : `${nome} ${p}`));
 }
 
 type Secao = "lista" | "texto" | "livro";
@@ -388,7 +446,7 @@ export function lerLinhas(texto: string, opcoes: { vocabulario?: Iterable<string
 
   const fora = (original: string, motivo: MotivoFora = "texto", descricao = original) => {
     if (letras(descricao) < 3) return null;
-    const l: LinhaDaEscola = { original: original.trim(), quantidade: 1, descricao: descricao.trim(), observacao: "", item: false, motivo };
+    const l: LinhaDaEscola = { original: original.trim(), quantidade: 1, descricao: descricao.trim(), observacao: "", item: false, motivo, exigencia: "", alternativas: [] };
     out.push(l);
     return l;
   };
@@ -509,7 +567,7 @@ export function lerLinhas(texto: string, opcoes: { vocabulario?: Iterable<string
           && !FRASE.test(c) && !CONTEXTO.test(c) && !INTRODUTOR.test(c) && temObjeto(chave(t.descricao), extra);
         if (item) {
           if (pendente) fora(pendente);
-          out.push({ original: frase, quantidade: Math.min(99, t.quantidade!), descricao: t.descricao, observacao: t.observacao, item: true });
+          out.push({ original: frase, quantidade: Math.min(99, t.quantidade!), descricao: t.descricao, observacao: t.observacao, item: true, exigencia: t.exigencia, alternativas: t.alternativas });
         } else {
           fora(pendente ? `${pendente} ${frase}` : frase);
         }
@@ -542,7 +600,7 @@ export function lerLinhas(texto: string, opcoes: { vocabulario?: Iterable<string
         if (item) {
           if (pendente) fora(pendente, "texto", pendente.replace(/:$/, ""));
           pendente = null;
-          out.push({ original: p.texto, quantidade: Math.min(99, t.quantidade ?? 1), descricao: t.descricao, observacao: t.observacao, item: true });
+          out.push({ original: p.texto, quantidade: Math.min(99, t.quantidade ?? 1), descricao: t.descricao, observacao: t.observacao, item: true, exigencia: t.exigencia, alternativas: t.alternativas });
           aberto = null;
           continue;
         }
@@ -554,7 +612,7 @@ export function lerLinhas(texto: string, opcoes: { vocabulario?: Iterable<string
         }
         const original = pendente ? `${pendente} ${p.texto}` : p.texto;
         pendente = null;
-        aberto = { original, quantidade: Math.min(99, t.quantidade ?? 1), descricao: t.descricao, observacao: t.observacao, item: false, motivo: m };
+        aberto = { original, quantidade: Math.min(99, t.quantidade ?? 1), descricao: t.descricao, observacao: t.observacao, item: false, motivo: m, exigencia: t.exigencia, alternativas: t.alternativas };
         out.push(aberto);
       }
       if (pendente) fora(pendente, "texto", pendente.replace(/:$/, ""));
@@ -631,7 +689,10 @@ export const NOTA_SEGURA = 0.6;
  */
 export function emDuvida(sugestoes: Sugestao[]): boolean {
   const [a, b] = sugestoes;
-  return !a || a.pontos < NOTA_SEGURA || (!!b && a.pontos - b.pontos < 0.1);
+  // A distância em centésimos inteiros: as notas já vêm arredondadas, e em
+  // ponto flutuante 1 - 0.9 dá 0.0999…, o que fazia uma vitória de dez pontos
+  // ("Apontador com depósito jumbo" contra o sem jumbo) pedir conferência.
+  return !a || a.pontos < NOTA_SEGURA || (!!b && Math.round((a.pontos - b.pontos) * 100) < 10);
 }
 
 /** Prepara o catálogo uma vez e devolve quem sugere, para não refazer as palavras de cada produto a cada linha. */
@@ -650,6 +711,24 @@ export function sugeridor(produtos: ProdutoParaCasar[]): (descricao: string) => 
 /** Os até 3 produtos mais parecidos com a linha, do melhor para o pior. */
 export function sugerir(descricao: string, produtos: ProdutoParaCasar[]): Sugestao[] {
   return sugeridor(produtos)(descricao);
+}
+
+/**
+ * O que uma exigência cobra do produto: as palavras que QUALIFICAM ("jumbo"
+ * em "para lápis jumbo"), sem o objeto a que se refere ("lápis"), que é de
+ * outro produto. Sem qualificador ("para giz de cera"), cobra o próprio objeto.
+ */
+export function cobradoPelaExigencia(exigencia: string): string[] {
+  const todas = palavras(exigencia).filter((p) => !/^\d+$/.test(p));
+  const qualificam = todas.filter((p) => !ehObjeto(p, NENHUM));
+  return qualificam.length ? qualificam : todas;
+}
+
+/** O produto cumpre a exigência? "Apontador com depósito" não cumpre "para lápis jumbo"; "Apontador jumbo" cumpre. */
+export function atendeExigencia(exigencia: string, nomeDoProduto: string): boolean {
+  if (!exigencia) return true;
+  const nome = new Set(palavras(nomeDoProduto));
+  return cobradoPelaExigencia(exigencia).every((p) => nome.has(p));
 }
 
 /** As palavras que abrem os nomes do catálogo ("caderno", "lápis"): o que a loja vende é material escolar. */

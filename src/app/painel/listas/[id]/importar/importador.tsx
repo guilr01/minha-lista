@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { Icone } from "@/components/icone";
-import { Aviso, ChipFaixa, botao, botaoContornoPequeno, campo, cartao, rotuloCampo } from "@/components/ui";
+import { Aviso, ChipFaixa, botao, botaoContornoPequeno, campo, cartao, link, rotuloCampo } from "@/components/ui";
 import { reais } from "@/lib/dinheiro";
 import type { Faixa } from "@/lib/faixa";
-import { NOTA_MINIMA, emDuvida, type MotivoFora } from "@/lib/lista-da-escola";
-import { conferirListaDaEscolaAcao, gravarListaDaEscolaAcao, type Decisao, type LinhaConferida } from "./acoes";
+import {
+  NOTA_MINIMA, atendeExigencia, cobradoPelaExigencia, emDuvida, lerLinhas, sugeridor, vocabularioDoCatalogo,
+  type LinhaDaEscola, type MotivoFora, type Sugestao,
+} from "@/lib/lista-da-escola";
+import { conferirListaDaEscolaAcao, gravarListaDaEscolaAcao, type Decisao } from "./acoes";
 
 type ProdutoDoCatalogo = { id: string; nome: string; opcoes: { faixa: Faixa; marca: string; preco_centavos: number }[] };
 
@@ -19,34 +22,67 @@ const GRUPOS_FORA: [MotivoFora, string, string][] = [
 
 const INDISPONIVEL = "__indisponivel";
 const IGNORAR = "__ignorar";
+const OPCOES = "__opcoes";
 
-type Escolha = { valor: string; quantidade: number; observacao: string };
+/** Uma das opções de "lápis ou lapiseira", com o produto escolhido para ela. */
+type Opcao = { texto: string; sugestoes: Sugestao[]; valor: string };
 
-/** Item: a melhor sugestão, se for boa, ou indisponível. */
-function comoItem(l: LinhaConferida): string {
-  const melhor = l.sugestoes[0];
-  return melhor && melhor.pontos >= NOTA_MINIMA ? melhor.produto_id : INDISPONIVEL;
-}
+/**
+ * Um trecho da lista na conferência. Tem chave própria, e não a posição:
+ * dividir e adicionar mudam as posições, e a escolha feita num cartão não
+ * pode pular para o vizinho.
+ */
+type Cartao = {
+  chave: number;
+  linha: LinhaDaEscola;
+  sugestoes: Sugestao[];
+  /** Vazio quando o item não tem alternativas; uma por opção quando tem. */
+  opcoes: Opcao[];
+  /** Produto, INDISPONIVEL, IGNORAR, ou OPCOES (vale o que está em cada opção). */
+  valor: string;
+  quantidade: number;
+  observacao: string;
+  naConferencia: boolean;
+  editando: boolean;
+};
 
-/** O ponto de partida de cada trecho: item como item; título, recado e aviso, fora da lista. */
-function escolhaInicial(l: LinhaConferida): Escolha {
-  return { valor: l.item ? comoItem(l) : IGNORAR, quantidade: l.quantidade, observacao: l.observacao };
-}
+const melhor = (s: Sugestao[]) => (s[0] && s[0].pontos >= NOTA_MINIMA ? s[0].produto_id : INDISPONIVEL);
 
 export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
   listaId: string; catalogo: ProdutoDoCatalogo[]; tipos: string; jaNaLista: string[];
 }) {
-  const [linhas, setLinhas] = useState<LinhaConferida[] | null>(null);
-  const [escolhas, setEscolhas] = useState<Escolha[]>([]);
-  /** Quais trechos estão na conferência. O que não parece item começa fora, no bloco recolhido. */
-  const [naConferencia, setNaConferencia] = useState<boolean[]>([]);
+  const [cartoes, setCartoes] = useState<Cartao[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [ocupado, iniciar] = useTransition();
-  const porId = new Map(catalogo.map((p) => [p.id, p]));
+  const proxima = useRef(0);
+  const porId = useMemo(() => new Map(catalogo.map((p) => [p.id, p])), [catalogo]);
+  const sugerir = useMemo(() => sugeridor(catalogo), [catalogo]);
+  const vocabulario = useMemo(() => vocabularioDoCatalogo(catalogo), [catalogo]);
   const naLista = new Set(jaNaLista);
 
-  if (!linhas) {
+  /** Linhas lidas viram cartões, com a sugestão do catálogo calculada aqui mesmo. */
+  function montar(linhas: LinhaDaEscola[], forcarItem = false): Cartao[] {
+    return linhas.map((linha) => {
+      // A exigência entra na comparação só pelo que ela cobra ("jumbo"), não pelo objeto ("lápis").
+      const cobra = cobradoPelaExigencia(linha.exigencia).join(" ");
+      const sugestoes = sugerir(`${linha.descricao} ${linha.observacao} ${cobra}`);
+      const opcoes = linha.alternativas.map((texto) => {
+        const s = sugerir(`${texto} ${cobra}`);
+        return { texto, sugestoes: s, valor: melhor(s) };
+      });
+      const item = forcarItem || linha.item;
+      return {
+        chave: proxima.current++, linha, sugestoes, opcoes,
+        valor: !item ? IGNORAR : opcoes.length ? OPCOES : melhor(sugestoes),
+        quantidade: linha.quantidade,
+        observacao: [linha.exigencia, linha.observacao].filter(Boolean).join("; ").slice(0, 120),
+        naConferencia: item, editando: false,
+      };
+    });
+  }
+
+  if (!cartoes) {
     return (
       <form className={`${cartao} mt-5 flex flex-col gap-4 p-4 lg:p-[22px]`}
         onSubmit={(ev) => {
@@ -56,9 +92,7 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
           iniciar(async () => {
             const r = await conferirListaDaEscolaAcao(f);
             if (r.erro || !r.linhas) return setErro(r.erro ?? "Não foi possível ler a lista.");
-            setLinhas(r.linhas);
-            setEscolhas(r.linhas.map(escolhaInicial));
-            setNaConferencia(r.linhas.map((l) => l.item));
+            setCartoes(montar(r.linhas));
           });
         }}>
         {erro && <div role="alert"><Aviso>{erro}</Aviso></div>}
@@ -82,24 +116,46 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
     );
   }
 
-  const mudar = (i: number, m: Partial<Escolha>) => setEscolhas((a) => a.map((e, j) => (j === i ? { ...e, ...m } : e)));
-  const trazer = (i: number) => {
-    setNaConferencia((a) => a.map((v, j) => (j === i ? true : v)));
-    mudar(i, { valor: comoItem(linhas[i]) });
-  };
-  const conta = { produto: 0, indisponivel: 0, ignorar: 0 };
-  escolhas.forEach((e) => (e.valor === INDISPONIVEL ? conta.indisponivel++ : e.valor === IGNORAR ? conta.ignorar++ : conta.produto++));
-  const itens = linhas.map((_, i) => i).filter((i) => naConferencia[i]);
-  const fora = linhas.map((_, i) => i).filter((i) => !naConferencia[i]);
-  const porMotivo = (m: MotivoFora) => fora.filter((i) => (linhas[i].motivo ?? "texto") === m);
+  const mudar = (chave: number, m: Partial<Cartao>) => setCartoes((cs) => cs!.map((c) => (c.chave === chave ? { ...c, ...m } : c)));
+  const mudarOpcao = (chave: number, i: number, valor: string) =>
+    setCartoes((cs) => cs!.map((c) => (c.chave === chave ? { ...c, opcoes: c.opcoes.map((o, j) => (j === i ? { ...o, valor } : o)) } : c)));
+  /** Lê de novo o texto editado: um trecho pode virar dois ("estojo; 02 lápis"), e cada um ganha a sua sugestão. */
+  const releitura = (chave: number, texto: string) =>
+    setCartoes((cs) => cs!.flatMap((c) => {
+      if (c.chave !== chave) return [c];
+      const lidas = lerLinhas(texto, { vocabulario }).filter((l) => l.descricao.trim());
+      return lidas.length ? montar(lidas, true) : [c];
+    }));
+  const trazer = (chave: number) => setCartoes((cs) => cs!.map((c) =>
+    (c.chave === chave ? { ...c, naConferencia: true, valor: c.opcoes.length ? OPCOES : melhor(c.sugestoes) } : c)));
+  const adicionarLinha = () => setCartoes((cs) => [...cs!, { ...montar([{
+    original: "", quantidade: 1, descricao: "", observacao: "", item: true, exigencia: "", alternativas: [],
+  }])[0], editando: true }]);
+
+  /** Os produtos escolhidos num cartão: um, ou um por opção que a papelaria vende. */
+  const produtosDe = (c: Cartao) => (c.valor === OPCOES
+    ? [...new Set(c.opcoes.map((o) => o.valor).filter((v) => porId.has(v)))]
+    : porId.has(c.valor) ? [c.valor] : []);
+
+  const itens = cartoes.filter((c) => c.naConferencia);
+  const fora = cartoes.filter((c) => !c.naConferencia);
+  const porMotivo = (m: MotivoFora) => fora.filter((c) => (c.linha.motivo ?? "texto") === m);
+  const conta = { produto: 0, indisponivel: 0, ignorar: fora.length };
+  for (const c of itens) {
+    if (c.editando) continue;
+    if (c.valor === IGNORAR) conta.ignorar++;
+    else if (produtosDe(c).length) conta.produto++;
+    else conta.indisponivel++;
+  }
 
   const gravar = () => {
     const decisoes: Decisao[] = [];
-    escolhas.forEach((e, i) => {
-      if (e.valor === IGNORAR) return;
-      if (e.valor === INDISPONIVEL) decisoes.push({ tipo: "indisponivel", texto: linhas[i].descricao });
-      else decisoes.push({ tipo: "produto", produto_id: e.valor, quantidade: e.quantidade, observacao: e.observacao });
-    });
+    for (const c of itens) {
+      if (c.valor === IGNORAR || c.editando) continue;
+      const produtos = produtosDe(c);
+      if (!produtos.length) decisoes.push({ tipo: "indisponivel", texto: c.linha.descricao });
+      else decisoes.push({ tipo: "produto", produto_id: produtos[0], alternativas: produtos.slice(1), quantidade: c.quantidade, observacao: c.observacao });
+    }
     setErro(null);
     iniciar(async () => {
       const r = await gravarListaDaEscolaAcao(listaId, decisoes);
@@ -122,79 +178,16 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
         <Aviso>Nenhum trecho do arquivo pareceu item de material. Confira o bloco abaixo e traga para a lista o que for item.</Aviso>
       )}
       <ol className="flex flex-col gap-2.5">
-        {itens.map((i) => {
-          const l = linhas[i];
-          const e = escolhas[i];
-          const produto = porId.get(e.valor);
-          const sugestao = l.sugestoes.find((s) => s.produto_id === e.valor);
-          // Confira: a sugestão que o sistema escolheu tem nota baixa ou empata com outra.
-          const confira = sugestao && (sugestao.produto_id === l.sugestoes[0]?.produto_id ? emDuvida(l.sugestoes) : sugestao.pontos < NOTA_MINIMA);
-          const status = e.valor === IGNORAR ? ["Ignorada", "bg-linha-2 text-apagado"]
-            : e.valor === INDISPONIVEL ? ["Item indisponível", "bg-[#fdecea] text-erro"]
-            : confira ? ["Confira", "bg-aviso-fundo text-aviso"] : ["Encontrado", "bg-ok-fundo text-ok"];
-          const sugeridos = new Set(l.sugestoes.map((s) => s.produto_id));
-          return (
-            <li key={i} className={`${cartao} flex flex-col gap-3 p-3.5 lg:p-4 ${e.valor === IGNORAR ? "opacity-70" : ""}`}>
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <span className="text-[12px] lg:text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">Lista da escola</span>
-                  <p className="text-[15px] lg:text-base font-semibold">{l.original}</p>
-                </div>
-                <div className="flex flex-none items-center gap-2">
-                  {sugestao && <span className="text-[13px] lg:text-sm font-semibold text-apagado">{Math.round(sugestao.pontos * 100)}% parecido</span>}
-                  <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs lg:text-[13px] font-bold ${status[1]}`}>{status[0]}</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-end gap-3">
-                <label className={`${rotuloCampo} min-w-[240px] flex-[3]`}>
-                  No seu catálogo
-                  <select className={campo} value={e.valor} onChange={(ev) => mudar(i, { valor: ev.target.value })}>
-                    {l.sugestoes.length > 0 && (
-                      <optgroup label="Mais parecidos">
-                        {l.sugestoes.map((s) => (
-                          <option key={s.produto_id} value={s.produto_id}>{s.nome}</option>
-                        ))}
-                      </optgroup>
-                    )}
-                    <optgroup label="Sem produto">
-                      <option value={INDISPONIVEL}>Não vendo este item (indisponível)</option>
-                      <option value={IGNORAR}>Ignorar esta linha (não é item)</option>
-                    </optgroup>
-                    <optgroup label="Todo o catálogo">
-                      {catalogo.filter((p) => !sugeridos.has(p.id)).map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                    </optgroup>
-                  </select>
-                </label>
-                {produto && (
-                  <>
-                    <label className={`${rotuloCampo} w-[80px]`}>
-                      Qtd
-                      <input type="number" min={1} max={99} className={campo} value={e.quantidade}
-                        onChange={(ev) => mudar(i, { quantidade: Math.max(1, Math.min(99, Number(ev.target.value) || 1)) })} />
-                    </label>
-                    <label className={`${rotuloCampo} min-w-[160px] flex-[2]`}>
-                      Observação da escola
-                      <input className={campo} value={e.observacao} maxLength={120} onChange={(ev) => mudar(i, { observacao: ev.target.value })} placeholder="Ex.: capa dura" />
-                    </label>
-                  </>
-                )}
-              </div>
-              {produto && (
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] lg:text-sm">
-                  {produto.opcoes.length === 0 && <span className="text-aviso">Este produto não tem nenhuma faixa com preço.</span>}
-                  {produto.opcoes.map((o) => (
-                    <span key={o.faixa} className="flex items-center gap-1.5"><ChipFaixa faixa={o.faixa} />{o.marca} · {reais(o.preco_centavos)}</span>
-                  ))}
-                  {naLista.has(produto.id) && <span className="text-apagado">Já está na lista: a quantidade passa a ser {e.quantidade}.</span>}
-                </div>
-              )}
-              {e.valor === INDISPONIVEL && (
-                <p className="text-[13px] lg:text-sm text-apagado">Vai para o recado da lista: “{l.descricao}”, para o cliente comprar em outro lugar.</p>
-              )}
-            </li>
-          );
-        })}
+        {itens.map((c) => (
+          <li key={c.chave}>
+            <CartaoDoItem c={c} catalogo={catalogo} porId={porId} naLista={naLista} produtos={produtosDe(c)}
+              mudar={(m) => mudar(c.chave, m)} mudarOpcao={(i, v) => mudarOpcao(c.chave, i, v)} releitura={(t) => releitura(c.chave, t)} />
+          </li>
+        ))}
       </ol>
+      <button type="button" className={`${botaoContornoPequeno} self-start`} onClick={adicionarLinha}>
+        <Icone nome="mais" tamanho={18} />Adicionar linha
+      </button>
 
       {fora.length > 0 && (
         <details className={`${cartao} group p-3.5 lg:p-4`} open={itens.length === 0}>
@@ -219,10 +212,10 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
               <section key={motivo} className="mt-3">
                 <h3 className="text-[13px] lg:text-sm font-bold uppercase tracking-[0.04em] text-apagado">{titulo}</h3>
                 <ul className="flex flex-col divide-y divide-linha">
-                  {doGrupo.map((i) => (
-                    <li key={i} className="flex items-center justify-between gap-3 py-2">
-                      <span className="min-w-0 text-[14px] lg:text-[15px] text-apagado">{linhas[i].original}</span>
-                      <button type="button" className={`${botaoContornoPequeno} flex-none`} onClick={() => trazer(i)}>É um item</button>
+                  {doGrupo.map((c) => (
+                    <li key={c.chave} className="flex items-center justify-between gap-3 py-2">
+                      <span className="min-w-0 text-[14px] lg:text-[15px] text-apagado">{c.linha.original}</span>
+                      <button type="button" className={`${botaoContornoPequeno} flex-none`} onClick={() => trazer(c.chave)}>É um item</button>
                     </li>
                   ))}
                 </ul>
@@ -237,11 +230,148 @@ export function Importador({ listaId, catalogo, tipos, jaNaLista }: {
         <button type="button" className={botao} disabled={ocupado} onClick={gravar}>
           {ocupado ? "Gravando…" : `Adicionar ${conta.produto} ${conta.produto === 1 ? "item" : "itens"} à lista`}
         </button>
-        <button type="button" className={botaoContornoPequeno} disabled={ocupado} onClick={() => { setLinhas(null); setNomeArquivo(""); }}>
+        <button type="button" className={botaoContornoPequeno} disabled={ocupado} onClick={() => { setCartoes(null); setNomeArquivo(""); }}>
           Começar de novo
         </button>
         {conta.indisponivel > 0 && <span className="text-[13px] lg:text-sm text-apagado">{conta.indisponivel} indisponíveis vão para o recado da lista.</span>}
       </div>
+    </div>
+  );
+}
+
+function CartaoDoItem({ c, catalogo, porId, naLista, produtos, mudar, mudarOpcao, releitura }: {
+  c: Cartao; catalogo: ProdutoDoCatalogo[]; porId: Map<string, ProdutoDoCatalogo>; naLista: Set<string>; produtos: string[];
+  mudar: (m: Partial<Cartao>) => void; mudarOpcao: (i: number, valor: string) => void; releitura: (texto: string) => void;
+}) {
+  const [texto, setTexto] = useState(c.linha.original);
+  const temOpcoes = c.opcoes.length > 0;
+
+  // Situação do cartão: nota baixa, empate ou exigência não cumprida pedem conferência.
+  const naoCumpre = c.linha.exigencia ? produtos.filter((id) => !atendeExigencia(c.linha.exigencia, porId.get(id)!.nome)) : [];
+  const duvida = temOpcoes
+    ? c.opcoes.some((o) => o.valor !== INDISPONIVEL && o.valor === o.sugestoes[0]?.produto_id && emDuvida(o.sugestoes))
+    : c.valor === c.sugestoes[0]?.produto_id ? emDuvida(c.sugestoes) : (c.sugestoes.find((s) => s.produto_id === c.valor)?.pontos ?? 1) < NOTA_MINIMA;
+  const status = c.valor === IGNORAR ? ["Ignorada", "bg-linha-2 text-apagado"]
+    : !produtos.length ? ["Item indisponível", "bg-[#fdecea] text-erro"]
+    : duvida || naoCumpre.length ? ["Confira", "bg-aviso-fundo text-aviso"] : ["Encontrado", "bg-ok-fundo text-ok"];
+  const parecido = !temOpcoes ? c.sugestoes.find((s) => s.produto_id === c.valor) : undefined;
+
+  if (c.editando) {
+    return (
+      <div className={`${cartao} flex flex-col gap-2.5 p-3.5 lg:p-4`}>
+        <label className={rotuloCampo}>
+          Texto do item, como a escola escreveria
+          <textarea className={`${campo} h-auto min-h-[72px] py-2.5`} value={texto} autoFocus onChange={(e) => setTexto(e.target.value)}
+            placeholder={"01 estojo\n02 lápis grafite jumbo"} />
+        </label>
+        <p className="leitura text-[13px] lg:text-sm text-apagado">
+          Dois itens juntos? Ponha cada um numa linha. Para o cliente escolher, escreva com &ldquo;ou&rdquo;: &ldquo;lápis ou lapiseira&rdquo;.
+        </p>
+        <div className="flex flex-wrap gap-2.5">
+          <button type="button" className={botaoContornoPequeno} disabled={!texto.trim()} onClick={() => releitura(texto)}>Ler de novo</button>
+          {c.linha.original && (
+            <button type="button" className={`${link} min-h-11`} onClick={() => { setTexto(c.linha.original); mudar({ editando: false }); }}>Cancelar</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${cartao} flex flex-col gap-3 p-3.5 lg:p-4 ${c.valor === IGNORAR ? "opacity-70" : ""}`}>
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-[1_1_14rem]">
+          <span className="text-[12px] lg:text-[13px] font-bold uppercase tracking-[0.04em] text-apagado">Lista da escola</span>
+          <p className="text-[15px] lg:text-base font-semibold">{c.linha.original}</p>
+          <button type="button" className={`${link} text-[13px] lg:text-sm`} onClick={() => mudar({ editando: true })}>Editar ou dividir</button>
+        </div>
+        <div className="flex flex-none items-center gap-2">
+          {parecido && <span className="text-[13px] lg:text-sm font-semibold text-apagado">{Math.round(parecido.pontos * 100)}% parecido</span>}
+          {temOpcoes && c.valor === OPCOES && <span className="text-[13px] lg:text-sm font-semibold text-apagado">{c.opcoes.length} opções · o cliente escolhe</span>}
+          <span className={`inline-flex h-[26px] items-center rounded-full px-2.5 text-xs lg:text-[13px] font-bold ${status[1]}`}>{status[0]}</span>
+        </div>
+      </div>
+
+      {c.linha.exigencia && (
+        <p className="rounded-xl bg-aviso-fundo px-3 py-2 text-[13px] lg:text-sm text-aviso">
+          A escola pede: <strong>{c.linha.exigencia}</strong>.
+          {naoCumpre.length > 0 && <> {naoCumpre.map((id) => porId.get(id)!.nome).join(", ")} não diz isso no nome: confira se serve.</>}
+        </p>
+      )}
+
+      {temOpcoes ? (
+        <div className="flex flex-col gap-2.5">
+          {c.opcoes.map((o, i) => (
+            <div key={i} className="flex flex-col gap-1.5">
+              <SeletorDeProduto rotulo={`Opção ${i + 1}: ${o.texto}`} valor={c.valor === OPCOES ? o.valor : c.valor} sugestoes={o.sugestoes}
+                catalogo={catalogo} umaOpcao onChange={(v) => (v === IGNORAR ? mudar({ valor: IGNORAR }) : (mudar({ valor: OPCOES }), mudarOpcao(i, v)))} />
+              {c.valor === OPCOES && porId.has(o.valor) && <Faixas produto={porId.get(o.valor)!} />}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <SeletorDeProduto rotulo="No seu catálogo" valor={c.valor} sugestoes={c.sugestoes} catalogo={catalogo} onChange={(v) => mudar({ valor: v })} />
+      )}
+
+      {produtos.length > 0 && (
+        <div className="flex flex-wrap items-end gap-3">
+          <label className={`${rotuloCampo} w-[80px]`}>
+            Qtd
+            <input type="number" min={1} max={99} className={campo} value={c.quantidade}
+              onChange={(ev) => mudar({ quantidade: Math.max(1, Math.min(99, Number(ev.target.value) || 1)) })} />
+          </label>
+          <label className={`${rotuloCampo} min-w-[160px] flex-[2]`}>
+            Observação da escola
+            <input className={campo} value={c.observacao} maxLength={120} onChange={(ev) => mudar({ observacao: ev.target.value })} placeholder="Ex.: capa dura" />
+          </label>
+        </div>
+      )}
+      {!temOpcoes && porId.has(c.valor) && <Faixas produto={porId.get(c.valor)!} />}
+      {produtos.some((id) => naLista.has(id)) && (
+        <p className="text-[13px] lg:text-sm text-apagado">Já está na lista: a quantidade passa a ser {c.quantidade}.</p>
+      )}
+      {temOpcoes && produtos.length === 1 && c.valor === OPCOES && (
+        <p className="text-[13px] lg:text-sm text-apagado">Só uma das opções está no seu catálogo: o cliente leva essa.</p>
+      )}
+      {c.valor !== IGNORAR && !produtos.length && (
+        <p className="text-[13px] lg:text-sm text-apagado">Vai para o recado da lista: “{c.linha.descricao}”, para o cliente comprar em outro lugar.</p>
+      )}
+    </div>
+  );
+}
+
+function SeletorDeProduto({ rotulo, valor, sugestoes, catalogo, umaOpcao, onChange }: {
+  rotulo: string; valor: string; sugestoes: Sugestao[]; catalogo: ProdutoDoCatalogo[]; umaOpcao?: boolean; onChange: (v: string) => void;
+}) {
+  const sugeridos = new Set(sugestoes.map((s) => s.produto_id));
+  return (
+    <label className={`${rotuloCampo} min-w-0`}>
+      {rotulo}
+      <select className={campo} value={valor === OPCOES ? INDISPONIVEL : valor} onChange={(ev) => onChange(ev.target.value)}>
+        {sugestoes.length > 0 && (
+          <optgroup label="Mais parecidos">
+            {sugestoes.map((s) => <option key={s.produto_id} value={s.produto_id}>{s.nome}</option>)}
+          </optgroup>
+        )}
+        <optgroup label="Sem produto">
+          <option value={INDISPONIVEL}>{umaOpcao ? "Não vendo esta opção" : "Não vendo este item (indisponível)"}</option>
+          <option value={IGNORAR}>Ignorar esta linha (não é item)</option>
+        </optgroup>
+        <optgroup label="Todo o catálogo">
+          {catalogo.filter((p) => !sugeridos.has(p.id)).map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+        </optgroup>
+      </select>
+    </label>
+  );
+}
+
+function Faixas({ produto }: { produto: ProdutoDoCatalogo }) {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] lg:text-sm">
+      {produto.opcoes.length === 0 && <span className="text-aviso">Este produto não tem nenhuma faixa com preço.</span>}
+      {produto.opcoes.map((o) => (
+        <span key={o.faixa} className="flex items-center gap-1.5"><ChipFaixa faixa={o.faixa} />{o.marca} · {reais(o.preco_centavos)}</span>
+      ))}
     </div>
   );
 }

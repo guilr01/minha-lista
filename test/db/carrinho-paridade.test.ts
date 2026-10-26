@@ -126,11 +126,37 @@ describe("descontos da tela × descontos do banco", () => {
     await trocarPara(q, "anon");
   }
 
+  /** Os dois primeiros itens de cada lista ganham uma alternativa ("lápis ou lapiseira"), de um produto que a lista não tem. */
+  async function comAlternativas(q: Q) {
+    await q("reset role");
+    await q(`
+      insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, ordem, alternativa_de)
+      select li.fornecedor_id, li.lista_id, p.id, li.quantidade, 100 + li.n, li.id
+        from (select li.*, row_number() over (partition by li.lista_id order by li.ordem, li.id) as n
+                from public.lista_item li where li.alternativa_de is null) li
+        join lateral (select p.id from public.produto p
+                       where p.fornecedor_id = li.fornecedor_id and p.ativo
+                         and not exists (select 1 from public.lista_item x where x.lista_id = li.lista_id and x.produto_id = p.id)
+                       order by p.nome offset li.n - 1 limit 1) p on true
+       where li.n <= 2`);
+    await trocarPara(q, "anon");
+  }
+
+  /** O cliente trocou o item pela alternativa: a linha passa a ser do outro produto. */
+  function escolherAlternativa(v: VitrineLista, l: Linha, qual: number): Linha {
+    const alts = v.itens.find((i) => i.produto_id === l.produto_id)?.alternativas ?? [];
+    return alts.length ? { ...l, produto_id: alts[qual % alts.length].produto_id } : l;
+  }
+
   it("300 carrinhos ao acaso, Pix e cartão: a tela e o banco chegam ao mesmo total e às mesmas regras", async () => {
     await emSandbox(async (q) => {
       await comRegras(q, regras);
+      await comAlternativas(q);
       const sortear = sorteador(7);
+      // Sorteio próprio para a alternativa: os carrinhos de sempre continuam os mesmos.
+      const sortearAlternativa = sorteador(11);
       let feitos = 0;
+      let comAlternativa = 0;
       const vistas = new Set<string>();
       for (let rodada = 0; rodada < 75; rodada++) {
         for (const [escola, serie] of SERIES) {
@@ -138,11 +164,12 @@ describe("descontos da tela × descontos do banco", () => {
           expect(v.papelaria.descontos).toEqual(regras);
           const base = FAIXAS[sortear(3)];
           const linhas: Linha[] = linhasDaLista(v.itens, base).map((l) => ({
-            ...l,
+            ...(sortearAlternativa(3) === 0 ? escolherAlternativa(v, l, sortearAlternativa(2)) : l),
             faixa: sortear(4) === 0 ? FAIXAS[sortear(3)] : l.faixa,
             quantidade: sortear(5) === 0 ? Math.max(1, l.quantidade + sortear(3) - 1) : l.quantidade,
             removida: sortear(6) === 0,
           }));
+          if (linhas.some((l) => !v.itens.some((i) => i.produto_id === l.produto_id) && v.itens.some((i) => i.alternativas.some((a) => a.produto_id === l.produto_id)))) comAlternativa++;
           for (const extra of c.filter((p) => !linhas.some((l) => l.produto_id === p.produto_id))) {
             if (sortear(8) === 0) linhas.push({ produto_id: extra.produto_id, faixa: base, quantidade: 1, removida: false });
           }
@@ -163,9 +190,35 @@ describe("descontos da tela × descontos do banco", () => {
         }
       }
       expect(feitos).toBeGreaterThan(280);
+      // A alternativa precisa ter sido escolhida em parte dos carrinhos: senão o grupo nunca foi testado.
+      expect(comAlternativa).toBeGreaterThan(50);
       // Cada regra (e o teto) precisa ter valido em algum carrinho: senão o
       // teste passaria sem olhar a regra.
       expect([...vistas].sort(), [...vistas].join()).toEqual(["faixa", "lista_completa", "pix", "teto", "valor_minimo"]);
+    });
+  });
+
+  it("trocar o item pela alternativa mantém a lista completa, na tela e no banco", async () => {
+    await emSandbox(async (q) => {
+      await comRegras(q, { lista_completa: { ativo: true, percentual: 10 } });
+      await comAlternativas(q);
+      const { v, produtos } = await dados(q, "colegio-modelo", "1-ano");
+      const item = v.itens.find((i) => i.alternativas.length)!;
+      expect(item).toBeDefined();
+      // Toda a lista, mas com a alternativa no lugar do item: ainda é a lista completa.
+      const linhas = linhasDaLista(v.itens, "economica").map((l) => (l.produto_id === item.produto_id ? escolherAlternativa(v, l, 0) : l));
+      expect(linhas.some((l) => l.produto_id === item.produto_id)).toBe(false);
+      const sub = subtotal(linhas, produtos);
+      const d = descontoDoPedido({ regras: v.papelaria.descontos, itens: v.itens, linhas, produtos, metodo: "pix", subtotal: sub });
+      expect(d.aplicadas).toEqual([{ regra: "lista_completa", percentual: 10 }]);
+      const r = (await q(`select public.criar_pedido($1) as r`, [pedido(v, linhas, produtos, "economica", sub - d.centavos)])).rows[0].r;
+      expect(r.descontos).toEqual([{ regra: "lista_completa", percentual: 10 }]);
+      // Sem o item e sem a alternativa, não é.
+      const semGrupo = linhas.map((l) => (l.produto_id === item.alternativas[0].produto_id ? { ...l, removida: true } : l));
+      const d2 = descontoDoPedido({ regras: v.papelaria.descontos, itens: v.itens, linhas: semGrupo, produtos, metodo: "pix", subtotal: subtotal(semGrupo, produtos) });
+      expect(d2.aplicadas).toEqual([]);
+      const r2 = (await q(`select public.criar_pedido($1) as r`, [pedido(v, semGrupo, produtos, "economica", subtotal(semGrupo, produtos))])).rows[0].r;
+      expect(r2.descontos).toEqual([]);
     });
   });
 

@@ -206,7 +206,7 @@ export async function listarEscolas(usuarioId: string, fornecedorId: string) {
                   'id', s.id, 'nome', s.nome, 'slug', s.slug, 'ordem', s.ordem,
                   'listas', coalesce((select jsonb_agg(jsonb_build_object(
                       'id', l.id, 'ano_letivo', l.ano_letivo, 'status', l.status,
-                      'itens', (select count(*) from public.lista_item li where li.lista_id = l.id),
+                      'itens', (select count(*) from public.lista_item li where li.lista_id = l.id and li.alternativa_de is null),
                       'pedidos', (select count(*) from public.pedido pe where pe.lista_id = l.id))
                     order by l.ano_letivo desc) from public.lista l where l.serie_id = s.id), '[]'::jsonb))
                 order by s.ordem, s.nome) from public.serie s where s.escola_id = e.id), '[]'::jsonb) as series
@@ -297,7 +297,18 @@ export async function copiarLista(usuarioId: string, fornecedorId: string, orige
     );
     await q(
       `insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, observacao, ordem)
-       select fornecedor_id, $2, produto_id, quantidade, observacao, ordem from public.lista_item where lista_id = $1`,
+       select fornecedor_id, $2, produto_id, quantidade, observacao, ordem from public.lista_item
+        where lista_id = $1 and alternativa_de is null`,
+      [origemId, nova.rows[0].id],
+    );
+    // As alternativas vêm junto, apontando para o principal da lista NOVA.
+    await q(
+      `insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, observacao, ordem, alternativa_de)
+       select a.fornecedor_id, $2, a.produto_id, a.quantidade, a.observacao, a.ordem, np.id
+         from public.lista_item a
+         join public.lista_item p on p.id = a.alternativa_de
+         join public.lista_item np on np.lista_id = $2 and np.produto_id = p.produto_id
+        where a.lista_id = $1`,
       [origemId, nova.rows[0].id],
     );
     return nova.rows[0].id;
@@ -312,8 +323,10 @@ export type ListaDoEditor = {
   serie: { id: string; nome: string; slug: string };
   escola: { id: string; nome: string; slug: string };
   pedidos: number;
-  itens: { id: string; produto_id: string; nome: string; ativo: boolean; quantidade: number; observacao: string | null }[];
+  itens: (ItemDoEditor & { alternativas: ItemDoEditor[] })[];
 };
+
+type ItemDoEditor = { id: string; produto_id: string; nome: string; ativo: boolean; quantidade: number; observacao: string | null };
 
 export async function buscarListaDoEditor(usuarioId: string, id: string) {
   return rodar(usuarioId, async (q) =>
@@ -324,9 +337,14 @@ export async function buscarListaDoEditor(usuarioId: string, id: string) {
               (select count(*)::int from public.pedido pe where pe.lista_id = l.id) as pedidos,
               coalesce((select jsonb_agg(jsonb_build_object(
                   'id', li.id, 'produto_id', p.id, 'nome', p.nome, 'ativo', p.ativo,
-                  'quantidade', li.quantidade, 'observacao', li.observacao) order by li.ordem, p.nome)
+                  'quantidade', li.quantidade, 'observacao', li.observacao,
+                  'alternativas', coalesce((select jsonb_agg(jsonb_build_object(
+                      'id', la.id, 'produto_id', pa.id, 'nome', pa.nome, 'ativo', pa.ativo,
+                      'quantidade', la.quantidade, 'observacao', la.observacao) order by la.ordem, pa.nome)
+                    from public.lista_item la join public.produto pa on pa.id = la.produto_id
+                   where la.alternativa_de = li.id), '[]'::jsonb)) order by li.ordem, p.nome)
                 from public.lista_item li join public.produto p on p.id = li.produto_id
-               where li.lista_id = l.id), '[]'::jsonb) as itens
+               where li.lista_id = l.id and li.alternativa_de is null), '[]'::jsonb) as itens
          from public.lista l
          join public.serie s on s.id = l.serie_id
          join public.escola e on e.id = s.escola_id
@@ -362,6 +380,22 @@ export async function alterarItem(usuarioId: string, itemId: string, qtd: number
   validarQuantidade(qtd);
   return rodar(usuarioId, async (q) => {
     await q(`update public.lista_item set quantidade = $2, observacao = nullif($3, '') where id = $1`, [itemId, qtd, obs.trim()]);
+    // A alternativa vale pelo mesmo item: a quantidade da escola é uma só.
+    await q(`update public.lista_item set quantidade = $2 where alternativa_de = $1`, [itemId, qtd]);
+  });
+}
+
+/** "ou lapiseira": outro produto que o cliente pode escolher no lugar do item. */
+export async function adicionarAlternativa(usuarioId: string, fornecedorId: string, itemId: string, produtoId: string) {
+  return rodar(usuarioId, async (q) => {
+    const i = await q<{ lista_id: string; quantidade: number }>(
+      `select lista_id, quantidade from public.lista_item where id = $1 and alternativa_de is null`, [itemId]);
+    if (!i.rows[0]) throw new ErroDeCadastro("Item não encontrado.");
+    await q(
+      `insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, ordem, alternativa_de)
+       values ($1, $2, $3, $4, coalesce((select max(ordem) + 1 from public.lista_item where lista_id = $2), 0), $5)`,
+      [fornecedorId, i.rows[0].lista_id, produtoId, i.rows[0].quantidade, itemId],
+    );
   });
 }
 
@@ -371,7 +405,7 @@ export async function removerItem(usuarioId: string, itemId: string) {
   });
 }
 
-export type ItemImportado = { produto_id: string; quantidade: number; observacao: string };
+export type ItemImportado = { produto_id: string; quantidade: number; observacao: string; alternativas?: string[] };
 
 /**
  * Grava o que a papelaria conferiu na importação da lista da escola, numa
@@ -387,21 +421,39 @@ export async function importarItensDaLista(usuarioId: string, fornecedorId: stri
     validarQuantidade(i.quantidade);
     const ja = porProduto.get(i.produto_id);
     porProduto.set(i.produto_id, ja
-      ? { ...ja, quantidade: Math.min(99, ja.quantidade + i.quantidade), observacao: [ja.observacao, i.observacao].filter(Boolean).join("; ") }
+      ? { ...ja, quantidade: Math.min(99, ja.quantidade + i.quantidade), observacao: [ja.observacao, i.observacao].filter(Boolean).join("; "),
+          alternativas: [...new Set([...(ja.alternativas ?? []), ...(i.alternativas ?? [])])] }
       : i);
   }
+  // Produto que é item principal não vira alternativa de outro.
+  const principais = new Set(porProduto.keys());
   return rodar(usuarioId, async (q) => {
     const l = await q<{ observacoes: string | null }>("select observacoes from public.lista where id = $1", [listaId]);
     if (!l.rowCount) throw new ErroDeCadastro("Lista não encontrada.");
     for (const i of porProduto.values()) {
-      await q(
+      // O que a importação diz que é item vira item principal, mesmo que antes fosse alternativa.
+      const r = await q<{ id: string }>(
         `insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, observacao, ordem)
          values ($1, $2, $3, $4, nullif($5, ''),
                  coalesce((select max(ordem) + 1 from public.lista_item where lista_id = $2), 0))
          on conflict (lista_id, produto_id) do update
-           set quantidade = excluded.quantidade, observacao = coalesce(excluded.observacao, public.lista_item.observacao)`,
+           set quantidade = excluded.quantidade, observacao = coalesce(excluded.observacao, public.lista_item.observacao),
+               alternativa_de = null
+         returning id`,
         [fornecedorId, listaId, i.produto_id, i.quantidade, i.observacao.trim().slice(0, 200)],
       );
+      for (const alt of i.alternativas ?? []) {
+        if (alt === i.produto_id || principais.has(alt)) continue;
+        await q(
+          `insert into public.lista_item (fornecedor_id, lista_id, produto_id, quantidade, ordem, alternativa_de)
+           values ($1, $2, $3, $4, coalesce((select max(ordem) + 1 from public.lista_item where lista_id = $2), 0), $5)
+           on conflict (lista_id, produto_id) do update
+             set quantidade = excluded.quantidade, alternativa_de = excluded.alternativa_de
+             where public.lista_item.alternativa_de is not null
+                or not exists (select 1 from public.lista_item x where x.alternativa_de = public.lista_item.id)`,
+          [fornecedorId, listaId, alt, i.quantidade, r.rows[0].id],
+        );
+      }
     }
     await q("update public.lista set observacoes = nullif($2, '') where id = $1",
       [listaId, recadoComIndisponiveis(l.rows[0].observacoes, indisponiveis.map((t) => t.trim().slice(0, 160)).filter(Boolean))]);

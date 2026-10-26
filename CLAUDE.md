@@ -261,6 +261,41 @@ código, não o schema. **Aplique a migração ANTES de enviar o código que dep
   papelaria não vende vai para o RECADO da lista num bloco "Itens da lista da escola que não
   vendemos:", que o cliente vê. Importar de novo troca o bloco em vez de repetir.
 
+## Apontamentos de quem usa (23/10/2026, migração 0009)
+
+Cinco pontos de uma papelaria de verdade, com o texto exato dela afirmado em
+`test/listas-reais.test.ts` ("apontamentos de um usuário"):
+
+- **Item dentro de item se divide**: "01 estojo com 02 lápis grafite Jumbo" são dois itens. O corte
+  é " com " seguido de quantidade PEQUENA (1 a 5) e um objeto dos dois lados: "pasta com 20
+  plásticos" continua um item só (20 plásticos são a pasta), e "estojo com 3 divisórias" também
+  (divisória não é objeto que se compra).
+- **Lista colada numa linha só** ("… e turma. - 01 pasta fichário …") se divide em " - " seguido de
+  quantidade, MENOS depois de embalagem ("caixa", "kit", "pacote"): "1 caixa - 12 potes" é a
+  caixa, não dois itens. Foi a lista do Jardim que mostrou isso.
+- **A conferência edita o texto**: "Editar ou dividir" abre a linha da escola num campo, e "Ler de
+  novo" passa pelo MESMO `lerLinhas` da importação: escrever duas linhas ali vira dois cartões.
+  "Adicionar linha" é o mesmo campo, vazio. A sugestão de produto passou para o NAVEGADOR
+  (`sugeridor`, com o catálogo preparado uma vez), senão cada edição seria uma ida ao servidor.
+- **"A ou B" é escolha do CLIENTE** (decisão do Guilherme, 23/10/2026). "Lápis ou lapiseira" vira
+  um cartão com um seletor por opção, e a opção que não traz o objeto herda a primeira palavra da
+  outra ("pasta fichário ou catálogo" → "pasta catálogo"). No banco a alternativa é uma linha de
+  `lista_item` com `alternativa_de` apontando para o principal da MESMA lista (chave composta), um
+  nível só (gatilho). A vitrine entrega o principal com as alternativas dentro, e na revisão o
+  cliente troca como troca a faixa. No painel, cada item tem "A escola aceita outro produto no
+  lugar?" para pôr ou tirar alternativa à mão.
+- **O desconto de lista completa trata o grupo como UM item**: qualquer produto do grupo, na
+  quantidade da escola, completa. Mudou nas duas pontas (`app.descontos_aplicados` e
+  `listaCompleta`), e `test/db/carrinho-paridade.test.ts` sorteia carrinhos COM alternativa
+  escolhida. Sem isso, o cliente que obedece à escola e leva a lapiseira perderia o desconto.
+- **Condição do item é exigência, não descrição**: "apontador com depósito PARA LÁPIS JUMBO" compara
+  com o catálogo por "apontador com depósito" mais o que a exigência cobra ("jumbo"), e o cartão
+  mostra "A escola pede: para lápis jumbo". Produto que não cumpre (`atendeExigencia`) fica em
+  Confira.
+- **`emDuvida` mede a distância em centésimos inteiros.** Em ponto flutuante `1 - 0.9` é
+  `0.0999…`, e uma vitória clara de dez pontos ("Apontador com depósito jumbo" contra o sem jumbo)
+  aparecia como empate. Achado no navegador, não em teste: o cartão dizia 100% e Confira.
+
 ## Legibilidade no computador (20/10/2026)
 
 Medido em 16 telas × 7 larguras (1024 a 2560), antes de mexer. O celular estava certo e não mudou.
@@ -329,7 +364,7 @@ O plano gratuito do Supabase estava no limite de 2 projetos ativos, e os dois (`
 `wod-coach`) estão em uso diário. O banco é **Postgres no Neon**: projeto "Minha lista"
 (`odd-bird-95021023`), região `aws-sa-east-1`, **Postgres 18**, banco `neondb`. Nada do Supabase
 ficou: papéis, `app.usuario` e `app.usuario_atual()` são criados pela migração
-`20261005000000_ambiente.sql`. **Todas as migrações e o seed estão aplicados** (a 0007 em 06/10/2026, com os hashes conferidos).
+`20261005000000_ambiente.sql`. **Todas as migrações e o seed estão aplicados** (a 0009, das alternativas, em 25/10/2026, com os dez hashes conferidos).
 
 - **O dono no Neon (`neondb_owner`) não é superusuário, mas TEM `BYPASSRLS`** (medido). O
   desenho não depende disso: as tabelas usam RLS sem `FORCE`, o dono é o papel do sistema, e

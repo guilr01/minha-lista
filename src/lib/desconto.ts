@@ -1,4 +1,4 @@
-import { linhasNoPedido, type Linha, type Produto } from "./carrinho";
+import { linhasNoPedido, produtosDoItem, type Linha, type Produto } from "./carrinho";
 import { ROTULO_FAIXA, type Faixa } from "./faixa";
 import type { ItemDaLista } from "./vitrine";
 
@@ -60,12 +60,19 @@ export function regrasAtivas(regras: RegrasDeDesconto | null | undefined): Regra
   return REGRAS.filter((k) => regras?.[k]?.ativo);
 }
 
-/** A lista está completa? Itens fora de venda não contam (o pai não tem como levá-los). */
+/**
+ * A lista está completa? Itens fora de venda não contam (o cliente não tem
+ * como levá-los). Item com alternativas é um item só: qualquer produto do
+ * grupo, na quantidade da escola, o completa (app.descontos_aplicados, 0009).
+ */
 export function listaCompleta(itens: ItemDaLista[], linhas: Linha[], produtos: Map<string, Produto>): boolean {
   const noPedido = linhasNoPedido(linhas, produtos);
   return itens
-    .filter((i) => i.opcoes.length > 0)
-    .every((i) => noPedido.some((l) => l.produto_id === i.produto_id && l.quantidade >= i.quantidade));
+    .filter((i) => [i, ...(i.alternativas ?? [])].some((a) => a.opcoes.length > 0))
+    .every((i) => {
+      const grupo = produtosDoItem(i);
+      return noPedido.some((l) => grupo.includes(l.produto_id) && l.quantidade >= i.quantidade);
+    });
 }
 
 export type Desconto = {

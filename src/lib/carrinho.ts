@@ -32,11 +32,24 @@ export function produtosConhecidos(itens: ItemDaLista[], catalogo: ProdutoDoCata
   for (const c of catalogo) {
     m.set(c.produto_id, { produto_id: c.produto_id, nome: c.nome, unidade: c.unidade, quantidade_lista: 0, observacao: null, opcoes: c.opcoes });
   }
-  // A lista vence o catálogo: traz a quantidade e a observação da escola.
+  // A lista vence o catálogo: traz a quantidade e a observação da escola,
+  // também para as alternativas, que o cliente pode escolher no lugar.
   for (const i of itens) {
-    m.set(i.produto_id, { produto_id: i.produto_id, nome: i.nome, unidade: i.unidade, quantidade_lista: i.quantidade, observacao: i.observacao, opcoes: i.opcoes });
+    for (const a of [i, ...(i.alternativas ?? [])]) {
+      m.set(a.produto_id, { produto_id: a.produto_id, nome: a.nome, unidade: a.unidade, quantidade_lista: a.quantidade, observacao: a.observacao, opcoes: a.opcoes });
+    }
   }
   return m;
+}
+
+/** Os produtos que valem para um item da lista: ele e as alternativas, nessa ordem. */
+export function produtosDoItem(i: ItemDaLista): string[] {
+  return [i.produto_id, ...(i.alternativas ?? []).map((a) => a.produto_id)];
+}
+
+/** O item da lista a que um produto pertence (como principal ou alternativa). */
+export function itemDoProduto(itens: ItemDaLista[], produtoId: string): ItemDaLista | null {
+  return itens.find((i) => produtosDoItem(i).includes(produtoId)) ?? null;
 }
 
 export function linhasDaLista(itens: ItemDaLista[], faixa: Faixa): Linha[] {
