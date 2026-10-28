@@ -328,6 +328,21 @@ Medido em 16 telas × 7 larguras (1024 a 2560), antes de mexer. O celular estava
 - **Parágrafo de explicação leva `leitura`** (`globals.css`, até ~72 caracteres por linha). Em
   `em`, não em `ch`: nesta fonte o "0" é largo e 68ch dava 95 caracteres.
 
+## Capacidade (medida em 28/10/2026)
+
+`docs/capacidade.md` tem o teste inteiro e `scripts/carga/` o repete. Em uma linha: o sistema não
+cai por gente comprando junto (~22 compras/s no máximo do Neon gratuito, zero erros até 160
+clientes simultâneos); **cai antes pelos limites do plano gratuito do Neon** (5 GB de
+transferência ≈ 13 mil compras/mês, e 100 CU-hora ≈ 13 h acordado por dia), e o **painel** é o
+que mais sofre com volume: a tela de pedidos não pagina, e catálogo, escolas e listas ficam
+lentos conforme a PLATAFORMA cresce, porque faltam índices em `lista_item (produto_id)` e
+`pedido (lista_id)`.
+
+- **Medir por CPU e bytes por compra, não por vazão local**: é o que o Neon cobra e limita.
+- **O gerador de volume só roda em Postgres local** e só apaga o banco `lista_pronta_carga`.
+- **`pkill -f` com o padrão na própria linha mata o shell que o chamou** (saída 144). Para parar
+  o servidor de teste, ache o pid (`ps -eo pid,args | grep "[n]ext-server"`) e use `kill`.
+
 ## Do protótipo, o que NÃO entra agora
 
 O protótipo tem leitura de lista por foto e a fila "Itens não encontrados" que nasce dela.
